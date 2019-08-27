@@ -12,14 +12,14 @@ var (
 	SubscriptionServiceEndpoint 		= ":8085"
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
 	PartnerId							= "000"
-	GoogleProjectId				        = "jenkins-support-saas"
+	GcpProjectId				        = "jenkins-support-saas"
 )
 
 type ServiceConfig struct {
 	SubscriptionServiceEndpoint    	string	`json:"subscriptionServiceEndpoint"`
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
 	PartnerId    					string	`json:"partnerId"`
-	GoogleProjectId    				string	`json:"googleProjectId"`
+	GcpProjectId    				string	`json:"gcpProjectId"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -27,7 +27,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		SubscriptionServiceEndpoint,
 		CloudCommerceProcurementUrl,
 		PartnerId,
-		GoogleProjectId,
+		GcpProjectId,
 	}
 
 	dir, err := os.Getwd()
@@ -42,7 +42,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	subscriptionServiceEndpoint := flag.String("subscriptionServiceEndpoint", "", "set the value of this service endpoint")
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
 	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
-	googleProjectId := flag.String("googleProjectId", "", "set the Google Project Id")
+	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -58,8 +58,8 @@ func GetConfiguration() (ServiceConfig, error) {
 	if partnerId == nil {
 		*partnerId = os.Getenv("JENKINS_SUPPORT_SAAS_PARTNER_ID")
 	}
-	if googleProjectId == nil {
-		*googleProjectId = os.Getenv("JENKINS_SUPPORT_SAAS_GOOGLE_PROJECT_ID")
+	if gcpProjectId == nil {
+		*gcpProjectId = os.Getenv("JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID")
 	}
 
 
@@ -68,7 +68,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.SubscriptionServiceEndpoint = *subscriptionServiceEndpoint
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
 		conf.PartnerId = *partnerId
-		conf.GoogleProjectId = *googleProjectId
+		conf.GcpProjectId = *gcpProjectId
 	} else {
 		file, err := os.Open(*configFile)
 		if err != nil {
@@ -101,14 +101,14 @@ func GetConfiguration() (ServiceConfig, error) {
 		valid = false
 	}
 
-	_,pathExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
-	if !pathExists {
-		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS was not set.")
+	if conf.GcpProjectId == "" {
+		fmt.Println("GcpProjectId was not set.")
 		valid = false
 	}
 
-	if conf.GoogleProjectId == "" {
-		fmt.Println("GoogleProjectId was not set.")
+	_,pathExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+	if !pathExists {
+		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS was not set.")
 		valid = false
 	}
 
