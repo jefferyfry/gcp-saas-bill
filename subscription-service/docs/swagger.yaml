@@ -1,0 +1,216 @@
+basePath: /api/v1
+definitions:
+  persistence.Account:
+    properties:
+      approvals:
+        type: string
+      createTime:
+        type: string
+      name:
+        type: string
+      provider:
+        type: string
+      state:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  persistence.Entitlement:
+    properties:
+      account:
+        type: string
+      createTime:
+        type: string
+      messageToUser:
+        type: string
+      name:
+        type: string
+      newPendingPlan:
+        type: string
+      plan:
+        type: string
+      product:
+        type: string
+      provider:
+        type: string
+      state:
+        type: integer
+      updateTime:
+        type: string
+      usageReportingId:
+        type: string
+    type: object
+host: localhost:8085
+info:
+  contact:
+    email: support@cloudbees.com
+    name: CloudBees Support
+    url: http://support.cloudbees.com
+  license: {}
+  termsOfService: https://www.cloudbees.com/products/terms-service
+paths:
+  /accounts:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new account
+      operationId: jenkins-support-saas-subscription-service-add-account
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Added
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Add a new account
+    put:
+      consumes:
+      - application/json
+      description: Update an account passing account json
+      operationId: jenkins-support-saas-subscription-service-update-account
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Updated
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Update an account
+  /accounts/{accountName}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an account
+      operationId: jenkins-support-saas-subscription-service-delete-account
+      parameters:
+      - description: Account Name
+        in: path
+        name: accountName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Deleted
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Delete an account
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an account by account name
+      operationId: jenkins-support-saas-subscription-service-get-account
+      parameters:
+      - description: Account Name
+        in: path
+        name: accountName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persistence.Account'
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Get an account
+  /entitlements:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new entitlement
+      operationId: jenkins-support-saas-subscription-service-add-entitlement
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Added
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Add a new entitlement
+    put:
+      consumes:
+      - application/json
+      description: Update an entitlement passing entitlement json
+      operationId: jenkins-support-saas-subscription-service-update-entitlement
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Updated
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Update an entitlement
+  /entitlements/{entitlementName}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an entitlement
+      operationId: jenkins-support-saas-subscription-service-delete-entitlement
+      parameters:
+      - description: Entitlement Name
+        in: path
+        name: entitlementName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Deleted
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Delete an entitlement
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an entitlement by entitlement name
+      operationId: jenkins-support-saas-subscription-service-get-entitlement
+      parameters:
+      - description: Entitlement Name
+        in: path
+        name: entitlementName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persistence.Entitlement'
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Get an entitlement
+swagger: "2.0"

@@ -81,6 +81,7 @@ func GetConfiguration() (ServiceConfig, error) {
 			fmt.Println("Configuration file not found. Continuing with default values.")
 			return conf, err
 		}
+		fmt.Printf("Using confile file %s to launch subscription service \n", *configFile)
 	}
 
 	valid := true

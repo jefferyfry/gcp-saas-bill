@@ -1,16 +1,18 @@
 package rest
 
 import (
-	"net/http"
+	_ "github.com/cloudbees/jenkins-support-saas/subscription-service/docs"
 	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence"
 	"github.com/gorilla/mux"
+	"github.com/swaggo/http-swagger"
+	"net/http"
 )
 
 //SetUpService sets up the subscription service.
 func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string, cloudCommerceProcurementUrl string, partnerId string) error {
 	handler := GetSubscriptionServiceHandler(dbHandler,cloudCommerceProcurementUrl,partnerId)
 	r := mux.NewRouter()
-	subscriptionRouter := r.PathPrefix("/subscriptions").Subrouter()
+	subscriptionRouter := r.PathPrefix("/api/v1").Subrouter()
 
 	//accounts
 	subscriptionRouter.Methods(http.MethodPost).Path("/accounts").HandlerFunc(handler.AddAccount)
@@ -28,6 +30,11 @@ func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string, 
 	subscriptionRouter.Methods(http.MethodPut).Path("/entitlements").HandlerFunc(handler.UpdateEntitlement)
 	subscriptionRouter.Methods(http.MethodDelete).Path("/entitlements/{entitlementName}").HandlerFunc(handler.DeleteEntitlement)
 	//subscriptionRouter.Methods(http.MethodGet).Path("/accounts/{accountId}/entitlements").HandlerFunc(handler.GetEntitlementsByAccount)
+
+	//swagger
+	r.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8085/swagger/doc.json"), //The url pointing to API definition"
+	))
 
 	return http.ListenAndServe(serviceEndpoint, r)
 }

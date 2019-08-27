@@ -10,7 +10,8 @@ import (
 // @contact.name CloudBees Support
 // @contact.url http://support.cloudbees.com
 // @contact.email support@cloudbees.com
-
+// @host localhost:8085
+// @BasePath /api/v1
 // @termsOfService https://www.cloudbees.com/products/terms-service
 func main() {
 	fmt.Println("Starting Jenkins Support SaaS Subscription Service...")
@@ -22,6 +23,6 @@ func main() {
 
 	datastoreClient := dbinterface.NewPersistenceLayer(dbinterface.DATASTOREDB,config.GoogleProjectId)
 
-	//RESTful Service start
+	//start service
 	log.Fatal(rest.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint,config.CloudCommerceProcurementUrl,config.PartnerId))
 }

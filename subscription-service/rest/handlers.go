@@ -20,101 +20,101 @@ func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler,cloudCo
 	}
 }
 
-// @Summary Add a new entitlement
-// @Description Adds a new entitlement
-// @ID jenkins-support-saas-subscription-service-add-entitlement
+// @Summary Add a new account
+// @Description Adds a new account
+// @ID jenkins-support-saas-subscription-service-add-account
 // @Accept  json
 // @Produce  json
 // @Success 201 {string} string "Added"
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements [post]
+// @Router /accounts [post]
 func (hdlr *SubscriptionServiceHandler) AddAccount(w http.ResponseWriter, r *http.Request) {
-	entitlement := persistence.Account{}
-	err := json.NewDecoder(r.Body).Decode(&entitlement)
+	account := persistence.Account{}
+	err := json.NewDecoder(r.Body).Decode(&account)
 
 	if nil != err {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding entitlement data %s", err)
+		fmt.Fprintf(w, "error occured while decoding account data %s", err)
 		return
 	}
-	dbErr := hdlr.dbHandler.AddAccount(&entitlement)
+	dbErr := hdlr.dbHandler.AddAccount(&account)
 	if nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting entitlement %s", dbErr)
+		fmt.Fprintf(w, "error occured while persisting account %s", dbErr)
 		return
 	}
 
 	w.WriteHeader(201)
 }
 
-// @Summary Get an entitlement
-// @Description Retrieves an entitlement by entitlement name
-// @ID jenkins-support-saas-subscription-service-get-entitlement
+// @Summary Get an account
+// @Description Retrieves an account by account name
+// @ID jenkins-support-saas-subscription-service-get-account
 // @Accept  json
 // @Produce  json
-// @Param entitlementName path string true "Account Name"
+// @Param accountName path string true "Account Name"
 // @Success 200 {object} persistence.Account
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements/{entitlementName} [get]
+// @Router /accounts/{accountName} [get]
 func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	entitlementName := vars["entitlementName"]
+	accountName := vars["accountName"]
 
-	entitlement, dbErr := hdlr.dbHandler.GetAccount(entitlementName)
+	account, dbErr := hdlr.dbHandler.GetAccount(accountName)
 	if nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting entitlement %s", dbErr)
+		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
 		return
 	}
 
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(&entitlement)
+	json.NewEncoder(w).Encode(&account)
 }
 
-// @Summary Update an entitlement
-// @Description Update an entitlement passing entitlement json
-// @ID jenkins-support-saas-subscription-service-update-entitlement
+// @Summary Update an account
+// @Description Update an account passing account json
+// @ID jenkins-support-saas-subscription-service-update-account
 // @Accept  json
 // @Produce  json
 // @Success 204 {string} string "Updated"
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements [put]
+// @Router /accounts [put]
 func (hdlr *SubscriptionServiceHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
-	entitlement := persistence.Account{}
-	err := json.NewDecoder(r.Body).Decode(&entitlement)
+	account := persistence.Account{}
+	err := json.NewDecoder(r.Body).Decode(&account)
 
 	if nil != err {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding entitlement data %s", err)
+		fmt.Fprintf(w, "error occured while decoding account data %s", err)
 		return
 	}
-	dbErr := hdlr.dbHandler.UpdateAccount(&entitlement)
+	dbErr := hdlr.dbHandler.UpdateAccount(&account)
 	if nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting entitlement %s", dbErr)
+		fmt.Fprintf(w, "error occured while persisting account %s", dbErr)
 		return
 	}
 
 	w.WriteHeader(204)
 }
 
-// @Summary Delete an entitlement
-// @Description Delete an entitlement
-// @ID jenkins-support-saas-subscription-service-delete-entitlement
+// @Summary Delete an account
+// @Description Delete an account
+// @ID jenkins-support-saas-subscription-service-delete-account
 // @Accept  json
 // @Produce  json
-// @Param entitlementName path string true "Account Name"
+// @Param accountName path string true "Account Name"
 // @Success 204 {string} string "Deleted"
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements/{entitlementName} [delete]
+// @Router /accounts/{accountName} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	entitlementName := vars["entitlementName"]
+	accountName := vars["accountName"]
 
-	dbErr := hdlr.dbHandler.DeleteAccount(entitlementName)
+	dbErr := hdlr.dbHandler.DeleteAccount(accountName)
 	if nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while deleting entitlement %s", dbErr)
+		fmt.Fprintf(w, "error occured while deleting account %s", dbErr)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *
 // @Produce  json
 // @Success 201 {string} string "Added"
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements [post]
+// @Router /entitlements [post]
 func (hdlr *SubscriptionServiceHandler) AddEntitlement(w http.ResponseWriter, r *http.Request) {
 	entitlement := persistence.Entitlement{}
 	err := json.NewDecoder(r.Body).Decode(&entitlement)
@@ -157,7 +157,7 @@ func (hdlr *SubscriptionServiceHandler) AddEntitlement(w http.ResponseWriter, r 
 // @Param entitlementName path string true "Entitlement Name"
 // @Success 200 {object} persistence.Entitlement
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements/{entitlementName} [get]
+// @Router /entitlements/{entitlementName} [get]
 func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	entitlementName := vars["entitlementName"]
@@ -180,7 +180,7 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r 
 // @Produce  json
 // @Success 204 {string} string "Updated"
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements [put]
+// @Router /entitlements [put]
 func (hdlr *SubscriptionServiceHandler) UpdateEntitlement(w http.ResponseWriter, r *http.Request) {
 	entitlement := persistence.Entitlement{}
 	err := json.NewDecoder(r.Body).Decode(&entitlement)
@@ -208,7 +208,7 @@ func (hdlr *SubscriptionServiceHandler) UpdateEntitlement(w http.ResponseWriter,
 // @Param entitlementName path string true "Entitlement Name"
 // @Success 204 {string} string "Deleted"
 // @Failure 500 {string} string "Error"
-// @Router /subscriptions/entitlements/{entitlementName} [delete]
+// @Router /entitlements/{entitlementName} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteEntitlement(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	entitlementName := vars["entitlementName"]
