@@ -1,0 +1,9 @@
+### Send POST request with json body
+POST http://localhost:8085/subscription/admin/users
+Content-Type: application/json
+
+{
+  "username": "testUser"
+}
+
+###
