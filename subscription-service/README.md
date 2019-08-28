@@ -65,6 +65,8 @@ go run main.go <optional command-line options>
 ## Swagger
 A Swagger UI is embedded in the service. It is located at http(s)://host:port/swagger/index.html
 
+![Swagger](https://user-images.githubusercontent.com/6440106/63872211-430eaa00-c972-11e9-93b9-fd417ae02eb8.png)
+
 ### Updating Swagger
 [Swaggo](https://github.com/swaggo/swag) is used to generate the Swagger UI. Swaggo uses annotations on main.go and rest/handlers.go to generate the Swagger UI. To update after changes, execute:
 
