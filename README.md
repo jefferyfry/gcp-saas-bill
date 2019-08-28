@@ -1,4 +1,4 @@
-#Jenkins Support SaaS
+# Jenkins Support SaaS
 This document describes the technical architecture and implementation for a prototype SaaS service that enables a Jenkins Support listing in the Google Cloud Platform (GCP) marketplace. This solution will allow CloudBees to list Jenkins Support as a separate and independent offering in the GCP marketplace so that customers can purchase and transact via the marketplace. The listing would target open source Jenkins users and CloudBees Jenkins Distribution users.
 
 The Jenkins Support SaaS service will act as an agent between the GCP marketplace enablement APIs and the CloudBees support systems. The service will be responsible for processing notifications from the GCP marketplace. These notifications include:
