@@ -20,33 +20,6 @@ func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler,cloudCo
 	}
 }
 
-// @Summary Add a new account
-// @Description Adds a new account
-// @ID jenkins-support-saas-subscription-service-add-account
-// @Accept  json
-// @Produce  json
-// @Success 201 {string} string "Added"
-// @Failure 500 {string} string "Error"
-// @Router /accounts [post]
-func (hdlr *SubscriptionServiceHandler) AddAccount(w http.ResponseWriter, r *http.Request) {
-	account := persistence.Account{}
-	err := json.NewDecoder(r.Body).Decode(&account)
-
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding account data %s", err)
-		return
-	}
-	dbErr := hdlr.dbHandler.AddAccount(&account)
-	if nil != dbErr {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting account %s", dbErr)
-		return
-	}
-
-	w.WriteHeader(201)
-}
-
 // @Summary Get an account
 // @Description Retrieves an account by account name
 // @ID jenkins-support-saas-subscription-service-get-account
@@ -71,15 +44,15 @@ func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(&account)
 }
 
-// @Summary Update an account
-// @Description Update an account passing account json
-// @ID jenkins-support-saas-subscription-service-update-account
+// @Summary Upsert an account
+// @Description Upsert an account passing account json
+// @ID jenkins-support-saas-subscription-service-upsert-account
 // @Accept  json
 // @Produce  json
-// @Success 204 {string} string "Updated"
+// @Success 204 {string} string "Upserted"
 // @Failure 500 {string} string "Error"
 // @Router /accounts [put]
-func (hdlr *SubscriptionServiceHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
+func (hdlr *SubscriptionServiceHandler) UpsertAccount(w http.ResponseWriter, r *http.Request) {
 	account := persistence.Account{}
 	err := json.NewDecoder(r.Body).Decode(&account)
 
@@ -88,7 +61,7 @@ func (hdlr *SubscriptionServiceHandler) UpdateAccount(w http.ResponseWriter, r *
 		fmt.Fprintf(w, "error occured while decoding account data %s", err)
 		return
 	}
-	dbErr := hdlr.dbHandler.UpdateAccount(&account)
+	dbErr := hdlr.dbHandler.UpsertAccount(&account)
 	if nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while persisting account %s", dbErr)
@@ -121,34 +94,6 @@ func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *
 	w.WriteHeader(204)
 }
 
-// @Summary Add a new entitlement
-// @Description Adds a new entitlement
-// @ID jenkins-support-saas-subscription-service-add-entitlement
-// @Accept  json
-// @Produce  json
-// @Success 201 {string} string "Added"
-// @Failure 500 {string} string "Error"
-// @Router /entitlements [post]
-func (hdlr *SubscriptionServiceHandler) AddEntitlement(w http.ResponseWriter, r *http.Request) {
-	entitlement := persistence.Entitlement{}
-	err := json.NewDecoder(r.Body).Decode(&entitlement)
-
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding entitlement data %s", err)
-		return
-	}
-	dbErr := hdlr.dbHandler.AddEntitlement(&entitlement)
-	if nil != dbErr {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting entitlement %s", dbErr)
-		return
-	}
-
-	w.WriteHeader(201)
-	json.NewEncoder(w).Encode(&entitlement)
-}
-
 // @Summary Get an entitlement
 // @Description Retrieves an entitlement by entitlement name
 // @ID jenkins-support-saas-subscription-service-get-entitlement
@@ -173,15 +118,15 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r 
 	json.NewEncoder(w).Encode(&entitlement)
 }
 
-// @Summary Update an entitlement
-// @Description Update an entitlement passing entitlement json
-// @ID jenkins-support-saas-subscription-service-update-entitlement
+// @Summary Upsert an entitlement
+// @Description Upsert an entitlement passing entitlement json
+// @ID jenkins-support-saas-subscription-service-upsert-entitlement
 // @Accept  json
 // @Produce  json
-// @Success 204 {string} string "Updated"
+// @Success 204 {string} string "Upserted"
 // @Failure 500 {string} string "Error"
 // @Router /entitlements [put]
-func (hdlr *SubscriptionServiceHandler) UpdateEntitlement(w http.ResponseWriter, r *http.Request) {
+func (hdlr *SubscriptionServiceHandler) UpsertEntitlement(w http.ResponseWriter, r *http.Request) {
 	entitlement := persistence.Entitlement{}
 	err := json.NewDecoder(r.Body).Decode(&entitlement)
 
@@ -190,7 +135,7 @@ func (hdlr *SubscriptionServiceHandler) UpdateEntitlement(w http.ResponseWriter,
 		fmt.Fprintf(w, "error occured while decoding entitlement data %s", err)
 		return
 	}
-	dbErr := hdlr.dbHandler.UpdateEntitlement(&entitlement)
+	dbErr := hdlr.dbHandler.UpsertEntitlement(&entitlement)
 	if nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while persisting entitlement %s", dbErr)

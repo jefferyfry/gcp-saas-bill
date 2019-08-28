@@ -108,8 +108,7 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	_,pathExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
 	if !pathExists {
-		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS was not set.")
-		valid = false
+		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS was not set or path does not exist. This is fine with an emulator but will fail in production. ")
 	}
 
 	if !valid {

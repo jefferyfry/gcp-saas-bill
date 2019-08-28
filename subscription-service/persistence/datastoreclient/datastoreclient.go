@@ -22,34 +22,7 @@ func NewDatastore(projectId string) (persistence.DatabaseHandler) {
 	}
 }
 
-func (datastoreClient *DatastoreClient) AddAccount(account *persistence.Account) error {
-	ctx := context.Background()
-
-	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
-	if err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
-		return err
-	}
-
-	_, txErr := client.RunInTransaction(ctx, func(tx *datastore.Transaction) error {
-		kind := ACCOUNT
-		name := account.Name
-		key := datastore.NameKey(kind, name, nil)
-
-		empty := persistence.Account{}
-
-		if err := tx.Get(key, &empty); err != datastore.ErrNoSuchEntity {
-			return err
-		}
-
-		_,err := client.Put(ctx, key, &account)
-
-		return err
-	})
-	return txErr
-}
-
-func (datastoreClient *DatastoreClient) UpdateAccount(account *persistence.Account) error {
+func (datastoreClient *DatastoreClient) UpsertAccount(account *persistence.Account) error {
 	ctx := context.Background()
 
 	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
@@ -101,37 +74,7 @@ func (datastoreClient *DatastoreClient) GetAccount(name string) (*persistence.Ac
 	return &account, gtErr
 }
 
-
-func (datastoreClient *DatastoreClient) AddEntitlement(entitlement *persistence.Entitlement) error {
-	ctx := context.Background()
-
-	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
-	if err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
-		return err
-	}
-
-	_, txErr := client.RunInTransaction(ctx, func(tx *datastore.Transaction) error {
-		accountKey := datastore.NameKey(ACCOUNT, entitlement.Account, nil)
-
-		kind := ENTITLEMENT
-		name := entitlement.Name
-		key := datastore.NameKey(kind, name, accountKey)
-
-		empty := persistence.Entitlement{}
-
-		if err := tx.Get(key, &empty); err != datastore.ErrNoSuchEntity {
-			return err
-		}
-
-		_,err := client.Put(ctx, key, &entitlement)
-
-		return err
-	})
-	return txErr
-}
-
-func (datastoreClient *DatastoreClient) UpdateEntitlement(entitlement *persistence.Entitlement) error {
+func (datastoreClient *DatastoreClient) UpsertEntitlement(entitlement *persistence.Entitlement) error {
 	ctx := context.Background()
 
 	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
