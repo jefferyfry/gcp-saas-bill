@@ -20,7 +20,7 @@ command-line options > environment variables
 * JENKINS_SUPPORT_SAAS_PARTNER_ID - _Partner ID_ from above.
 * JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
-* **GOOGLE_APPLICATION_CREDENTIALS** This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable.
+* **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
@@ -57,7 +57,7 @@ export DATASTORE_PROJECT_ID=cloudbees-jenkins-support
 ```
 
 ## Running Locally
-The following will be and run the service locally.
+The following will run the service locally.
 ```
 go run main.go <optional command-line options>
 ```
