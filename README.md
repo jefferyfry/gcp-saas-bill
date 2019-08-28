@@ -26,7 +26,7 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 #### CloudBees Components
 * Agent Cloud Function (CloudBees Developed) - The Agent Cloud Function is triggered by the GCP Marketplace Pub/Sub topics to process new accounts, subscriptions, updates, cancellations and renewals. 
 * Subscription Service (CloudBees Developed) - This web app serves the signup page and then approves new accounts and entitlements after receiving account information.
-* Subscription Front-end - Lightweight web interface that provides the signup page.
+* Subscription Front-end (CloudBees Developed) - Lightweight web interface that provides the signup page.
 * Subscription DB (CloudBees Developed) - This is a backup database that stores the current account and subscription data.
 * Support Systems - Support systems are the current backend systems such as Zendesk and Salesforce that must be provisioned to enable Jenkins Support services for a customer. The provisioning of these systems is TBD.
 
