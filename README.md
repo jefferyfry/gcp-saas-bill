@@ -20,7 +20,7 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 * agent cloud function README
 
 ## Architecture
-![Architecture](https://user-images.githubusercontent.com/6440106/63820624-c8587700-c8fe-11e9-8493-87e2c761efda.png)
+![Architecture](https://user-images.githubusercontent.com/6440106/63956792-00190900-ca3c-11e9-98ab-b84d1fc2f660.png)
 
 ### Components
 #### Google Components
@@ -39,7 +39,7 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 ![Customer Workflow](https://user-images.githubusercontent.com/6440106/63820521-6435b300-c8fe-11e9-86aa-dfdef195d2e1.png)
 
 ## Data Workflow
-![Data Workflow](https://user-images.githubusercontent.com/6440106/63820546-7adc0a00-c8fe-11e9-99b1-dcf6eb50192e.png)
+![Data Workflow](https://user-images.githubusercontent.com/6440106/63956757-e972b200-ca3b-11e9-82d9-51f4b3ab8556.png)
 
 1 - Customer subscribes (or makes changes) to Jenkins Support in the marketplace.
 
