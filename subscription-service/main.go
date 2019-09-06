@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/cloudbees/jenkins-support-saas/subscription-service/config"
 	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence/dbinterface"
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/rest"
+	"github.com/cloudbees/jenkins-support-saas/subscription-service/web"
 	"log"
 )
 // @contact.name CloudBees Support
@@ -24,5 +24,5 @@ func main() {
 	datastoreClient := dbinterface.NewPersistenceLayer(dbinterface.DATASTOREDB,config.GcpProjectId)
 
 	//start service
-	log.Fatal(rest.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint,config.CloudCommerceProcurementUrl,config.PartnerId))
+	log.Fatal(web.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint,config.CloudCommerceProcurementUrl,config.PartnerId))
 }

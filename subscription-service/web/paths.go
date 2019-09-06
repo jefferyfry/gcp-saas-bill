@@ -1,4 +1,4 @@
-package rest
+package web
 
 import (
 	_ "github.com/cloudbees/jenkins-support-saas/subscription-service/docs"

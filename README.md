@@ -45,16 +45,16 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 
 2a - Agent Cloud Function receives a notification of a change to a Jenkins Support subscription. This can be a new subscription, cancellation, update or renewal. 
 
-2b - For new accounts, the marketplace directs the customer to a signup page served by the Subscription Manager Web App. 
+2b - For new accounts, the marketplace directs the customer to a signup page served by the Subscription Service. 
 
 3 - The Agent Cloud Function queries the procurement API for the entitlement.
 
-4 - The Agent Cloud Function provisions/makes updates via the Subscription Manager Web App via REST API.
+4 - The Agent Cloud Function provisions/makes updates via the Subscription Service via REST API.
 
-5 - Subscription Manager Web App stores account, subscription to subscription database.
+5 - Subscription Service stores account, subscription to subscription database.
 
-6 - Subscription Manager Web App triggers provisioning of support systems (TBD).
+6 - Subscription Service triggers provisioning of backend systems (TBD).
 
-7 - Subscription Manager Web App sends successful web page response to customer.
+7 - Subscription Service sends successful web page response to customer.
 
-8 - Subscription Manager Web App sends final approval for account and/or entitlement to GCP Procurement API.
+8 - Subscription Service sends final approval for account and/or entitlement to GCP Procurement API.

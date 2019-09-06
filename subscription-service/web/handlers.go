@@ -1,4 +1,4 @@
-package rest
+package web
 
 import (
 	"encoding/json"
@@ -27,11 +27,17 @@ func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler,cloudCo
 // @Produce  json
 // @Param accountName path string true "Account Name"
 // @Success 200 {object} persistence.Account
-// @Failure 500 {string} string "Error"
+// @Failure 400 {string} string "Missing account name in path"
+// @Failure 500 {string} string "Internal server error"
 // @Router /accounts/{accountName} [get]
 func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	accountName := vars["accountName"]
+
+	if accountName == "" {
+		http.Error(w,`{"error": "missing account name"}`,400)
+		return
+	}
 
 	account, dbErr := hdlr.dbHandler.GetAccount(accountName)
 	if nil != dbErr {
@@ -78,11 +84,17 @@ func (hdlr *SubscriptionServiceHandler) UpsertAccount(w http.ResponseWriter, r *
 // @Produce  json
 // @Param accountName path string true "Account Name"
 // @Success 204 {string} string "Deleted"
-// @Failure 500 {string} string "Error"
+// @Failure 400 {string} string "Missing account name in path"
+// @Failure 500 {string} string "Internal server error"
 // @Router /accounts/{accountName} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	accountName := vars["accountName"]
+
+	if accountName == "" {
+		http.Error(w,`{"error": "missing account name"}`,400)
+		return
+	}
 
 	dbErr := hdlr.dbHandler.DeleteAccount(accountName)
 	if nil != dbErr {
@@ -101,11 +113,17 @@ func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *
 // @Produce  json
 // @Param entitlementName path string true "Entitlement Name"
 // @Success 200 {object} persistence.Entitlement
+// @Failure 400 {string} string "Missing entitlement name in path"
 // @Failure 500 {string} string "Error"
 // @Router /entitlements/{entitlementName} [get]
 func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	entitlementName := vars["entitlementName"]
+
+	if entitlementName == "" {
+		http.Error(w,`{"error": "missing entitlement name in path"}`,400)
+		return
+	}
 
 	entitlement, dbErr := hdlr.dbHandler.GetEntitlement(entitlementName)
 	if nil != dbErr {
@@ -152,11 +170,17 @@ func (hdlr *SubscriptionServiceHandler) UpsertEntitlement(w http.ResponseWriter,
 // @Produce  json
 // @Param entitlementName path string true "Entitlement Name"
 // @Success 204 {string} string "Deleted"
+// @Failure 400 {string} string "Missing entitlement name in path"
 // @Failure 500 {string} string "Error"
 // @Router /entitlements/{entitlementName} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteEntitlement(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	entitlementName := vars["entitlementName"]
+
+	if entitlementName == "" {
+		http.Error(w,`{"error": "missing entitlement name in path"}`,400)
+		return
+	}
 
 	dbErr := hdlr.dbHandler.DeleteEntitlement(entitlementName)
 	if nil != dbErr {

@@ -1,0 +1,59 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: cloudbees-jenkins-support-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    # - port:
+    #     number: 80
+    #     name: http
+    #     protocol: HTTP
+    #   hosts:
+    #   - api.dev.storefront-demo.com
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+        privateKey: /etc/istio/ingressgateway-certs/tls.key
+      hosts:
+        - api.dev.storefront-demo.com
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: subscription-frontent
+spec:
+  hosts:
+    - api.dev.storefront-demo.com
+  gateways:
+    - storefront-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /accounts
+      route:
+        - destination:
+            port:
+              number: 8080
+            host: accounts.dev.svc.cluster.local
+    - match:
+        - uri:
+            prefix: /fulfillment
+      route:
+        - destination:
+            port:
+              number: 8080
+            host: fulfillment.dev.svc.cluster.local
+    - match:
+        - uri:
+            prefix: /orders
+      route:
+        - destination:
+            port:
+              number: 8080
+            host: orders.dev.svc.cluster.local
