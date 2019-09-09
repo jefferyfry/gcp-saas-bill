@@ -9,13 +9,15 @@ import (
 )
 
 var (
+	SubscriptionServiceUrl = "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
 	ClientId 		= "123456"
 	ClientSecret    = "abcdef"
-	CallbackUrl		= "http://localhos/callback"
+	CallbackUrl		= "http://localhost/callback"
 	Issuer			= "http://localhost"
 )
 
 type ServiceConfig struct {
+	SubscriptionServiceUrl string `json:"subscriptionServiceUrl"`
 	ClientId    	string	`json:"clientId"`
 	ClientSecret    string	`json:"clientSecret"`
 	CallbackUrl    	string	`json:"callbackUrl"`
@@ -24,6 +26,7 @@ type ServiceConfig struct {
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
+		SubscriptionServiceUrl,
 		ClientId,
 		ClientSecret,
 		CallbackUrl,
@@ -39,6 +42,7 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
+	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
 	clientId := flag.String("clientId", "", "set the value of the Auth0 client ID")
 	clientSecret := flag.String("clientSecret", "", "set the value of the Auth0 client secret")
 	callbackUrl := flag.String("callbackUrl", "", "set the value for the Auth0 callback URL")
@@ -48,6 +52,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	//try environment variables if necessary
 	if configFile == nil {
 		*configFile = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CONFIG_FILE")
+	}
+	if subscriptionServiceUrl == nil {
+		*subscriptionServiceUrl = os.Getenv("JENKINS_SUPPORT_SUB_SERVICE_URL")
 	}
 	if clientId == nil {
 		*clientId = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID")
@@ -65,6 +72,7 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if *configFile == "" {
 		//try other flags
+		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
 		conf.ClientId = *clientId
 		conf.ClientSecret = *clientSecret
 		conf.CallbackUrl = *callbackUrl
@@ -85,6 +93,11 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 
 	valid := true
+
+	if conf.SubscriptionServiceUrl == "" {
+		fmt.Println("Subscription Service URL was not set.")
+		valid = false
+	}
 
 	if conf.ClientId == "" {
 		fmt.Println("Client ID was not set.")

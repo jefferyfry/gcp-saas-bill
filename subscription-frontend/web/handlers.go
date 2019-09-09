@@ -244,7 +244,7 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 	account.Timezone = r.PostFormValue("timezone")
 
 	//submit to subscript service
-	jsonBytes, err := json.Marshal(repo)
+	jsonBytes, err := json.Marshal(account)
 	if err != nil {
 		fmt.Println(err)
 		return
