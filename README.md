@@ -16,7 +16,7 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 
 ## Additional READMEs
 * subscription service [README](/subscription-service/README.md)
-* front-end service README
+* front-end service [README](/subscription-frontend/README.md)
 * agent cloud function README
 
 ## Architecture
