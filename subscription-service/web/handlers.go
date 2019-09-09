@@ -55,6 +55,7 @@ func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *htt
 // @ID jenkins-support-saas-subscription-service-upsert-account
 // @Accept  json
 // @Produce  json
+// @Param account body persistence.Account true "Account"
 // @Success 204 {string} string "Upserted"
 // @Failure 500 {string} string "Error"
 // @Router /accounts [put]

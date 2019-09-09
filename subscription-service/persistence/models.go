@@ -2,21 +2,20 @@ package persistence
 
 type Account struct {
 	//google fields
-	Name  			string     	`json:"name"`
-	UpdateTime   	string    	`json:"updateTime"`
-	CreateTime      string    	`json:"createTime"`
-	Provider     	string		`json:"provider"`
-	State 	 		string      `json:"state"`
-	Approvals    	string     	`json:"approvals"`
+	Name  			string     	`json:"name,omitempty"`
+	UpdateTime   	string    	`json:"updateTime,omitempty"`
+	CreateTime      string    	`json:"createTime,omitempty"`
+	Provider     	string		`json:"provider,omitempty"`
+	State 	 		string      `json:"state,omitempty"`
+	Approvals    	string     	`json:"approvals,omitempty"`
 
 	//signup fields
-	FirstName 		string     	`json:"firstName"`
-	LastName		string     	`json:"lastName"`
-	EmailAddress	string     	`json:"emailAddress"`
-	Phone			string     	`json:"phone"`
-	Company			string     	`json:"company"`
-	Country			string     	`json:"country"`
-	Timezone		string     	`json:"timezone"`
+	FirstName 		string     	`json:"firstName,omitempty"`
+	LastName		string     	`json:"lastName,omitempty"`
+	EmailAddress	string     	`json:"emailAddress,omitempty"`
+	Phone			string     	`json:"phone,omitempty"`
+	Company			string     	`json:"company,omitempty"`
+	Timezone		string     	`json:"timezone,omitempty"`
 }
 
 type Entitlement struct {

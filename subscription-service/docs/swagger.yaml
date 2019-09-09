@@ -4,13 +4,27 @@ definitions:
     properties:
       approvals:
         type: string
+      company:
+        type: string
       createTime:
         type: string
+      emailAddress:
+        type: string
+      firstName:
+        description: signup fields
+        type: string
+      lastName:
+        type: string
       name:
+        description: google fields
+        type: string
+      phone:
         type: string
       provider:
         type: string
       state:
+        type: string
+      timezone:
         type: string
       updateTime:
         type: string
@@ -50,40 +64,31 @@ info:
   termsOfService: https://www.cloudbees.com/products/terms-service
 paths:
   /accounts:
-    post:
-      consumes:
-      - application/json
-      description: Adds a new account
-      operationId: jenkins-support-saas-subscription-service-add-account
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Added
-          schema:
-            type: string
-        "500":
-          description: Error
-          schema:
-            type: string
-      summary: Add a new account
     put:
       consumes:
       - application/json
-      description: Update an account passing account json
-      operationId: jenkins-support-saas-subscription-service-update-account
+      description: Upsert an account passing account json
+      operationId: jenkins-support-saas-subscription-service-upsert-account
+      parameters:
+      - description: Account
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/persistence.Account'
+          type: object
       produces:
       - application/json
       responses:
         "204":
-          description: Updated
+          description: Upserted
           schema:
             type: string
         "500":
           description: Error
           schema:
             type: string
-      summary: Update an account
+      summary: Upsert an account
   /accounts/{accountName}:
     delete:
       consumes:
@@ -103,8 +108,12 @@ paths:
           description: Deleted
           schema:
             type: string
+        "400":
+          description: Missing account name in path
+          schema:
+            type: string
         "500":
-          description: Error
+          description: Internal server error
           schema:
             type: string
       summary: Delete an account
@@ -126,46 +135,33 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/persistence.Account'
+        "400":
+          description: Missing account name in path
+          schema:
+            type: string
         "500":
-          description: Error
+          description: Internal server error
           schema:
             type: string
       summary: Get an account
   /entitlements:
-    post:
-      consumes:
-      - application/json
-      description: Adds a new entitlement
-      operationId: jenkins-support-saas-subscription-service-add-entitlement
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Added
-          schema:
-            type: string
-        "500":
-          description: Error
-          schema:
-            type: string
-      summary: Add a new entitlement
     put:
       consumes:
       - application/json
-      description: Update an entitlement passing entitlement json
-      operationId: jenkins-support-saas-subscription-service-update-entitlement
+      description: Upsert an entitlement passing entitlement json
+      operationId: jenkins-support-saas-subscription-service-upsert-entitlement
       produces:
       - application/json
       responses:
         "204":
-          description: Updated
+          description: Upserted
           schema:
             type: string
         "500":
           description: Error
           schema:
             type: string
-      summary: Update an entitlement
+      summary: Upsert an entitlement
   /entitlements/{entitlementName}:
     delete:
       consumes:
@@ -183,6 +179,10 @@ paths:
       responses:
         "204":
           description: Deleted
+          schema:
+            type: string
+        "400":
+          description: Missing entitlement name in path
           schema:
             type: string
         "500":
@@ -208,6 +208,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/persistence.Entitlement'
+        "400":
+          description: Missing entitlement name in path
+          schema:
+            type: string
         "500":
           description: Error
           schema:
