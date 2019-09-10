@@ -5,6 +5,12 @@ The Frontend service provides the UI for customer signup from the marketplace. T
 The basic frontend flow amongst handlers and pages is the following:
 ![Jenkins Support SaaS - Page 4](https://user-images.githubusercontent.com/6440106/64573203-54b36280-d31f-11e9-84cb-9e0ca4e5fc67.png)
 
+## Handler Functions
+* [Signup](https://github.com/cloudbees/jenkins-support-saas/blob/master/subscription-frontend/web/handlers.go#L63)
+* [Auth0Login](https://github.com/cloudbees/jenkins-support-saas/blob/master/subscription-frontend/web/handlers.go#L162)
+* [Auth0Callback](https://github.com/cloudbees/jenkins-support-saas/blob/master/subscription-frontend/web/handlers.go#L194)
+* [Finish](https://github.com/cloudbees/jenkins-support-saas/blob/master/subscription-frontend/web/handlers.go#L254)
+
 ## Pages
 * [signup.html](https://github.com/cloudbees/jenkins-support-saas/tree/master/subscription-frontend/templates/signup.html) - Initial page to direct customer to Auth0/Google sign in. The customer is sent to this page from marketplace.
 * [confirm.html](https://github.com/cloudbees/jenkins-support-saas/tree/master/subscription-frontend/templates/confirm.html) - Auth0/Google callback page to confirm account information.
