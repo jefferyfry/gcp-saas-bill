@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	FrontendServiceEndpoint = ":8086"
 	SubscriptionServiceUrl = "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
 	ClientId 		= "123456"
 	ClientSecret    = "abcdef"
@@ -17,6 +18,7 @@ var (
 )
 
 type ServiceConfig struct {
+	FrontendServiceEndpoint string `json:"frontendServiceEndpoint"`
 	SubscriptionServiceUrl string `json:"subscriptionServiceUrl"`
 	ClientId    	string	`json:"clientId"`
 	ClientSecret    string	`json:"clientSecret"`
@@ -26,6 +28,7 @@ type ServiceConfig struct {
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
+		FrontendServiceEndpoint,
 		SubscriptionServiceUrl,
 		ClientId,
 		ClientSecret,
@@ -42,6 +45,7 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
+	frontendServiceEndpoint := flag.String("frontendServiceEndpoint", "", "set the value of the frontend service endpoint port")
 	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
 	clientId := flag.String("clientId", "", "set the value of the Auth0 client ID")
 	clientSecret := flag.String("clientSecret", "", "set the value of the Auth0 client secret")
@@ -50,28 +54,32 @@ func GetConfiguration() (ServiceConfig, error) {
 	flag.Parse()
 
 	//try environment variables if necessary
-	if configFile == nil {
+	if *configFile == "" {
 		*configFile = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CONFIG_FILE")
 	}
-	if subscriptionServiceUrl == nil {
+	if *frontendServiceEndpoint == "" {
+		*frontendServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT")
+	}
+	if *subscriptionServiceUrl == "" {
 		*subscriptionServiceUrl = os.Getenv("JENKINS_SUPPORT_SUB_SERVICE_URL")
 	}
-	if clientId == nil {
+	if *clientId == "" {
 		*clientId = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID")
 	}
-	if clientSecret == nil {
+	if *clientSecret == "" {
 		*clientSecret = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET")
 	}
-	if callbackUrl == nil {
+	if *callbackUrl == "" {
 		*callbackUrl = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL")
 	}
-	if issuer == nil {
+	if *issuer == "" {
 		*issuer = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_ISSUER")
 	}
 
 
 	if *configFile == "" {
 		//try other flags
+		conf.FrontendServiceEndpoint = *frontendServiceEndpoint
 		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
 		conf.ClientId = *clientId
 		conf.ClientSecret = *clientSecret
@@ -93,6 +101,11 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 
 	valid := true
+
+	if conf.FrontendServiceEndpoint == "" {
+		fmt.Println("FrontendServiceEndpoint was not set.")
+		valid = false
+	}
 
 	if conf.SubscriptionServiceUrl == "" {
 		fmt.Println("Subscription Service URL was not set.")

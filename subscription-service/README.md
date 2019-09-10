@@ -62,6 +62,17 @@ The following will run the service locally.
 go run main.go <optional command-line options>
 ```
 
+## Building the docker image locally
+```
+docker build -t subscription-service-1 .
+```
+
+## Running the docker image locally with environment variables
+```
+docker run -it --rm -p 8085:8085 -e JENKINS_SUPPORT_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT=8085 -e JENKINS_SUPPORT_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e JENKINS_SUPPORT_SAAS_PARTNER_ID='123456' -e JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-subscription-service subscription-service-1
+
+```
+
 ## Swagger
 A Swagger UI is embedded in the service. It is located at http(s)://host:port/swagger/index.html
 

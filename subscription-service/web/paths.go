@@ -28,8 +28,8 @@ func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string, 
 
 	//swagger
 	r.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8085/swagger/doc.json"), //The url pointing to API definition"
+		httpSwagger.URL("http://localhost:"+serviceEndpoint+"/swagger/doc.json"), //The url pointing to API definition"
 	))
 
-	return http.ListenAndServe(serviceEndpoint, r)
+	return http.ListenAndServe(":"+serviceEndpoint, r)
 }

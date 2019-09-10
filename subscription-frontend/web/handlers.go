@@ -13,7 +13,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
 	"github.com/lestrrat/go-jwx/jwk"
-	"golang.org/x/oauth2/jwt"
 	"html/template"
 	"log"
 

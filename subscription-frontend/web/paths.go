@@ -10,10 +10,10 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer)
 	r := mux.NewRouter()
 
-	r.Methods(http.MethodGet).Path("/signup").HandlerFunc(handler.Signup)
+	r.Methods(http.MethodPost).Path("/signup").HandlerFunc(handler.Signup)
 	r.Methods(http.MethodPost).Path("/login").HandlerFunc(handler.Auth0Login) //this shouldn't be called unless istio fails. this redirects to auth0
 	r.Methods(http.MethodPost).Path("/callback").HandlerFunc(handler.Auth0Callback)
 	r.Methods(http.MethodPost).Path("/finish").HandlerFunc(handler.Finish)
 
-	return http.ListenAndServe(serviceEndpoint, r)
+	return http.ListenAndServe(":"+serviceEndpoint, r)
 }

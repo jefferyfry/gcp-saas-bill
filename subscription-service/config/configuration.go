@@ -46,19 +46,19 @@ func GetConfiguration() (ServiceConfig, error) {
 	flag.Parse()
 
 	//try environment variables if necessary
-	if configFile == nil {
+	if *configFile == "" {
 		*configFile = os.Getenv("JENKINS_SUPPORT_SAAS_CONFIG_FILE")
 	}
-	if subscriptionServiceEndpoint == nil {
+	if *subscriptionServiceEndpoint == "" {
 		*subscriptionServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT")
 	}
-	if cloudCommerceProcurementUrl == nil {
+	if *cloudCommerceProcurementUrl == "" {
 		*cloudCommerceProcurementUrl = os.Getenv("JENKINS_SUPPORT_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL")
 	}
-	if partnerId == nil {
+	if *partnerId == "" {
 		*partnerId = os.Getenv("JENKINS_SUPPORT_SAAS_PARTNER_ID")
 	}
-	if gcpProjectId == nil {
+	if *gcpProjectId == "" {
 		*gcpProjectId = os.Getenv("JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID")
 	}
 

@@ -16,5 +16,5 @@ func main() {
 	}
 
 	//start service
-	log.Fatal(web.GetSubscriptionFrontendHandler(config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer))
+	log.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer))
 }

@@ -10,3 +10,19 @@ The basic frontend flow amongst handlers and pages is the following:
 * [confirm.html](https://github.com/cloudbees/jenkins-support-saas/tree/master/subscription-frontend/templates/confirm.html) - Auth0/Google callback page to confirm account information.
 * [finish.html](https://github.com/cloudbees/jenkins-support-saas/tree/master/subscription-frontend/templates/finish.html) - Final page to confirm account creation and notify customer of next steps.
 
+## Running Locally
+The following will run the service locally.
+```
+go run main.go <optional command-line options>
+```
+
+## Building the docker image locally
+```
+docker build -t frontend-service-1 .
+```
+
+## Running the docker image locally with environment variables
+```
+docker run -it --rm -p 8086:8086 -e JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e JENKINS_SUPPORT_SUB_SERVICE_URL='http://localhost:8085' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID='abcdef' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET='123456' -e JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e JENKINS_SUPPORT_SUB_FRONTEND_ISSUER='issuer' --name my-frontend-service frontend-service-1
+
+```
