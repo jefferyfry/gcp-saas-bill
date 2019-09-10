@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cloudbees/jenkins-support-saas/frontend-service/auth"
-	"encoding/json"
 	"github.com/coreos/go-oidc"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
@@ -21,7 +20,7 @@ import (
 )
 
 var (
-	Store *sessions.FilesystemStore
+	Store *sessions.CookieStore
 )
 
 type SubscriptionFrontendHandler struct {
@@ -43,13 +42,13 @@ type Account struct {
 	Timezone		string     	`json:"timezone"`
 }
 
-func Init() error {
-	Store = sessions.NewFilesystemStore("", []byte("something-very-secret"))
-	gob.Register(map[string]interface{}{})
-	return nil
-}
+func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string) *SubscriptionFrontendHandler {
+	Store = sessions.NewCookieStore([]byte(sessionKey))
 
-func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string) *SubscriptionFrontendHandler {
+	Store.Options = &sessions.Options{
+		MaxAge:   60 * 60,
+		HttpOnly: true,
+	}
 	return &SubscriptionFrontendHandler{
 		subscriptionServiceUrl,
 		clientId,
@@ -58,6 +57,7 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 		issuer,
 	}
 }
+
 
 //gets google jwt token and stores. sends to signup.html
 func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +130,26 @@ func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.R
 	session.Values["sub"] = sub
 	session.Save(r,w)
 
-	tmpl, err := template.ParseFiles("../templates/signup.html")
+	tmpl, err := template.ParseFiles("templates/signup.html")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w,sub)
+}
+
+func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *http.Request) {
+	sub:="account-test-1234567"
+	session, err := Store.Get(r, "auth-session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	session.Values["sub"] = sub
+	session.Save(r,w)
+
+	tmpl, err := template.ParseFiles("templates/signup.html")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -223,7 +242,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 
 	profile["sub"] = session.Values["sub"]
 
-	tmpl, err := template.ParseFiles("../templates/confirm.html")
+	tmpl, err := template.ParseFiles("templates/confirm.html")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -268,7 +287,7 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 
 	//confirm procurement api
 
-	tmpl, err := template.ParseFiles("../templates/finish.html")
+	tmpl, err := template.ParseFiles("templates/finish.html")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

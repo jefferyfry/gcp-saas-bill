@@ -15,6 +15,7 @@ var (
 	ClientSecret    = "abcdef"
 	CallbackUrl		= "http://localhost/callback"
 	Issuer			= "http://localhost"
+	SessionKey		= "cloudbeesjenkinssupportsessionkey1cl0udb33s1"
 )
 
 type ServiceConfig struct {
@@ -24,6 +25,7 @@ type ServiceConfig struct {
 	ClientSecret    string	`json:"clientSecret"`
 	CallbackUrl    	string	`json:"callbackUrl"`
 	Issuer    		string	`json:"issuer"`
+	SessionKey    	string	`json:"sessionKey"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -34,6 +36,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		ClientSecret,
 		CallbackUrl,
 		Issuer,
+		SessionKey,
 	}
 
 	dir, err := os.Getwd()
@@ -50,7 +53,8 @@ func GetConfiguration() (ServiceConfig, error) {
 	clientId := flag.String("clientId", "", "set the value of the Auth0 client ID")
 	clientSecret := flag.String("clientSecret", "", "set the value of the Auth0 client secret")
 	callbackUrl := flag.String("callbackUrl", "", "set the value for the Auth0 callback URL")
-	issuer := flag.String("issuer", "", "set the value of th Auth0 issuer")
+	issuer := flag.String("issuer", "", "set the value of the Auth0 issuer")
+	sessionKey := flag.String("sessionKey", "", "set the value of http session key")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -75,6 +79,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *issuer == "" {
 		*issuer = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_ISSUER")
 	}
+	if *sessionKey == "" {
+		*sessionKey = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_SESSION_KEY")
+	}
 
 
 	if *configFile == "" {
@@ -85,6 +92,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.ClientSecret = *clientSecret
 		conf.CallbackUrl = *callbackUrl
 		conf.Issuer = *issuer
+		conf.SessionKey = *sessionKey
 	} else {
 		file, err := os.Open(*configFile)
 		if err != nil {
@@ -129,6 +137,11 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.Issuer == "" {
 		fmt.Println("Issuer was not set.")
+		valid = false
+	}
+
+	if conf.SessionKey == "" {
+		fmt.Println("SessionKey was not set.")
 		valid = false
 	}
 
