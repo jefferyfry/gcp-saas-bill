@@ -18,11 +18,26 @@ go run main.go <optional command-line options>
 
 ## Building the docker image locally
 ```
-docker build -t frontend-service-1 .
+docker build -t frontend-service:<tag> .
+
+ex. 
+docker build -t frontend-service:1 .
+```
+
+## Pushing to GCR
+```
+docker tag frontend-service:<tag> gcr.io/<path>/frontend-service:<tag>
+
+docker push gcr.io/<path>/frontend-service:<tag>
+
+ex.
+docker tag frontend-service:1 gcr.io/cloudbees-jenkins-support-dev/frontend-service:1
+
+docker push gcr.io/cloudbees-jenkins-support-dev/frontend-service:1
 ```
 
 ## Running the docker image locally with environment variables
 ```
-docker run -it --rm -p 8086:8086 -e JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e JENKINS_SUPPORT_SUB_SERVICE_URL='http://localhost:8085' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID='abcdef' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET='123456' -e JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e JENKINS_SUPPORT_SUB_FRONTEND_ISSUER='issuer' -e JENKINS_SUPPORT_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1
+docker run -it --rm -p 8086:8086 -e JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e JENKINS_SUPPORT_SUB_SERVICE_URL='http://localhost:8085' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID='abcdef' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET='123456' -e JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e JENKINS_SUPPORT_SUB_FRONTEND_ISSUER='issuer' -e JENKINS_SUPPORT_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1:<tag>
 
 ```
