@@ -58,3 +58,44 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 7 - Subscription Service sends successful web page response to customer.
 
 8 - Subscription Service sends final approval for account and/or entitlement to GCP Procurement API.
+
+## Deploying
+
+### Istio with GKE
+This application was deployed and tested on GKE clusters version 1.13.7-gke.24 with Istio 1.1.13-gke.0. Kubernetes manifest files are includes for deployment on a GKE cluster with Istio-enabled. For simplicity, set up Istio sidecar auto-injection. Additionally, Istio strict mTLS should be configured.
+
+```
+kubectl label namespace NAMESPACE istio-injection=enabled
+```
+
+The manifest for the Istio ingress gateway is configured for HTTPS and references certificates. Before applying the manifests, create the cert, key and add the secret.
+
+#### Creating the Cert, Key for the Istio Ingress Gateway HTTPS
+
+```
+1. openssl genrsa -des3 -passout pass:x -out server.pass.key 2048
+
+2. openssl rsa -passin pass:x -in server.pass.key -out server.key
+
+3. rm server.pass.key
+
+4. openssl req -new -key server.key -out server.csr
+(answer questions)
+
+5. openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+
+6. kubectl create -n istio-system secret tls istio-ingressgateway-certs --cert=server.crt --key=server.key
+
+```
+
+#### Applying the Istio Manifest
+Before applying the manifest update the hosts value to your domain.
+```
+kubectl apply -f manifests/istio-gateway.yaml
+```
+
+#### Applying the Application Manfiest
+Before applying the manifest update the environment variables.
+```
+kubectl apply -f manifests/jenkins-support-saas.yaml
+```

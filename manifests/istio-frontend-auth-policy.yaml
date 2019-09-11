@@ -1,15 +1,15 @@
 apiVersion: authentication.istio.io/v1alpha1
 kind: Policy
 metadata:
-  name: subscription-frontend-auth-policy
+  name: frontend-service-auth-policy
 spec:
   targets:
-    - name: subscription-frontend
+    - name: frontend-service
   origins:
     - jwt:
         issuer: "https://cloudbees-jenkins-support.auth0.com/"
         jwksUri: "https://cloudbees-jenkins-support.auth0.com/.well-known/jwks.json"
         trigger_rules:
           - excluded_paths:
-              - prefix: /signup
+              - suffix: /signuptest
   principalBinding: USE_ORIGIN
