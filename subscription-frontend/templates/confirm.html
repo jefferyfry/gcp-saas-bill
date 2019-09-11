@@ -40,31 +40,31 @@
         <div class="info-form">
             <form action="/finish" method="post" class="form-inlin justify-content-center">
                 <div class="form-group">
-                    <input id="sub" type="hidden" class="form-control" value="{{.sub}}">
+                    <input name="sub" type="hidden" class="form-control" value="{{.sub}}">
                 </div>
                 <div class="form-group">
                     <label for="firstName">First Name</label>
-                    <input id="firstName" type="text" required="true" class="form-control" placeholder="First Name" value="{{.given_name}}">
+                    <input name="firstName" type="text" required="true" class="form-control" placeholder="First Name" value="{{.given_name}}">
                 </div>
                 <div class="form-group">
                     <label for="lastName">Last/Family Name</label>
-                    <input id="lastName" type="text" required="true" class="form-control" placeholder="Last/Family Name" value="{{.family_name}}">
+                    <input name="lastName" type="text" required="true" class="form-control" placeholder="Last/Family Name" value="{{.family_name}}">
                 </div>
                 <div class="form-group">
                     <label for="emailAddress">Email</label>
-                    <input id="emailAddress" type="text" required="true" class="form-control" placeholder="johndoe@company.com" value="{{.email}}">
+                    <input name="emailAddress" type="text" required="true" class="form-control" placeholder="johndoe@company.com" value="{{.email}}">
                 </div>
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
-                    <input id="phone" type="text" required="true" class="form-control" placeholder="0-000-000-000" value="{{.phone_number}}">
+                    <input name="phone" type="text" required="true" class="form-control" placeholder="0-000-000-000" value="{{.phone_number}}">
                 </div>
                 <div class="form-group">
                     <label for="company">Company</label>
-                    <input id="company" type="text" required="true" class="form-control" placeholder="?">
+                    <input name="company" type="text" required="true" class="form-control" placeholder="?">
                 </div>
                 <div class="form-group">
                     <label for="timezone">Timezone</label>
-                    <select id="timezone" class="form-control">
+                    <select name="timezone" class="form-control">
                         <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International Date Line West</option>
                         <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island, Samoa</option>
                         <option timeZoneId="3" gmtAdjustment="GMT-10:00" useDaylightTime="0" value="-10">(GMT-10:00) Hawaii</option>

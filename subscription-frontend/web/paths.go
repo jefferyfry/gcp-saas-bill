@@ -14,6 +14,7 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 	r.Methods(http.MethodPost).Path("/signup").HandlerFunc(handler.Signup)
 	r.Methods(http.MethodGet).Path("/login").HandlerFunc(handler.Auth0Login) //this shouldn't be called unless istio fails. this redirects to auth0
 	r.Methods(http.MethodGet).Path("/callback").HandlerFunc(handler.Auth0Callback)
+	r.Methods(http.MethodGet).Path("/finishtest").HandlerFunc(handler.FinishTest)
 	r.Methods(http.MethodPost).Path("/finish").HandlerFunc(handler.Finish)
 
 	return http.ListenAndServe(":"+serviceEndpoint, r)

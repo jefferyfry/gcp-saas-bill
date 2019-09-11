@@ -43,9 +43,20 @@ The configFile command-line option or JENKINS_SUPPORT_SAAS_CONFIG_FILE environme
 ## Persistence
 The subscription service uses GCP Datastore/Firestore NoSQL. Connecting the service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials required to access GCP resources like Datastore. Also ensure that you have set the correct GCP Project ID. This should be the same as where you created your Datastore database. 
 
-### Using the Datastore Emulator
-For development and testing, GCP provides a [Datastore emulator](https://cloud.google.com/datastore/docs/tools/datastore-emulator). Follow the [instructions](https://cloud.google.com/datastore/docs/tools/datastore-emulator#installing_the_emulator) to install the emulator.
+### Creating the GCP Service Account to Access Datastore
+Follow the instructions [here](https://cloud.google.com/datastore/docs/activate#other-platforms) to create a service account with permission Cloud Datastore Owner and download the key.
 
+Then create the kubernetes secret.
+```
+kubectl create secret generic datastore-service-account --from-file service-account.json
+```
+
+### Using the Datastore Emulator
+For development and testing, GCP provides a [Datastore emulator](https://cloud.google.com/datastore/docs/tools/datastore-emulator). Follow the [instructions](https://cloud.google.com/datastore/docs/tools/datastore-emulator#installing_the_emulator) to install the emulator. Then start the datastore emulator:
+
+```
+gcloud beta emulators datastore start
+```
 When running the subscription service locally, you may need to set environment variables for the service to connect to the emulator. Take note of the emulator output to get the correct emulator port. Here is an example of setting these:
 
 ```

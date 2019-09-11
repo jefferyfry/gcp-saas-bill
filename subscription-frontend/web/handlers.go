@@ -2,11 +2,12 @@ package web
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
+
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/cloudbees/jenkins-support-saas/frontend-service/auth"
 	"github.com/coreos/go-oidc"
 	"github.com/dgrijalva/jwt-go"
@@ -248,6 +249,17 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	tmpl.Execute(w,profile)
+}
+
+func (hdlr *SubscriptionFrontendHandler) FinishTest(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/confirm.html")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var profile map[string]interface{}
 	tmpl.Execute(w,profile)
 }
 

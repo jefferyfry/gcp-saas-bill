@@ -35,7 +35,7 @@ func (datastoreClient *DatastoreClient) UpsertAccount(account *persistence.Accou
 	name := account.Name
 	key := datastore.NameKey(kind, name, nil)
 
-	_,ptErr := client.Put(ctx, key, &account)
+	_,ptErr := client.Put(ctx, key, account)
 
 	return ptErr
 }
@@ -69,7 +69,7 @@ func (datastoreClient *DatastoreClient) GetAccount(name string) (*persistence.Ac
 
 	account := persistence.Account{}
 
-	gtErr := client.Get(ctx,key, &account)
+	gtErr := client.Get(ctx,key, account)
 
 	return &account, gtErr
 }
@@ -88,7 +88,7 @@ func (datastoreClient *DatastoreClient) UpsertEntitlement(entitlement *persisten
 	name := entitlement.Name
 	key := datastore.NameKey(kind, name, accountKey)
 
-	_,ptErr := client.Put(ctx, key, &entitlement)
+	_,ptErr := client.Put(ctx, key, entitlement)
 
 	return ptErr
 }
@@ -122,7 +122,7 @@ func (datastoreClient *DatastoreClient) GetEntitlement(name string) (*persistenc
 
 	entitlement := persistence.Entitlement{}
 
-	gtErr := client.Get(ctx,key, &entitlement)
+	gtErr := client.Get(ctx,key, entitlement)
 
 	return &entitlement, gtErr
 }
