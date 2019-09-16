@@ -141,7 +141,13 @@ func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.R
 }
 
 func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *http.Request) {
-	sub:="account-test-1234567"
+	sub, ok := r.URL.Query()["sub"]
+
+	if !ok {
+		http.Error(w, "Missing sub parameter.", http.StatusBadRequest)
+		return
+	}
+
 	session, err := Store.Get(r, "auth-session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -157,6 +163,23 @@ func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *ht
 		return
 	}
 	tmpl.Execute(w,sub)
+}
+
+func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *http.Request) {
+	email, ok := r.URL.Query()["email"]
+
+	if !ok {
+		http.Error(w, "Missing sub parameter.", http.StatusBadRequest)
+		return
+	}
+
+	tmpl, err := template.ParseFiles("templates/emailConfirm.html")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w,email)
 }
 
 //redirects to Auth0 for authentication, this should not be called unless istio fails
@@ -242,7 +265,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 	}
 
 	profile["sub"] = session.Values["sub"]
-
+	fmt.Println("map:", profile)
 	tmpl, err := template.ParseFiles("templates/confirm.html")
 
 	if err != nil {
@@ -296,8 +319,6 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 		return
 	}
 	defer resp.Body.Close()
-
-	//confirm procurement api
 
 	tmpl, err := template.ParseFiles("templates/finish.html")
 
