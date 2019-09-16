@@ -47,19 +47,19 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("JENKINS_SUPPORT_SAAS_CONFIG_FILE")
+		*configFile = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE")
 	}
 	if *subscriptionServiceEndpoint == "" {
-		*subscriptionServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT")
+		*subscriptionServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_ENDPOINT")
 	}
 	if *cloudCommerceProcurementUrl == "" {
-		*cloudCommerceProcurementUrl = os.Getenv("JENKINS_SUPPORT_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL")
+		*cloudCommerceProcurementUrl = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL")
 	}
 	if *partnerId == "" {
-		*partnerId = os.Getenv("JENKINS_SUPPORT_SAAS_PARTNER_ID")
+		*partnerId = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_PARTNER_ID")
 	}
 	if *gcpProjectId == "" {
-		*gcpProjectId = os.Getenv("JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID")
+		*gcpProjectId = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_GCP_PROJECT_ID")
 	}
 
 

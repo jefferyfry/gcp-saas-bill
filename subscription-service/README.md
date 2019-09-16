@@ -14,11 +14,11 @@ To successfully run the subscription service, configuration must be set through 
 command-line options > environment variables
 
 ### Environment Variables
-* JENKINS_SUPPORT_SAAS_CONFIG_FILE - Path to a configuration file (see below).
-* JENKINS_SUPPORT_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
-* JENKINS_SUPPORT_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL - _Cloud Commerce Procurement URL_ from above.
-* JENKINS_SUPPORT_SAAS_PARTNER_ID - _Partner ID_ from above.
-* JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
+* JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
+* JENKINS_SUPPORT_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL - _Cloud Commerce Procurement URL_ from above.
+* JENKINS_SUPPORT_SUBSCRIPTION_PARTNER_ID - _Partner ID_ from above.
+* JENKINS_SUPPORT_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable for production.
 
@@ -38,6 +38,43 @@ The configFile command-line option or JENKINS_SUPPORT_SAAS_CONFIG_FILE environme
   "partnerId": "0000",
   "gcpProjectId": "cloudbees-jenkins-support"
 }
+```
+
+### Production Configuration
+For production, it is highly recommended that the service configuration be set by using the configuration file option. Set this configuration file as a kubernetes secret:
+
+```
+kubectl create secret generic subscription-service-config --from-file subscription-service-config.json
+```
+
+Then mount the file and set it as an environment variable.
+
+```
+    spec:
+      containers:
+        - name: subscription-service
+          image: gcr.io/cloudbees-jenkins-support-dev/subscription-service:latest
+          env:
+            - name: JENKINS_SUPPORT_SAAS_CONFIG_FILE
+              value: /app/subscription-service-config.json
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /auth/service-account.json
+          ports:
+            - containerPort: 8085
+          volumeMounts:
+            - name: datastore-service-account
+              mountPath: "/auth"
+              readOnly: true
+            - name: subscription-service-config
+              mountPath: "/app"
+              readOnly: true
+      volumes:
+        - name: datastore-service-account
+          secret:
+            secretName: datastore-service-account
+        - name: subscription-service-config
+          secret:
+            secretName: subscription-service-config
 ```
 
 ## Persistence

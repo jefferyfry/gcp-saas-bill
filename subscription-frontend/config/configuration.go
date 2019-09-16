@@ -59,28 +59,28 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CONFIG_FILE")
+		*configFile = os.Getenv("JENKINS_SUPPORT_FRONTEND_CONFIG_FILE")
 	}
 	if *frontendServiceEndpoint == "" {
-		*frontendServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT")
+		*frontendServiceEndpoint = os.Getenv("JENKINS_SUPPORT_FRONTEND_SERVICE_ENDPOINT")
 	}
 	if *subscriptionServiceUrl == "" {
-		*subscriptionServiceUrl = os.Getenv("JENKINS_SUPPORT_SUB_SERVICE_URL")
+		*subscriptionServiceUrl = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_URL")
 	}
 	if *clientId == "" {
-		*clientId = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID")
+		*clientId = os.Getenv("JENKINS_SUPPORT_FRONTEND_CLIENT_ID")
 	}
 	if *clientSecret == "" {
-		*clientSecret = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET")
+		*clientSecret = os.Getenv("JENKINS_SUPPORT_FRONTEND_CLIENT_SECRET")
 	}
 	if *callbackUrl == "" {
-		*callbackUrl = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL")
+		*callbackUrl = os.Getenv("JENKINS_SUPPORT_FRONTEND_CALLBACK_URL")
 	}
 	if *issuer == "" {
-		*issuer = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_ISSUER")
+		*issuer = os.Getenv("JENKINS_SUPPORT_FRONTEND_ISSUER")
 	}
 	if *sessionKey == "" {
-		*sessionKey = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_SESSION_KEY")
+		*sessionKey = os.Getenv("JENKINS_SUPPORT_FRONTEND_SESSION_KEY")
 	}
 
 
