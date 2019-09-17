@@ -80,15 +80,12 @@ Then mount the file and set it as an environment variable.
           image: gcr.io/cloudbees-jenkins-support-dev/frontend-service:latest
           env:
             - name: JENKINS_SUPPORT_FRONTEND_CONFIG_FILE
-              value: /app/frontend-service-config.json
+              value: /auth/frontend-service-config/frontend-service-config.json
           ports:
             - containerPort: 8086
           volumeMounts:
-            - name: datastore-service-account
-              mountPath: "/auth"
-              readOnly: true
             - name: frontend-service-config
-              mountPath: "/app"
+              mountPath: "/auth/frontend-service-config"
               readOnly: true
       volumes:
         - name: frontend-service-config

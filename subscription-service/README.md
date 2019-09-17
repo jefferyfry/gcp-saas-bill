@@ -55,18 +55,18 @@ Then mount the file and set it as an environment variable.
         - name: subscription-service
           image: gcr.io/cloudbees-jenkins-support-dev/subscription-service:latest
           env:
-            - name: JENKINS_SUPPORT_SAAS_CONFIG_FILE
-              value: /app/subscription-service-config.json
             - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: /auth/service-account.json
+              value: /auth/datastore-service-account/service-account.json
+            - name: JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE
+              value: /auth/subscription-service-config/subscription-service-config.json
           ports:
             - containerPort: 8085
           volumeMounts:
             - name: datastore-service-account
-              mountPath: "/auth"
+              mountPath: "/auth/datastore-service-account"
               readOnly: true
             - name: subscription-service-config
-              mountPath: "/app"
+              mountPath: "/auth/subscription-service-config"
               readOnly: true
       volumes:
         - name: datastore-service-account

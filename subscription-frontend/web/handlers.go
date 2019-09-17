@@ -169,7 +169,7 @@ func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *
 	email, ok := r.URL.Query()["email"]
 
 	if !ok {
-		http.Error(w, "Missing sub parameter.", http.StatusBadRequest)
+		http.Error(w, "Missing email parameter.", http.StatusBadRequest)
 		return
 	}
 
