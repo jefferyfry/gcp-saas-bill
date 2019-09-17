@@ -17,7 +17,7 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 ## Additional READMEs
 * subscription service [README](/subscription-service/README.md)
 * front-end service [README](/subscription-frontend/README.md)
-* agent cloud function README
+* pubsub service README
 
 ## Architecture
 ![Architecture](https://user-images.githubusercontent.com/6440106/64708575-ae27a880-d469-11e9-8006-e947c950cc91.png)
@@ -97,7 +97,7 @@ kubectl apply -f manifests/istio-gateway.yaml
 ```
 
 #### Applying the Application Manfiest
-Before applying the manifest update the environment variables.
+Before applying the manifest update the environment variables or providing a configuration files.
 ```
 kubectl apply -f manifests/jenkins-support-saas.yaml
 ```

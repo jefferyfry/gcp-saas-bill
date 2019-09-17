@@ -143,7 +143,7 @@ func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.R
 func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *http.Request) {
 	sub, ok := r.URL.Query()["sub"]
 
-	if !ok {
+	if !ok || len(sub[0]) < 1 {
 		http.Error(w, "Missing sub parameter.", http.StatusBadRequest)
 		return
 	}
@@ -153,7 +153,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	session.Values["sub"] = sub
+	session.Values["sub"] = sub[0]
 	session.Save(r,w)
 
 	tmpl, err := template.ParseFiles("templates/signup.html")
