@@ -41,7 +41,7 @@ The configFile command-line option or JENKINS_SUPPORT_SAAS_CONFIG_FILE environme
 ```
 
 ### Production Configuration
-For production, it is highly recommended that the service configuration be set by using the configuration file option. Set this configuration file as a kubernetes secret:
+For production, it is highly recommended that the service configuration be set by using the configuration file option. Set this configuration file as a kubernetes secret since there are sensitive parameters in the configuration:
 
 ```
 kubectl create secret generic subscription-service-config --from-file subscription-service-config.json

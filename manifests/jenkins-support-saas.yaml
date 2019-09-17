@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-service
+  labels:
+    app: frontend-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-service
+  template:
+    metadata:
+      labels:
+        app: frontend-service
+    spec:
+      containers:
+        - name: frontend-service
+          image: gcr.io/cloudbees-jenkins-support-dev/frontend-service:latest
+          env:
+#            - name: JENKINS_SUPPORT_FRONTEND_SERVICE_ENDPOINT
+#              value: "8086"
+#            - name: JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_URL
+#              value: "http://subscription-service.default.svc.cluster.local:8085/api/v1"
+#            - name: JENKINS_SUPPORT_FRONTEND_CLIENT_ID
+#              value: "<yourauth0clientid>"
+#            - name: JENKINS_SUPPORT_FRONTEND_CLIENT_SECRET
+#              value: "<yourauth0clientsecret>"
+#            - name: JENKINS_SUPPORT_FRONTEND_CALLBACK_URL
+#              value: "https://<yourhost>/callback"
+#            - name: JENKINS_SUPPORT_FRONTEND_ISSUER
+#              value: "https://<yourdomain/>"
+#            - name: JENKINS_SUPPORT_FRONTEND_SESSION_KEY
+#              value: "<yoursessionkey>"
+            - name: JENKINS_SUPPORT_FRONTEND_CONFIG_FILE
+              value: /auth/frontend-service-config/frontend-service-config.json
+          ports:
+            - containerPort: 8086
+          volumeMounts:
+            - name: frontend-service-config
+              mountPath: "/auth/frontend-service-config"
+              readOnly: true
+      volumes:
+        - name: frontend-service-config
+          secret:
+            secretName: frontend-service-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subscription-service
+  labels:
+    app: subscription-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: subscription-service
+  template:
+    metadata:
+      labels:
+        app: subscription-service
+    spec:
+      containers:
+        - name: subscription-service
+          image: gcr.io/cloudbees-jenkins-support-dev/subscription-service:latest
+          env:
+#            - name: JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_ENDPOINT
+#              value: "8085"
+#            - name: JENKINS_SUPPORT_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL
+#              value: "https://cloudcommerceprocurement.googleapis.com/"
+#            - name: JENKINS_SUPPORT_SUBSCRIPTION_PARTNER_ID
+#              value: "<yourpartnerid>"
+#            - name: JENKINS_SUPPORT_SUBSCRIPTION_GCP_PROJECT_ID
+#              value: "<yourprojectid>"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /auth/datastore-service-account/service-account.json
+            - name: JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE
+              value: /auth/subscription-service-config/subscription-service-config.json
+          ports:
+            - containerPort: 8085
+          volumeMounts:
+            - name: datastore-service-account
+              mountPath: "/auth/datastore-service-account"
+              readOnly: true
+            - name: subscription-service-config
+              mountPath: "/auth/subscription-service-config"
+              readOnly: true
+      volumes:
+        - name: datastore-service-account
+          secret:
+            secretName: datastore-service-account
+        - name: subscription-service-config
+          secret:
+            secretName: subscription-service-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend-service
+  ports:
+    - port: 8086
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: subscription-service
+spec:
+  selector:
+    app: subscription-service
+  ports:
+    - port: 8085
+      name: http
