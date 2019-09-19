@@ -1,42 +1,34 @@
-# Jenkins Support Subscription Service
+#Subscription Service
 This directory contains the code for the subscription service which manages the 
-Jenkins Support subscriptions coming from the GCP marketplace.
+subscriptions coming from the GCP marketplace.
 
 ## Configuration
 To successfully run the subscription service, configuration must be set through either environment variables, command-line options or a configuration file. You may chose an option based on on your intent (development, testing, production deployment). The following configuration is required:
 
 * Subscription Service Endpoint - This is the listening port for the service.
-* Cloud Commerce Procurement URL - This is the marketplace API url for querying and approving subscriptions. See [here](https://cloud.google.com/marketplace/docs/partners/commerce-procurement-api/reference/rest/).
-* Partner ID - This is the unique partner ID to include in posts.
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
 
 ### Configuration Precedence
 command-line options > environment variables
 
 ### Environment Variables
-* JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
-* JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
-* JENKINS_SUPPORT_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL - _Cloud Commerce Procurement URL_ from above.
-* JENKINS_SUPPORT_SUBSCRIPTION_PARTNER_ID - _Partner ID_ from above.
-* JENKINS_SUPPORT_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
+* CLOUD_BILLING_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
+* CLOUD_BILLING_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
 * subscriptionServiceEndpoint - _Subscription Service Endpoint_ from above.
-* cloudCommerceProcurementUrl - _Cloud Commerce Procurement URL_ from above.
-* partnerId - _Partner ID_ from above.
 * gcpProjectId - _GCP Project ID_ from above.
 
 ### Configuration File
-The configFile command-line option or JENKINS_SUPPORT_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
+The configFile command-line option or CLOUD_BILLING_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "subscriptionServiceEndpoint": ":8085",
-  "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/",
-  "partnerId": "0000",
-  "gcpProjectId": "cloudbees-jenkins-support"
+  "gcpProjectId": "cloud-billing"
 }
 ```
 
@@ -57,7 +49,7 @@ Then mount the file and set it as an environment variable.
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/datastore-service-account/service-account.json
-            - name: JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE
+            - name: CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE
               value: /auth/subscription-service-config/subscription-service-config.json
           ports:
             - containerPort: 8085
@@ -133,7 +125,7 @@ docker push gcr.io/cloudbees-jenkins-support-dev/subscription-service:1
 
 ## Running the docker image locally with environment variables
 ```
-docker run -it --rm -p 8085:8085 -e JENKINS_SUPPORT_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT=8085 -e JENKINS_SUPPORT_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e JENKINS_SUPPORT_SAAS_PARTNER_ID='123456' -e JENKINS_SUPPORT_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-subscription-service subscription-service-1:<tag>
+docker run -it --rm -p 8085:8085 -e CLOUD_BILLING_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT=8085 -e CLOUD_BILLING_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILLING_SAAS_PARTNER_ID='123456' -e CLOUD_BILLING_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-subscription-service subscription-service-1:<tag>
 
 ```
 

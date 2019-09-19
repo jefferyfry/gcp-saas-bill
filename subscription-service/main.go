@@ -24,5 +24,5 @@ func main() {
 	datastoreClient := dbinterface.NewPersistenceLayer(dbinterface.DATASTOREDB,config.GcpProjectId)
 
 	//start service
-	log.Fatal(web.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint,config.CloudCommerceProcurementUrl,config.PartnerId))
+	log.Fatal(web.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint))
 }

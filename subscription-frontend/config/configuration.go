@@ -16,16 +16,20 @@ var (
 	CallbackUrl		= "http://localhost/callback"
 	Issuer			= "http://localhost"
 	SessionKey		= "cloudbeesjenkinssupportsessionkey1cl0udb33s1"
+	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
+	PartnerId							= "000"
 )
 
 type ServiceConfig struct {
 	FrontendServiceEndpoint string `json:"frontendServiceEndpoint"`
-	SubscriptionServiceUrl string `json:"subscriptionServiceUrl"`
-	ClientId    	string	`json:"clientId"`
-	ClientSecret    string	`json:"clientSecret"`
-	CallbackUrl    	string	`json:"callbackUrl"`
-	Issuer    		string	`json:"issuer"`
-	SessionKey    	string	`json:"sessionKey"`
+	SubscriptionServiceUrl 	string `json:"subscriptionServiceUrl"`
+	ClientId    			string	`json:"clientId"`
+	ClientSecret    		string	`json:"clientSecret"`
+	CallbackUrl    			string	`json:"callbackUrl"`
+	Issuer    				string	`json:"issuer"`
+	SessionKey    			string	`json:"sessionKey"`
+	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
+	PartnerId    					string	`json:"partnerId"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -37,6 +41,8 @@ func GetConfiguration() (ServiceConfig, error) {
 		CallbackUrl,
 		Issuer,
 		SessionKey,
+		CloudCommerceProcurementUrl,
+		PartnerId,
 	}
 
 	dir, err := os.Getwd()
@@ -55,32 +61,41 @@ func GetConfiguration() (ServiceConfig, error) {
 	callbackUrl := flag.String("callbackUrl", "", "set the value for the Auth0 callback URL")
 	issuer := flag.String("issuer", "", "set the value of the Auth0 issuer")
 	sessionKey := flag.String("sessionKey", "", "set the value of http session key")
+	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
+	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
+
 	flag.Parse()
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("JENKINS_SUPPORT_FRONTEND_CONFIG_FILE")
+		*configFile = os.Getenv("CLOUD_BILLING_FRONTEND_CONFIG_FILE")
 	}
 	if *frontendServiceEndpoint == "" {
-		*frontendServiceEndpoint = os.Getenv("JENKINS_SUPPORT_FRONTEND_SERVICE_ENDPOINT")
+		*frontendServiceEndpoint = os.Getenv("CLOUD_BILLING_FRONTEND_SERVICE_ENDPOINT")
 	}
 	if *subscriptionServiceUrl == "" {
-		*subscriptionServiceUrl = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_URL")
+		*subscriptionServiceUrl = os.Getenv("CLOUD_BILLING_SUBSCRIPTION_SERVICE_URL")
 	}
 	if *clientId == "" {
-		*clientId = os.Getenv("JENKINS_SUPPORT_FRONTEND_CLIENT_ID")
+		*clientId = os.Getenv("CLOUD_BILLING_FRONTEND_CLIENT_ID")
 	}
 	if *clientSecret == "" {
-		*clientSecret = os.Getenv("JENKINS_SUPPORT_FRONTEND_CLIENT_SECRET")
+		*clientSecret = os.Getenv("CLOUD_BILLING_FRONTEND_CLIENT_SECRET")
 	}
 	if *callbackUrl == "" {
-		*callbackUrl = os.Getenv("JENKINS_SUPPORT_FRONTEND_CALLBACK_URL")
+		*callbackUrl = os.Getenv("CLOUD_BILLING_FRONTEND_CALLBACK_URL")
 	}
 	if *issuer == "" {
-		*issuer = os.Getenv("JENKINS_SUPPORT_FRONTEND_ISSUER")
+		*issuer = os.Getenv("CLOUD_BILLING_FRONTEND_ISSUER")
 	}
 	if *sessionKey == "" {
-		*sessionKey = os.Getenv("JENKINS_SUPPORT_FRONTEND_SESSION_KEY")
+		*sessionKey = os.Getenv("CLOUD_BILLING_FRONTEND_SESSION_KEY")
+	}
+	if *cloudCommerceProcurementUrl == "" {
+		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILLING_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL")
+	}
+	if *partnerId == "" {
+		*partnerId = os.Getenv("CLOUD_BILLING_FRONTEND_PARTNER_ID")
 	}
 
 
@@ -93,6 +108,8 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.CallbackUrl = *callbackUrl
 		conf.Issuer = *issuer
 		conf.SessionKey = *sessionKey
+		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
+		conf.PartnerId = *partnerId
 	} else {
 		file, err := os.Open(*configFile)
 		if err != nil {
@@ -142,6 +159,16 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.SessionKey == "" {
 		fmt.Println("SessionKey was not set.")
+		valid = false
+	}
+
+	if conf.CloudCommerceProcurementUrl == "" {
+		fmt.Println("CloudCommerceProcurementUrl was not set.")
+		valid = false
+	}
+
+	if conf.PartnerId == "" {
+		fmt.Println("PartnerId was not set.")
 		valid = false
 	}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http/httputil"
 
 	"context"
 	"encoding/base64"
@@ -30,6 +31,8 @@ type SubscriptionFrontendHandler struct {
 	ClientSecret string
 	CallbackUrl string
 	Issuer string
+	CloudCommerceProcurementUrl string
+	PartnerId string
 }
 
 type Account struct {
@@ -43,7 +46,7 @@ type Account struct {
 	Timezone		string     	`json:"timezone"`
 }
 
-func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string) *SubscriptionFrontendHandler {
+func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string) *SubscriptionFrontendHandler {
 	Store = sessions.NewCookieStore([]byte(sessionKey))
 
 	Store.Options = &sessions.Options{
@@ -56,6 +59,8 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 		clientSecret,
 		callbackUrl,
 		issuer,
+		cloudCommerceProcurementUrl,
+		partnerId,
 	}
 }
 
@@ -297,28 +302,56 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 	account.Timezone = r.PostFormValue("timezone")
 
 	//submit to subscript service
-	jsonBytes, err := json.Marshal(account)
+	accountBytes, err := json.Marshal(account)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	url := hdlr.SubscriptionServiceUrl + "/accounts"
+	subscriptionServiceUrl := hdlr.SubscriptionServiceUrl + "/accounts"
 
-	req, err := http.NewRequest(http.MethodPut,url,bytes.NewBuffer(jsonBytes))
+	subReq, err := http.NewRequest(http.MethodPut,subscriptionServiceUrl,bytes.NewBuffer(accountBytes))
 	if nil != err {
 		w.WriteHeader(500)
 		fmt.Fprint(w, `{"error": "error with creating account upsert request %s"}`, err)
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	subResp, err := http.DefaultClient.Do(subReq)
 	if nil != err {
-		w.WriteHeader(resp.StatusCode)
+		w.WriteHeader(subResp.StatusCode)
 		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
 		return
 	}
-	defer resp.Body.Close()
+	defer subResp.Body.Close()
+
+	//confirm account with procurement api
+	procurementUrl := hdlr.CloudCommerceProcurementUrl+"/"+hdlr.PartnerId + "/accounts/"+account.Name+":approve"
+	jsonApproval := []byte(`
+		{
+			"approvalName": "signup"
+		}`)
+
+	procReq, err := http.NewRequest(http.MethodPut,procurementUrl,bytes.NewBuffer(jsonApproval))
+	if nil != err {
+		w.WriteHeader(500)
+		fmt.Fprint(w, `{"error": "error with creating account approval request %s"}`, err)
+		return
+	}
+
+	procResp, err := http.DefaultClient.Do(procReq)
+	if nil != err {
+		w.WriteHeader(procResp.StatusCode)
+		fmt.Fprintf(w, `{"error": "error received from procurement api service %s"}`, err)
+		return
+	}
+	defer procResp.Body.Close()
+
+	responseDump, err := httputil.DumpResponse(procResp,true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(responseDump))
 
 	tmpl, err := template.ParseFiles("templates/finish.html")
 

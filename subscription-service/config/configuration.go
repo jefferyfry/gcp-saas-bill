@@ -10,23 +10,17 @@ import (
 
 var (
 	SubscriptionServiceEndpoint 		= ":8085"
-	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
-	PartnerId							= "000"
-	GcpProjectId				        = "jenkins-support-saas"
+	GcpProjectId				        = "cloud-billing-saas"
 )
 
 type ServiceConfig struct {
 	SubscriptionServiceEndpoint    	string	`json:"subscriptionServiceEndpoint"`
-	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
-	PartnerId    					string	`json:"partnerId"`
 	GcpProjectId    				string	`json:"gcpProjectId"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		SubscriptionServiceEndpoint,
-		CloudCommerceProcurementUrl,
-		PartnerId,
 		GcpProjectId,
 	}
 
@@ -40,34 +34,24 @@ func GetConfiguration() (ServiceConfig, error) {
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
 	subscriptionServiceEndpoint := flag.String("subscriptionServiceEndpoint", "", "set the value of this service endpoint")
-	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
-	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
 	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
 	flag.Parse()
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE")
+		*configFile = os.Getenv("CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE")
 	}
 	if *subscriptionServiceEndpoint == "" {
-		*subscriptionServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_ENDPOINT")
-	}
-	if *cloudCommerceProcurementUrl == "" {
-		*cloudCommerceProcurementUrl = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL")
-	}
-	if *partnerId == "" {
-		*partnerId = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_PARTNER_ID")
+		*subscriptionServiceEndpoint = os.Getenv("CLOUD_BILLING_SUBSCRIPTION_SERVICE_ENDPOINT")
 	}
 	if *gcpProjectId == "" {
-		*gcpProjectId = os.Getenv("JENKINS_SUPPORT_SUBSCRIPTION_GCP_PROJECT_ID")
+		*gcpProjectId = os.Getenv("CLOUD_BILLING_SUBSCRIPTION_GCP_PROJECT_ID")
 	}
 
 
 	if *configFile == "" {
 		//try other flags
 		conf.SubscriptionServiceEndpoint = *subscriptionServiceEndpoint
-		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
-		conf.PartnerId = *partnerId
 		conf.GcpProjectId = *gcpProjectId
 	} else {
 		file, err := os.Open(*configFile)
@@ -91,24 +75,20 @@ func GetConfiguration() (ServiceConfig, error) {
 		valid = false
 	}
 
-	if conf.CloudCommerceProcurementUrl == "" {
-		fmt.Println("CloudCommerceProcurementUrl was not set.")
-		valid = false
-	}
-
-	if conf.PartnerId == "" {
-		fmt.Println("PartnerId was not set.")
-		valid = false
-	}
-
 	if conf.GcpProjectId == "" {
 		fmt.Println("GcpProjectId was not set.")
 		valid = false
 	}
 
-	_,pathExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
-	if !pathExists {
+	credPath,envExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+	if !envExists {
 		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS was not set or path does not exist. This is fine with an emulator but will fail in production. ")
+	}
+
+	_, errPath := os.Stat(credPath)
+	if os.IsNotExist(errPath) {
+		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: %s.",credPath)
+		valid = false
 	}
 
 	if !valid {

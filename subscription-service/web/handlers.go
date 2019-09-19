@@ -10,13 +10,11 @@ import (
 
 type SubscriptionServiceHandler struct {
 	dbHandler    persistence.DatabaseHandler
-	cloudCommerceProcurementUrl string
-	partnerId                   string
 }
 
-func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler,cloudCommerceProcurementUrl string,partnerId string) *SubscriptionServiceHandler {
+func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler) *SubscriptionServiceHandler {
 	return &SubscriptionServiceHandler {
-		dbHandler,cloudCommerceProcurementUrl, partnerId ,
+		dbHandler,
 	}
 }
 

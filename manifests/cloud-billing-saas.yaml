@@ -18,21 +18,21 @@ spec:
         - name: frontend-service
           image: gcr.io/cloudbees-jenkins-support-dev/frontend-service:latest
           env:
-#            - name: JENKINS_SUPPORT_FRONTEND_SERVICE_ENDPOINT
+#            - name: CLOUD_BILLING_FRONTEND_SERVICE_ENDPOINT
 #              value: "8086"
-#            - name: JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_URL
+#            - name: CLOUD_BILLING_SUBSCRIPTION_SERVICE_URL
 #              value: "http://subscription-service.default.svc.cluster.local:8085/api/v1"
-#            - name: JENKINS_SUPPORT_FRONTEND_CLIENT_ID
+#            - name: CLOUD_BILLING_FRONTEND_CLIENT_ID
 #              value: "<yourauth0clientid>"
-#            - name: JENKINS_SUPPORT_FRONTEND_CLIENT_SECRET
+#            - name: CLOUD_BILLING_FRONTEND_CLIENT_SECRET
 #              value: "<yourauth0clientsecret>"
-#            - name: JENKINS_SUPPORT_FRONTEND_CALLBACK_URL
+#            - name: CLOUD_BILLING_FRONTEND_CALLBACK_URL
 #              value: "https://<yourhost>/callback"
-#            - name: JENKINS_SUPPORT_FRONTEND_ISSUER
+#            - name: CLOUD_BILLING_FRONTEND_ISSUER
 #              value: "https://<yourdomain/>"
-#            - name: JENKINS_SUPPORT_FRONTEND_SESSION_KEY
+#            - name: CLOUD_BILLING_FRONTEND_SESSION_KEY
 #              value: "<yoursessionkey>"
-            - name: JENKINS_SUPPORT_FRONTEND_CONFIG_FILE
+            - name: CLOUD_BILLING_FRONTEND_CONFIG_FILE
               value: /auth/frontend-service-config/frontend-service-config.json
           ports:
             - containerPort: 8086
@@ -65,17 +65,17 @@ spec:
         - name: subscription-service
           image: gcr.io/cloudbees-jenkins-support-dev/subscription-service:latest
           env:
-#            - name: JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_ENDPOINT
+#            - name: CLOUD_BILLING_SUBSCRIPTION_SERVICE_ENDPOINT
 #              value: "8085"
-#            - name: JENKINS_SUPPORT_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL
+#            - name: CLOUD_BILLING_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL
 #              value: "https://cloudcommerceprocurement.googleapis.com/"
-#            - name: JENKINS_SUPPORT_SUBSCRIPTION_PARTNER_ID
+#            - name: CLOUD_BILLING_SUBSCRIPTION_PARTNER_ID
 #              value: "<yourpartnerid>"
-#            - name: JENKINS_SUPPORT_SUBSCRIPTION_GCP_PROJECT_ID
+#            - name: CLOUD_BILLING_SUBSCRIPTION_GCP_PROJECT_ID
 #              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/datastore-service-account/service-account.json
-            - name: JENKINS_SUPPORT_SUBSCRIPTION_CONFIG_FILE
+            - name: CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE
               value: /auth/subscription-service-config/subscription-service-config.json
           ports:
             - containerPort: 8085
@@ -93,7 +93,55 @@ spec:
         - name: subscription-service-config
           secret:
             secretName: subscription-service-config
-
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pubsub-service
+  labels:
+    app: pubsub-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pubsub-service
+  template:
+    metadata:
+      labels:
+        app: pubsub-service
+    spec:
+      containers:
+        - name: pubsub-service
+          image: gcr.io/cloudbees-jenkins-support-dev/pubsub-service:latest
+          env:
+            #            - name: CLOUD_BILLING_AGENT_PUBSUB_SUBSCRIPTION
+            #              value: "codelab"
+            #            - name: CLOUD_BILLING_AGENT_CLOUD_COMMERCE_PROCUREMENT_URL
+            #              value: "https://cloudcommerceprocurement.googleapis.com/"
+            #            - name: CLOUD_BILLING_AGENT_PARTNER_ID
+            #              value: "<yourpartnerid>"
+            #            - name: CLOUD_BILLING_AGENT_GCP_PROJECT_ID
+            #              value: "<yourprojectid>"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /auth/pubsub-service-account/service-account.json
+            - name: CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE
+              value: /auth/pubsub-service-config/pubsub-service-config.json
+          ports:
+            - containerPort: 8085
+          volumeMounts:
+            - name: pubsub-service-account
+              mountPath: "/auth/pubsub-service-account"
+              readOnly: true
+            - name: pubsub-service-config
+              mountPath: "/auth/pubsub-service-config"
+              readOnly: true
+      volumes:
+        - name: pubsub-service-account
+          secret:
+            secretName: pubsub-service-account
+        - name: pubsub-service-config
+          secret:
+            secretName: pubsub-service-config
 ---
 apiVersion: v1
 kind: Service

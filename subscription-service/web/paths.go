@@ -9,8 +9,8 @@ import (
 )
 
 //SetUpService sets up the subscription service.
-func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string, cloudCommerceProcurementUrl string, partnerId string) error {
-	handler := GetSubscriptionServiceHandler(dbHandler,cloudCommerceProcurementUrl,partnerId)
+func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string) error {
+	handler := GetSubscriptionServiceHandler(dbHandler)
 	r := mux.NewRouter()
 	subscriptionRouter := r.PathPrefix("/api/v1").Subrouter()
 

@@ -1,4 +1,4 @@
-# Jenkins Support Subscription Frontend Service
+#Frontend Service
 The Frontend service provides the UI for customer signup from the marketplace. The end result is storing the customer account information for the subscription and confirming the account with Google. Auth0 and Google Identity are used to capture some of the customer profile data.
 
 ## Frontend Flow
@@ -26,19 +26,23 @@ To successfully run the subscription service, configuration must be set through 
 * Callback URL - This is the callback URL used by the Oauth/Auth0 service.
 * Issuer - The Oauth issuer or Auth0 domain.
 * Session Key - A random character sequence for session encoding.
+* Cloud Commerce Procurement URL - This is the marketplace API url for querying and approving subscriptions. See [here](https://cloud.google.com/marketplace/docs/partners/commerce-procurement-api/reference/rest/).
+* Partner ID - This is the unique partner ID to include in posts.
 
 ### Configuration Precedence
 command-line options > environment variables
 
 ### Environment Variables
-* JENKINS_SUPPORT_FRONTEND_CONFIG_FILE - Path to a configuration file (see below).
-* JENKINS_SUPPORT_FRONTEND_SERVICE_ENDPOINT 
-* JENKINS_SUPPORT_SUBSCRIPTION_SERVICE_URL 
-* JENKINS_SUPPORT_FRONTEND_CLIENT_ID 
-* JENKINS_SUPPORT_FRONTEND_CLIENT_SECRET 
-* JENKINS_SUPPORT_FRONTEND_CALLBACK_URL
-* JENKINS_SUPPORT_FRONTEND_ISSUER
-* JENKINS_SUPPORT_FRONTEND_SESSION_KEY
+* CLOUD_BILLING_FRONTEND_CONFIG_FILE - Path to a configuration file (see below).
+* CLOUD_BILLING_FRONTEND_SERVICE_ENDPOINT 
+* CLOUD_BILLING_SUBSCRIPTION_SERVICE_URL 
+* CLOUD_BILLING_FRONTEND_CLIENT_ID 
+* CLOUD_BILLING_FRONTEND_CLIENT_SECRET 
+* CLOUD_BILLING_FRONTEND_CALLBACK_URL
+* CLOUD_BILLING_FRONTEND_ISSUER
+* CLOUD_BILLING_FRONTEND_SESSION_KEY
+* CLOUD_BILLING_CLOUD_COMMERCE_PROCUREMENT_URL
+* CLOUD_BILLING_PARTNER_ID
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
@@ -51,7 +55,7 @@ command-line options > environment variables
 * sessionKey 
 
 ### Configuration File
-The configFile command-line option or JENKINS_SUPPORT_FRONTEND_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
+The configFile command-line option or CLOUD_BILLING_FRONTEND_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "frontendServiceEndpoint": "8086",
@@ -60,7 +64,9 @@ The configFile command-line option or JENKINS_SUPPORT_FRONTEND_CONFIG_FILE envir
   "clientSecret": "abcdefg",
   "callbackUrl": "https://cloudbees-jenkins-support.35.231.106.233.xip.io/callback",
   "issuer": "https://cloudbees-dev1.auth0.com/",
-  "sessionKey": "somekeycloudbeesjen0udb33s1"
+  "sessionKey": "somekeycloudbeesjen0udb33s1",
+  "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/",
+  "partnerId": "DEMO-codelab-project"
 }
 ```
 
@@ -79,7 +85,7 @@ Then mount the file and set it as an environment variable.
         - name: frontend-service
           image: gcr.io/cloudbees-jenkins-support-dev/frontend-service:latest
           env:
-            - name: JENKINS_SUPPORT_FRONTEND_CONFIG_FILE
+            - name: CLOUD_BILLING_FRONTEND_CONFIG_FILE
               value: /auth/frontend-service-config/frontend-service-config.json
           ports:
             - containerPort: 8086
@@ -121,6 +127,6 @@ docker push gcr.io/cloudbees-jenkins-support-dev/frontend-service:1
 
 ## Running the docker image locally with environment variables
 ```
-docker run -it --rm -p 8086:8086 -e JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e JENKINS_SUPPORT_SUB_SERVICE_URL='http://localhost:8085' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID='abcdef' -e JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET='123456' -e JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e JENKINS_SUPPORT_SUB_FRONTEND_ISSUER='issuer' -e JENKINS_SUPPORT_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1:<tag>
+docker run -it --rm -p 8086:8086 -e CLOUD_BILLING_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e CLOUD_BILLING_SUB_SERVICE_URL='http://localhost:8085' -e CLOUD_BILLING_SUB_FRONTEND_CLIENT_ID='abcdef' -e CLOUD_BILLING_SUB_FRONTEND_CLIENT_SECRET='123456' -e CLOUD_BILLING_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e CLOUD_BILLING_SUB_FRONTEND_ISSUER='issuer' -e CLOUD_BILLING_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1:<tag>
 
 ```

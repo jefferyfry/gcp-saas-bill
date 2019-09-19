@@ -9,34 +9,25 @@ import (
 )
 
 var (
-	FrontendServiceEndpoint = ":8086"
-	SubscriptionServiceUrl = "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
-	ClientId 		= "123456"
-	ClientSecret    = "abcdef"
-	CallbackUrl		= "http://localhost/callback"
-	Issuer			= "http://localhost"
-	SessionKey		= "cloudbeesjenkinssupportsessionkey1cl0udb33s1"
+	PubSubSubscription       			= "codelab"
+	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
+	PartnerId							= "000"
+	GcpProjectId				        = "cloud-billing-saas"
 )
 
 type ServiceConfig struct {
-	FrontendServiceEndpoint string `json:"frontendServiceEndpoint"`
-	SubscriptionServiceUrl string `json:"subscriptionServiceUrl"`
-	ClientId    	string	`json:"clientId"`
-	ClientSecret    string	`json:"clientSecret"`
-	CallbackUrl    	string	`json:"callbackUrl"`
-	Issuer    		string	`json:"issuer"`
-	SessionKey    	string	`json:"sessionKey"`
+	PubSubSubscription    			string	`json:"pubSubSubscription"`
+	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
+	PartnerId    					string	`json:"partnerId"`
+	GcpProjectId    				string	`json:"gcpProjectId"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
-		FrontendServiceEndpoint,
-		SubscriptionServiceUrl,
-		ClientId,
-		ClientSecret,
-		CallbackUrl,
-		Issuer,
-		SessionKey,
+		PubSubSubscription,
+		CloudCommerceProcurementUrl,
+		PartnerId,
+		GcpProjectId,
 	}
 
 	dir, err := os.Getwd()
@@ -48,51 +39,35 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
-	frontendServiceEndpoint := flag.String("frontendServiceEndpoint", "", "set the value of the frontend service endpoint port")
-	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
-	clientId := flag.String("clientId", "", "set the value of the Auth0 client ID")
-	clientSecret := flag.String("clientSecret", "", "set the value of the Auth0 client secret")
-	callbackUrl := flag.String("callbackUrl", "", "set the value for the Auth0 callback URL")
-	issuer := flag.String("issuer", "", "set the value of the Auth0 issuer")
-	sessionKey := flag.String("sessionKey", "", "set the value of http session key")
+	pubSubSubscription := flag.String("pubSubSubscription", "", "set the value of the pub sub subscription")
+	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
+	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
+	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
 	flag.Parse()
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CONFIG_FILE")
+		*configFile = os.Getenv("CLOUD_BILLING_AGENT_CONFIG_FILE")
 	}
-	if *frontendServiceEndpoint == "" {
-		*frontendServiceEndpoint = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_SERVICE_ENDPOINT")
+	if *pubSubSubscription == "" {
+		*pubSubSubscription = os.Getenv("CLOUD_BILLING_AGENT_PUBSUB_SUBSCRIPTION")
 	}
-	if *subscriptionServiceUrl == "" {
-		*subscriptionServiceUrl = os.Getenv("JENKINS_SUPPORT_SUB_SERVICE_URL")
+	if *cloudCommerceProcurementUrl == "" {
+		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILLING_AGENT_CLOUD_COMMERCE_PROCUREMENT_URL")
 	}
-	if *clientId == "" {
-		*clientId = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_ID")
+	if *partnerId == "" {
+		*partnerId = os.Getenv("CLOUD_BILLING_AGENT_PARTNER_ID")
 	}
-	if *clientSecret == "" {
-		*clientSecret = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CLIENT_SECRET")
+	if *gcpProjectId == "" {
+		*gcpProjectId = os.Getenv("CLOUD_BILLING_AGENT_GCP_PROJECT_ID")
 	}
-	if *callbackUrl == "" {
-		*callbackUrl = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_CALLBACK_URL")
-	}
-	if *issuer == "" {
-		*issuer = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_ISSUER")
-	}
-	if *sessionKey == "" {
-		*sessionKey = os.Getenv("JENKINS_SUPPORT_SUB_FRONTEND_SESSION_KEY")
-	}
-
 
 	if *configFile == "" {
 		//try other flags
-		conf.FrontendServiceEndpoint = *frontendServiceEndpoint
-		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
-		conf.ClientId = *clientId
-		conf.ClientSecret = *clientSecret
-		conf.CallbackUrl = *callbackUrl
-		conf.Issuer = *issuer
-		conf.SessionKey = *sessionKey
+		conf.PubSubSubscription = *pubSubSubscription
+		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
+		conf.PartnerId = *partnerId
+		conf.GcpProjectId = *gcpProjectId
 	} else {
 		file, err := os.Open(*configFile)
 		if err != nil {
@@ -105,48 +80,44 @@ func GetConfiguration() (ServiceConfig, error) {
 			fmt.Println("Configuration file not found. Continuing with default values.")
 			return conf, err
 		}
-		fmt.Printf("Using confile file %s to launch subscription frontend service \n", *configFile)
+		fmt.Printf("Using confile file %s to launch subscription service \n", *configFile)
 	}
 
 	valid := true
 
-	if conf.FrontendServiceEndpoint == "" {
-		fmt.Println("FrontendServiceEndpoint was not set.")
+	if conf.PubSubSubscription == "" {
+		fmt.Println("PubSubSubscription was not set.")
 		valid = false
 	}
 
-	if conf.SubscriptionServiceUrl == "" {
-		fmt.Println("Subscription Service URL was not set.")
+	if conf.CloudCommerceProcurementUrl == "" {
+		fmt.Println("CloudCommerceProcurementUrl was not set.")
 		valid = false
 	}
 
-	if conf.ClientId == "" {
-		fmt.Println("Client ID was not set.")
+	if conf.PartnerId == "" {
+		fmt.Println("PartnerId was not set.")
 		valid = false
 	}
 
-	if conf.ClientSecret == "" {
-		fmt.Println("ClientSecret was not set.")
+	if conf.GcpProjectId == "" {
+		fmt.Println("GcpProjectId was not set.")
 		valid = false
 	}
 
-	if conf.CallbackUrl == "" {
-		fmt.Println("Callback URL was not set.")
-		valid = false
+	credPath,envExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+	if !envExists {
+		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS was not set or path does not exist. This is fine with an emulator but will fail in production. ")
 	}
 
-	if conf.Issuer == "" {
-		fmt.Println("Issuer was not set.")
-		valid = false
-	}
-
-	if conf.SessionKey == "" {
-		fmt.Println("SessionKey was not set.")
+	_, errPath := os.Stat(credPath)
+	if os.IsNotExist(errPath) {
+		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: %s.",credPath)
 		valid = false
 	}
 
 	if !valid {
-		err = errors.New("Subscription frontend service configuration is not valid!")
+		err = errors.New("Subscription service configuration is not valid!")
 	}
 
 	return conf, err
