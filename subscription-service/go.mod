@@ -1,4 +1,4 @@
-module github.com/cloudbees/jenkins-support-saas/subscription-service
+module github.com/cloudbees/cloud-bill-saas/subscription-service
 
 go 1.12
 

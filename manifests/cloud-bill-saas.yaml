@@ -116,6 +116,8 @@ spec:
           env:
             #            - name: CLOUD_BILLING_AGENT_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
+            #            - name: CLOUD_BILLING_AGENT_PUBSUB_TOPIC_PREFIX
+            #              value: "DEMO-"
             #            - name: CLOUD_BILLING_AGENT_CLOUD_COMMERCE_PROCUREMENT_URL
             #              value: "https://cloudcommerceprocurement.googleapis.com/"
             #            - name: CLOUD_BILLING_AGENT_PARTNER_ID

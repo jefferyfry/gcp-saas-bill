@@ -77,7 +77,7 @@ Follow the instructions [here](https://cloud.google.com/datastore/docs/activate#
 
 Then create the kubernetes secret.
 ```
-kubectl create secret generic datastore-service-account --from-file service-account.json
+kubectl create secret generic datastore-service-account --from-file datastore-service-account.json
 ```
 
 ### Using the Datastore Emulator

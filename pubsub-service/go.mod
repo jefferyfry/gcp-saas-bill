@@ -1,4 +1,4 @@
-module github.com/cloudbees/jenkins-support-saas/marketplace-agent-service
+module github.com/cloudbees/cloud-bill-saas/marketplace-agent-service
 
 go 1.12
 

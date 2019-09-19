@@ -97,7 +97,7 @@ kubectl apply -f manifests/istio-gateway.yaml
 ```
 
 #### Applying the Application Manfiest
-Before applying the manifest update the environment variables or providing a configuration files.
+Before applying the manifest update the environment variables or providing configuration files.
 ```
-kubectl apply -f manifests/jenkins-support-saas.yaml
+kubectl apply -f manifests/cloud-bill-saas.yaml
 ```

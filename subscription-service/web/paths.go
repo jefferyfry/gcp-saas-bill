@@ -1,8 +1,8 @@
 package web
 
 import (
-	_ "github.com/cloudbees/jenkins-support-saas/subscription-service/docs"
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence"
+	_ "github.com/cloudbees/cloud-bill-saas/subscription-service/docs"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
 	"github.com/gorilla/mux"
 	"github.com/swaggo/http-swagger"
 	"net/http"
@@ -19,6 +19,12 @@ func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string) 
 	subscriptionRouter.Methods(http.MethodGet).Path("/accounts/{accountName}").HandlerFunc(handler.GetAccount)
 	subscriptionRouter.Methods(http.MethodPut).Path("/accounts").HandlerFunc(handler.UpsertAccount)
 	subscriptionRouter.Methods(http.MethodDelete).Path("/accounts/{accountName}").HandlerFunc(handler.DeleteAccount)
+
+	//contacts
+	subscriptionRouter.Methods(http.MethodPost).Path("/contacts").HandlerFunc(handler.UpsertContact)
+	subscriptionRouter.Methods(http.MethodGet).Path("/contacts/{accountName}").HandlerFunc(handler.GetContact)
+	subscriptionRouter.Methods(http.MethodPut).Path("/contacts").HandlerFunc(handler.UpsertContact)
+	subscriptionRouter.Methods(http.MethodDelete).Path("/contacts/{accountName}").HandlerFunc(handler.DeleteContact)
 
 	//entitlements
 	subscriptionRouter.Methods(http.MethodPost).Path("/entitlements").HandlerFunc(handler.UpsertEntitlement)

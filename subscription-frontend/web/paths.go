@@ -10,8 +10,9 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId)
 	r := mux.NewRouter()
 
-	r.Methods(http.MethodGet).Path("/signuptest").HandlerFunc(handler.SignupTest)
-	r.Methods(http.MethodPost).Path("/signup").HandlerFunc(handler.Signup)
+	r.Methods(http.MethodGet).Path("/signupsaastest").HandlerFunc(handler.SignupSaasTest)
+	r.Methods(http.MethodGet).Path("/signupprod/{accountName}").HandlerFunc(handler.SignupProd)
+	r.Methods(http.MethodPost).Path("/signupsaas").HandlerFunc(handler.SignupSaas)
 	r.Methods(http.MethodGet).Path("/login").HandlerFunc(handler.Auth0Login)
 	r.Methods(http.MethodGet).Path("/").HandlerFunc(handler.EmailConfirm)
 	r.Methods(http.MethodGet).Path("/callback").HandlerFunc(handler.Auth0Callback)

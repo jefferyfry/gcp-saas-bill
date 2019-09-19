@@ -1,7 +1,7 @@
 package datastoreclient
 
 import (
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
 	"context"
 	"cloud.google.com/go/datastore"
 	"log"
@@ -9,6 +9,7 @@ import (
 
 const (
 	ACCOUNT        = "Account"
+	CONTACT    		= "Contact"
 	ENTITLEMENT    = "Entitlement"
 )
 
@@ -74,6 +75,59 @@ func (datastoreClient *DatastoreClient) GetAccount(name string) (*persistence.Ac
 	return &account, gtErr
 }
 
+func (datastoreClient *DatastoreClient) UpsertContact(contact *persistence.Contact) error {
+	ctx := context.Background()
+
+	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
+	if err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return err
+	}
+	accountKey := datastore.NameKey(ACCOUNT, contact.AccountName, nil)
+
+	kind := CONTACT
+	name := contact.AccountName
+	key := datastore.NameKey(kind, name, accountKey)
+
+	_,ptErr := client.Put(ctx, key, contact)
+
+	return ptErr
+}
+
+func (datastoreClient *DatastoreClient) DeleteContact(accountName string) error {
+	ctx := context.Background()
+
+	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
+	if err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return err
+	}
+
+	kind := CONTACT
+	key := datastore.NameKey(kind, accountName, nil)
+
+	return client.Delete(ctx,key)
+}
+
+func (datastoreClient *DatastoreClient) GetContact(accountName string) (*persistence.Contact, error){
+	ctx := context.Background()
+
+	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
+	if err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return nil,err
+	}
+
+	kind := CONTACT
+	key := datastore.NameKey(kind, accountName, nil)
+
+	contact := persistence.Contact{}
+
+	gtErr := client.Get(ctx,key, contact)
+
+	return &contact, gtErr
+}
+
 func (datastoreClient *DatastoreClient) UpsertEntitlement(entitlement *persistence.Entitlement) error {
 	ctx := context.Background()
 
@@ -93,7 +147,7 @@ func (datastoreClient *DatastoreClient) UpsertEntitlement(entitlement *persisten
 	return ptErr
 }
 
-func (datastoreClient *DatastoreClient) DeleteEntitlement(name string) error {
+func (datastoreClient *DatastoreClient) DeleteEntitlement(entitlementName string) error {
 	ctx := context.Background()
 
 	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
@@ -103,12 +157,12 @@ func (datastoreClient *DatastoreClient) DeleteEntitlement(name string) error {
 	}
 
 	kind := ENTITLEMENT
-	key := datastore.NameKey(kind, name, nil)
+	key := datastore.NameKey(kind, entitlementName, nil)
 
 	return client.Delete(ctx,key)
 }
 
-func (datastoreClient *DatastoreClient) GetEntitlement(name string) (*persistence.Entitlement, error){
+func (datastoreClient *DatastoreClient) GetEntitlement(entitlementName string) (*persistence.Entitlement, error){
 	ctx := context.Background()
 
 	client, err := datastore.NewClient(ctx, datastoreClient.ProjectId)
@@ -118,7 +172,7 @@ func (datastoreClient *DatastoreClient) GetEntitlement(name string) (*persistenc
 	}
 
 	kind := ENTITLEMENT
-	key := datastore.NameKey(kind, name, nil)
+	key := datastore.NameKey(kind, entitlementName, nil)
 
 	entitlement := persistence.Entitlement{}
 
@@ -126,4 +180,6 @@ func (datastoreClient *DatastoreClient) GetEntitlement(name string) (*persistenc
 
 	return &entitlement, gtErr
 }
+
+
 

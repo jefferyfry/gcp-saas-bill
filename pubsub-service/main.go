@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudbees/jenkins-support-saas/marketplace-agent-service/config"
+	"github.com/cloudbees/cloud-bill-saas/marketplace-agent-service/config"
 	"log"
 )
 
@@ -54,14 +54,29 @@ func main() {
 		log.Fatal(err)
 	}
 
+	topicId := config.PubSubTopicPrefix+config.GcpProjectId
+	topic := client.Topic(topicId)
+	exists, errTp := topic.Exists(ctx)
+	if errTp != nil {
+		log.Fatalf("Error checking for topic: %v", errTp)
+	}
+	if !exists {
+		if _, err := client.CreateTopic(ctx, topicId); err != nil {
+			log.Fatalf("Failed to create topic: %v", err)
+		}
+	}
+
 	subscription := client.Subscription(config.PubSubSubscription)
 
-	exists, err := subscription.Exists(ctx)
-	if err != nil {
+	exists, errSub := subscription.Exists(ctx)
+	if errSub != nil {
 		log.Fatalf("Error checking for subscription: %v", err)
 	}
 
 	if !exists {
+		if _, err = client.CreateSubscription(ctx, config.PubSubSubscription, pubsub.SubscriptionConfig{Topic: topic}); err != nil {
+			log.Fatalf("Failed to create subscription: %v", err)
+		}
 		log.Fatalf("GCP marketplace pubsub subscription does not exist %s: %v", config.PubSubSubscription, err)
 	}
 

@@ -8,4 +8,8 @@ type DatabaseHandler interface {
 	UpsertEntitlement(*Entitlement) error
 	DeleteEntitlement(string) error
 	GetEntitlement(string) (*Entitlement, error)
+
+	UpsertContact(*Contact) error
+	DeleteContact(string) error
+	GetContact(string) (*Contact, error)
 }

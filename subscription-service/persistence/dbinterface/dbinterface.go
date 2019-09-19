@@ -1,8 +1,8 @@
 package dbinterface
 
 import (
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence"
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence/datastoreclient"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence/datastoreclient"
 )
 
 type DBTYPE string

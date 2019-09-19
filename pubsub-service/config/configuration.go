@@ -10,6 +10,7 @@ import (
 
 var (
 	PubSubSubscription       			= "codelab"
+	PubSubTopicPrefix       			= "DEMO-"
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
 	PartnerId							= "000"
 	GcpProjectId				        = "cloud-billing-saas"
@@ -17,6 +18,7 @@ var (
 
 type ServiceConfig struct {
 	PubSubSubscription    			string	`json:"pubSubSubscription"`
+	PubSubTopicPrefix				string 	`json:"pubSubTopicPrefix"`
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
 	PartnerId    					string	`json:"partnerId"`
 	GcpProjectId    				string	`json:"gcpProjectId"`
@@ -25,6 +27,7 @@ type ServiceConfig struct {
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		PubSubSubscription,
+		PubSubTopicPrefix,
 		CloudCommerceProcurementUrl,
 		PartnerId,
 		GcpProjectId,
@@ -39,7 +42,8 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
-	pubSubSubscription := flag.String("pubSubSubscription", "", "set the value of the pub sub subscription")
+	pubSubSubscription := flag.String("pubSubSubscription", "", "set the value of the pubsub subscription")
+	pubSubTopicPrefix := flag.String("pubSubTopicPrefix", "", "set the value of the pubsub topic prefix")
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
 	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
 	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
@@ -51,6 +55,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 	if *pubSubSubscription == "" {
 		*pubSubSubscription = os.Getenv("CLOUD_BILLING_AGENT_PUBSUB_SUBSCRIPTION")
+	}
+	if *pubSubTopicPrefix == "" {
+		*pubSubTopicPrefix = os.Getenv("CLOUD_BILLING_AGENT_PUBSUB_TOPIC_PREFIX")
 	}
 	if *cloudCommerceProcurementUrl == "" {
 		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILLING_AGENT_CLOUD_COMMERCE_PROCUREMENT_URL")
@@ -65,6 +72,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *configFile == "" {
 		//try other flags
 		conf.PubSubSubscription = *pubSubSubscription
+		conf.PubSubTopicPrefix = *pubSubTopicPrefix
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
 		conf.PartnerId = *partnerId
 		conf.GcpProjectId = *gcpProjectId
@@ -87,6 +95,11 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.PubSubSubscription == "" {
 		fmt.Println("PubSubSubscription was not set.")
+		valid = false
+	}
+
+	if conf.PubSubTopicPrefix == "" {
+		fmt.Println("PubSubTopicPrefix was not set.")
 		valid = false
 	}
 

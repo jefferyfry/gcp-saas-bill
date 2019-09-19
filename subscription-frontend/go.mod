@@ -1,4 +1,4 @@
-module github.com/cloudbees/jenkins-support-saas/frontend-service
+module github.com/cloudbees/cloud-bill-saas/frontend-service
 
 go 1.12
 

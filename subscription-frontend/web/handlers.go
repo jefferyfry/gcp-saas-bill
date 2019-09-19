@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http/httputil"
 
 	"context"
 	"encoding/base64"
 	"errors"
-	"github.com/cloudbees/jenkins-support-saas/frontend-service/auth"
+	"github.com/cloudbees/cloud-bill-saas/frontend-service/auth"
 	"github.com/coreos/go-oidc"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
@@ -35,9 +36,9 @@ type SubscriptionFrontendHandler struct {
 	PartnerId string
 }
 
-type Account struct {
+type Contact struct {
 	//google fields
-	Name  			string     	`json:"name"`
+	AccountName  	string     	`json:"accountName"`
 	FirstName 		string     	`json:"firstName"`
 	LastName		string     	`json:"lastName"`
 	EmailAddress	string     	`json:"emailAddress"`
@@ -66,7 +67,7 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 
 
 //gets google jwt token and stores. sends to signup.html
-func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.Request) {
+func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *http.Request) {
 	tknStr := r.Header.Get("x-gcp-marketplace-token")
 	if tknStr == "" {
 		http.Error(w, "x-gcp-marketplace-token not found.", http.StatusInternalServerError)
@@ -133,7 +134,7 @@ func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.R
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	session.Values["sub"] = sub
+	session.Values["acct"] = sub
 	session.Save(r,w)
 
 	tmpl, err := template.ParseFiles("templates/signup.html")
@@ -145,10 +146,10 @@ func (hdlr *SubscriptionFrontendHandler) Signup(w http.ResponseWriter, r *http.R
 	tmpl.Execute(w,sub)
 }
 
-func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *http.Request) {
-	sub, ok := r.URL.Query()["sub"]
+func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r *http.Request) {
+	acct, ok := r.URL.Query()["acct"]
 
-	if !ok || len(sub[0]) < 1 {
+	if !ok || len(acct[0]) < 1 {
 		http.Error(w, "Missing sub parameter.", http.StatusBadRequest)
 		return
 	}
@@ -158,7 +159,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	session.Values["sub"] = sub[0]
+	session.Values["acct"] = acct[0]
 	session.Save(r,w)
 
 	tmpl, err := template.ParseFiles("templates/signup.html")
@@ -167,7 +168,41 @@ func (hdlr *SubscriptionFrontendHandler) SignupTest(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w,sub)
+	tmpl.Execute(w,acct)
+}
+
+func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	accountName := vars["accountName"]
+
+	if accountName == "" {
+		http.Error(w,`{"error": "missing account name in path"}`,400)
+		return
+	}
+
+	prod, ok := r.URL.Query()["prod"]
+
+	if !ok || len(prod[0]) < 1 {
+		http.Error(w, "Missing prod parameter.", http.StatusBadRequest)
+		return
+	}
+
+	session, err := Store.Get(r, "auth-session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	session.Values["acct"] = accountName
+	session.Values["prod"] = prod[0]
+	session.Save(r,w)
+
+	tmpl, err := template.ParseFiles("templates/signup.html")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w,accountName)
 }
 
 func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *http.Request) {
@@ -269,7 +304,13 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 		return
 	}
 
-	profile["sub"] = session.Values["sub"]
+	profile["acct"] = session.Values["acct"]
+	prod := session.Values["prod"]
+	if prod == "" {
+		profile["prod"] = "saas"
+	} else {
+		profile["prod"] = session.Values["prod"]
+	}
 	fmt.Println("map:", profile)
 	tmpl, err := template.ParseFiles("templates/confirm.html")
 
@@ -292,66 +333,27 @@ func (hdlr *SubscriptionFrontendHandler) FinishTest(w http.ResponseWriter, r *ht
 }
 
 func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.Request) {
-	account := Account{}
-	account.Name = r.PostFormValue("sub")
-	account.Company = r.PostFormValue("company")
-	account.EmailAddress = r.PostFormValue("emailAddress")
-	account.FirstName = r.PostFormValue("firstName")
-	account.LastName = r.PostFormValue("lastName")
-	account.Phone = r.PostFormValue("phone")
-	account.Timezone = r.PostFormValue("timezone")
+	contact := Contact{}
+	contact.AccountName = r.PostFormValue("acct")
+	contact.Company = r.PostFormValue("company")
+	contact.EmailAddress = r.PostFormValue("emailAddress")
+	contact.FirstName = r.PostFormValue("firstName")
+	contact.LastName = r.PostFormValue("lastName")
+	contact.Phone = r.PostFormValue("phone")
+	contact.Timezone = r.PostFormValue("timezone")
+	prod := r.PostFormValue("prod")
 
-	//submit to subscript service
-	accountBytes, err := json.Marshal(account)
-	if err != nil {
-		fmt.Println(err)
+	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
+		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 		return
 	}
 
-	subscriptionServiceUrl := hdlr.SubscriptionServiceUrl + "/accounts"
-
-	subReq, err := http.NewRequest(http.MethodPut,subscriptionServiceUrl,bytes.NewBuffer(accountBytes))
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprint(w, `{"error": "error with creating account upsert request %s"}`, err)
-		return
+	if prod == "saas" {
+		sendAccountApprove(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountName, w)
+	} else { //integrated prod support
+		//TODO query subscription API for more details
+		//createProduct(prod,contact.AccountName,hdlr.SubscriptionServiceUrl, w)
 	}
-
-	subResp, err := http.DefaultClient.Do(subReq)
-	if nil != err {
-		w.WriteHeader(subResp.StatusCode)
-		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
-		return
-	}
-	defer subResp.Body.Close()
-
-	//confirm account with procurement api
-	procurementUrl := hdlr.CloudCommerceProcurementUrl+"/"+hdlr.PartnerId + "/accounts/"+account.Name+":approve"
-	jsonApproval := []byte(`
-		{
-			"approvalName": "signup"
-		}`)
-
-	procReq, err := http.NewRequest(http.MethodPut,procurementUrl,bytes.NewBuffer(jsonApproval))
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprint(w, `{"error": "error with creating account approval request %s"}`, err)
-		return
-	}
-
-	procResp, err := http.DefaultClient.Do(procReq)
-	if nil != err {
-		w.WriteHeader(procResp.StatusCode)
-		fmt.Fprintf(w, `{"error": "error received from procurement api service %s"}`, err)
-		return
-	}
-	defer procResp.Body.Close()
-
-	responseDump, err := httputil.DumpResponse(procResp,true)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(responseDump))
 
 	tmpl, err := template.ParseFiles("templates/finish.html")
 
@@ -359,7 +361,74 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w,account)
+	tmpl.Execute(w, contact)
+}
+
+func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+	contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes))
+	if nil != err {
+		w.WriteHeader(500)
+		fmt.Fprint(w, `{"error": "error with creating contact upsert request %s"}`, err)
+		return false
+	}
+	contactResp, err := http.DefaultClient.Do(contactReq)
+	if nil != err {
+		w.WriteHeader(contactResp.StatusCode)
+		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
+		return false
+	}
+	defer contactResp.Body.Close()
+	return true
+}
+
+func createContact(contact Contact, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+	//submit to subscript service
+	contactBytes, err := json.Marshal(contact)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes))
+	if nil != err {
+		w.WriteHeader(500)
+		fmt.Fprint(w, `{"error": "error with creating contact upsert request %s"}`, err)
+		return false
+	}
+	contactResp, err := http.DefaultClient.Do(contactReq)
+	if nil != err {
+		w.WriteHeader(contactResp.StatusCode)
+		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
+		return false
+	}
+	defer contactResp.Body.Close()
+	return true
+}
+
+func sendAccountApprove(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) bool {
+	procurementUrl := cloudCommerceProcurementUrl + "/" + partnerId + "/accounts/" + accountName + ":approve"
+	jsonApproval := []byte(`
+			{
+				"approvalName": "signup"
+			}`)
+	procReq, err := http.NewRequest(http.MethodPut, procurementUrl, bytes.NewBuffer(jsonApproval))
+	if nil != err {
+		w.WriteHeader(500)
+		fmt.Fprint(w, `{"error": "error with creating account approval request %s"}`, err)
+		return false
+	}
+	procResp, err := http.DefaultClient.Do(procReq)
+	if nil != err {
+		w.WriteHeader(procResp.StatusCode)
+		fmt.Fprintf(w, `{"error": "error received from procurement api service %s"}`, err)
+		return false
+	}
+	defer procResp.Body.Close()
+	responseDump, err := httputil.DumpResponse(procResp, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(responseDump))
+	return true
 }
 
 

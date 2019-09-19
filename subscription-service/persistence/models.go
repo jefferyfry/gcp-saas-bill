@@ -1,23 +1,27 @@
 package persistence
 
+//google account fields
 type Account struct {
-	//google fields
-	Name  			string     	`json:"name,omitempty"`
+	Name  			string     	`json:"name"`
 	UpdateTime   	string    	`json:"updateTime,omitempty"`
 	CreateTime      string    	`json:"createTime,omitempty"`
 	Provider     	string		`json:"provider,omitempty"`
 	State 	 		string      `json:"state,omitempty"`
 	Approvals    	string     	`json:"approvals,omitempty"`
+}
 
-	//signup fields
+//cloudbees signup fields
+type Contact struct {
+	AccountName 	string     	`json:"accountName"`
 	FirstName 		string     	`json:"firstName,omitempty"`
 	LastName		string     	`json:"lastName,omitempty"`
-	EmailAddress	string     	`json:"emailAddress,omitempty"`
+	EmailAddress	string     	`json:"emailAddress"`
 	Phone			string     	`json:"phone,omitempty"`
 	Company			string     	`json:"company,omitempty"`
 	Timezone		string     	`json:"timezone,omitempty"`
 }
 
+//google entitlement fields
 type Entitlement struct {
 	Name     			string	`json:"name"`
 	Account   			string	`json:"account"`
