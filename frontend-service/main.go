@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/cloudbees/jenkins-support-saas/frontend-service/config"
-	"github.com/cloudbees/jenkins-support-saas/frontend-service/web"
+	"github.com/cloudbees/cloud-bill-saas/frontend-service/config"
+	"github.com/cloudbees/cloud-bill-saas/frontend-service/web"
 	"log"
 )
 
 func main() {
-	fmt.Println("Starting Jenkins Support SaaS Subscription Service...")
+	fmt.Println("Starting Cloud Bill SaaS Frontend Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {

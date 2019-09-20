@@ -4,29 +4,32 @@ definitions:
     properties:
       approvals:
         type: string
-      company:
-        type: string
       createTime:
         type: string
-      emailAddress:
-        type: string
-      firstName:
-        description: signup fields
-        type: string
-      lastName:
-        type: string
       name:
-        description: google fields
-        type: string
-      phone:
         type: string
       provider:
         type: string
       state:
         type: string
-      timezone:
-        type: string
       updateTime:
+        type: string
+    type: object
+  persistence.Contact:
+    properties:
+      accountName:
+        type: string
+      company:
+        type: string
+      emailAddress:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      timezone:
         type: string
     type: object
   persistence.Entitlement:
@@ -68,7 +71,7 @@ paths:
       consumes:
       - application/json
       description: Upsert an account passing account json
-      operationId: jenkins-support-saas-subscription-service-upsert-account
+      operationId: cloud-bill-saas-subscription-service-upsert-account
       parameters:
       - description: Account
         in: body
@@ -94,7 +97,7 @@ paths:
       consumes:
       - application/json
       description: Delete an account
-      operationId: jenkins-support-saas-subscription-service-delete-account
+      operationId: cloud-bill-saas-subscription-service-delete-account
       parameters:
       - description: Account Name
         in: path
@@ -121,7 +124,7 @@ paths:
       consumes:
       - application/json
       description: Retrieves an account by account name
-      operationId: jenkins-support-saas-subscription-service-get-account
+      operationId: cloud-bill-saas-subscription-service-get-account
       parameters:
       - description: Account Name
         in: path
@@ -144,12 +147,85 @@ paths:
           schema:
             type: string
       summary: Get an account
+  /contacts:
+    put:
+      consumes:
+      - application/json
+      description: Upsert an contact passing contact json
+      operationId: cloud-bill-saas-subscription-service-upsert-contact
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Upserted
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Upsert an contact
+  /contacts/{accountName}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an contact
+      operationId: cloud-bill-saas-subscription-service-delete-contact
+      parameters:
+      - description: Account Name
+        in: path
+        name: accountName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Deleted
+          schema:
+            type: string
+        "400":
+          description: Missing account name in path
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Delete an contact
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an contact by account name
+      operationId: cloud-bill-saas-subscription-service-get-contact
+      parameters:
+      - description: Account Name
+        in: path
+        name: accountName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persistence.Contact'
+        "400":
+          description: Missing account name in path
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Get an contact
   /entitlements:
     put:
       consumes:
       - application/json
       description: Upsert an entitlement passing entitlement json
-      operationId: jenkins-support-saas-subscription-service-upsert-entitlement
+      operationId: cloud-bill-saas-subscription-service-upsert-entitlement
       produces:
       - application/json
       responses:
@@ -167,7 +243,7 @@ paths:
       consumes:
       - application/json
       description: Delete an entitlement
-      operationId: jenkins-support-saas-subscription-service-delete-entitlement
+      operationId: cloud-bill-saas-subscription-service-delete-entitlement
       parameters:
       - description: Entitlement Name
         in: path
@@ -194,7 +270,7 @@ paths:
       consumes:
       - application/json
       description: Retrieves an entitlement by entitlement name
-      operationId: jenkins-support-saas-subscription-service-get-entitlement
+      operationId: cloud-bill-saas-subscription-service-get-entitlement
       parameters:
       - description: Entitlement Name
         in: path

@@ -1,4 +1,4 @@
-module github.com/cloudbees/cloud-bill-saas/marketplace-agent-service
+module github.com/cloudbees/cloud-bill-saas/pubsub-service
 
 go 1.12
 

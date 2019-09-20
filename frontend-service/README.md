@@ -1,4 +1,4 @@
-#Frontend Service
+# Frontend Service
 The Frontend service provides the UI for customer signup from the marketplace. The end result is storing the customer account information for the subscription and confirming the account with Google. Auth0 and Google Identity are used to capture some of the customer profile data.
 
 ## Frontend Flow
@@ -62,7 +62,7 @@ The configFile command-line option or CLOUD_BILLING_FRONTEND_CONFIG_FILE environ
   "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1",
   "clientId": "1234556",
   "clientSecret": "abcdefg",
-  "callbackUrl": "https://cloudbees-jenkins-support.35.231.106.233.xip.io/callback",
+  "callbackUrl": "https://cloud-bill.35.231.106.233.xip.io/callback",
   "issuer": "https://cloudbees-dev1.auth0.com/",
   "sessionKey": "somekeycloudbeesjen0udb33s1",
   "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/",
@@ -83,7 +83,7 @@ Then mount the file and set it as an environment variable.
     spec:
       containers:
         - name: frontend-service
-          image: gcr.io/cloudbees-jenkins-support-dev/frontend-service:latest
+          image: gcr.io/cloud-bill-dev/frontend-service:latest
           env:
             - name: CLOUD_BILLING_FRONTEND_CONFIG_FILE
               value: /auth/frontend-service-config/frontend-service-config.json
@@ -120,9 +120,9 @@ docker tag frontend-service:<tag> gcr.io/<path>/frontend-service:<tag>
 docker push gcr.io/<path>/frontend-service:<tag>
 
 ex.
-docker tag frontend-service:1 gcr.io/cloudbees-jenkins-support-dev/frontend-service:1
+docker tag frontend-service:1 gcr.io/cloud-bill-dev/frontend-service:1
 
-docker push gcr.io/cloudbees-jenkins-support-dev/frontend-service:1
+docker push gcr.io/cloud-bill-dev/frontend-service:1
 ```
 
 ## Running the docker image locally with environment variables

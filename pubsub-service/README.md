@@ -1,4 +1,4 @@
-#Subscription Service
+# PubSub Service
 This directory contains the code for the pubsub service which manages the 
 pubsubs coming from the GCP marketplace.
 
@@ -31,7 +31,7 @@ The configFile command-line option or CLOUD_BILLING_SAAS_CONFIG_FILE environment
   "pubSubTopicPrefix": "DEMO-",
   "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/",
   "partnerId": "DEMO-codelab-project",
-  "gcpProjectId": "cloudbees-jenkins-support-dev"
+  "gcpProjectId": "cloud-bill-dev"
 }
 ```
 
@@ -48,21 +48,21 @@ Then mount the file and set it as an environment variable.
     spec:
       containers:
         - name: pubsub-service
-          image: gcr.io/cloudbees-jenkins-support-dev/pubsub-service:latest
+          image: gcr.io/cloud-bill-dev/pubsub-service:latest
           env:
-            #            - name: CLOUD_BILLING_AGENT_PUBSUB_SUBSCRIPTION
+            #            - name: CLOUD_BILLING_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
-            #            - name: CLOUD_BILLING_AGENT_PUBSUB_TOPIC_PREFIX
+            #            - name: CLOUD_BILLING_PUBSUB_TOPIC_PREFIX
             #              value: "DEMO-"
-            #            - name: CLOUD_BILLING_AGENT_CLOUD_COMMERCE_PROCUREMENT_URL
+            #            - name: CLOUD_BILLING_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
             #              value: "https://cloudcommerceprocurement.googleapis.com/"
-            #            - name: CLOUD_BILLING_AGENT_PARTNER_ID
+            #            - name: CLOUD_BILLING_PUBSUB_PARTNER_ID
             #              value: "<yourpartnerid>"
-            #            - name: CLOUD_BILLING_AGENT_GCP_PROJECT_ID
+            #            - name: CLOUD_BILLING_PUBSUB_GCP_PROJECT_ID
             #              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/pubsub-service-account/service-account.json
-            - name: CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE
+            - name: CLOUD_BILLING_PUBSUB_CONFIG_FILE
               value: /auth/pubsub-service-config/pubsub-service-config.json
           ports:
             - containerPort: 8085
@@ -114,9 +114,9 @@ docker tag pubsub-service:<tag> gcr.io/<path>/pubsub-service:<tag>
 docker push gcr.io/<path>/pubsub-service:<tag>
 
 ex.
-docker tag pubsub-service:1 gcr.io/cloudbees-jenkins-support-dev/pubsub-service:1
+docker tag pubsub-service:1 gcr.io/cloud-bill-dev/pubsub-service:1
 
-docker push gcr.io/cloudbees-jenkins-support-dev/pubsub-service:1
+docker push gcr.io/cloud-bill-dev/pubsub-service:1
 
 ```
 

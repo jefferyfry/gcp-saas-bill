@@ -1,4 +1,4 @@
-#Subscription Service
+# Subscription Service
 This directory contains the code for the subscription service which manages the 
 subscriptions coming from the GCP marketplace.
 
@@ -45,7 +45,7 @@ Then mount the file and set it as an environment variable.
     spec:
       containers:
         - name: subscription-service
-          image: gcr.io/cloudbees-jenkins-support-dev/subscription-service:latest
+          image: gcr.io/cloud-bill-dev/subscription-service:latest
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/datastore-service-account/service-account.json
@@ -89,11 +89,11 @@ gcloud beta emulators datastore start
 When running the subscription service locally, you may need to set environment variables for the service to connect to the emulator. Take note of the emulator output to get the correct emulator port. Here is an example of setting these:
 
 ```
-export DATASTORE_DATASET=cloudbees-jenkins-support
+export DATASTORE_DATASET=cloud-bill
 export DATASTORE_EMULATOR_HOST=::1:8039
 export DATASTORE_EMULATOR_HOST_PATH=::1:8039/datastore
 export DATASTORE_HOST=http://::1:8039
-export DATASTORE_PROJECT_ID=cloudbees-jenkins-support
+export DATASTORE_PROJECT_ID=cloud-bill
 ```
 
 ## Running Locally
@@ -117,9 +117,9 @@ docker tag subscription-service:<tag> gcr.io/<path>/subscription-service:<tag>
 docker push gcr.io/<path>/subscription-service:<tag>
 
 ex.
-docker tag subscription-service:1 gcr.io/cloudbees-jenkins-support-dev/subscription-service:1
+docker tag subscription-service:1 gcr.io/cloud-bill-dev/subscription-service:1
 
-docker push gcr.io/cloudbees-jenkins-support-dev/subscription-service:1
+docker push gcr.io/cloud-bill-dev/subscription-service:1
 
 ```
 

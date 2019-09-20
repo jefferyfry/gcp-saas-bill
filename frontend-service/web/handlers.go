@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http/httputil"
+	"strings"
 
 	"context"
 	"encoding/base64"
@@ -150,7 +151,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r
 	acct, ok := r.URL.Query()["acct"]
 
 	if !ok || len(acct[0]) < 1 {
-		http.Error(w, "Missing sub parameter.", http.StatusBadRequest)
+		http.Error(w, "Missing acct parameter.", http.StatusBadRequest)
 		return
 	}
 
@@ -304,9 +305,22 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 		return
 	}
 
+	//need to check if we have first last
+	if profile["firstName"] == nil && profile["name"] != nil {
+		split := strings.Split(profile["name"].(string), " ")
+		ln := len(split)
+		switch(ln){
+			case 2:
+				profile["lastName"] = split[1]
+				fallthrough
+			case 1:
+				profile["firstName"] = split[0]
+		}
+	}
+
 	profile["acct"] = session.Values["acct"]
 	prod := session.Values["prod"]
-	if prod == "" {
+	if prod == nil {
 		profile["prod"] = "saas"
 	} else {
 		profile["prod"] = session.Values["prod"]
@@ -355,6 +369,16 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 		//createProduct(prod,contact.AccountName,hdlr.SubscriptionServiceUrl, w)
 	}
 
+	//delete the session
+	session, err := Store.Get(r, "auth-session")
+	if err == nil {
+		session.Options.MaxAge = -1
+		err = session.Save(r, w)
+		if err != nil {
+			fmt.Println("failed to delete session")
+		}
+	}
+
 	tmpl, err := template.ParseFiles("templates/finish.html")
 
 	if err != nil {
@@ -364,7 +388,7 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 	tmpl.Execute(w, contact)
 }
 
-func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+/*func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes))
 	if nil != err {
 		w.WriteHeader(500)
@@ -379,7 +403,7 @@ func createProduct(prod string, accountName string, subscriptionServiceUrl strin
 	}
 	defer contactResp.Body.Close()
 	return true
-}
+}*/
 
 func createContact(contact Contact, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	//submit to subscript service

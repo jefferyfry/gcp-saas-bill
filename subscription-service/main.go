@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/config"
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/persistence/dbinterface"
-	"github.com/cloudbees/jenkins-support-saas/subscription-service/web"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/config"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence/dbinterface"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/web"
 	"log"
 )
 // @contact.name CloudBees Support
@@ -14,7 +14,7 @@ import (
 // @BasePath /api/v1
 // @termsOfService https://www.cloudbees.com/products/terms-service
 func main() {
-	fmt.Println("Starting Jenkins Support SaaS Subscription Service...")
+	fmt.Println("Starting Cloud Bill SaaS Subscription Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {

@@ -22,7 +22,7 @@
                     "application/json"
                 ],
                 "summary": "Upsert an account",
-                "operationId": "jenkins-support-saas-subscription-service-upsert-account",
+                "operationId": "cloud-bill-saas-subscription-service-upsert-account",
                 "parameters": [
                     {
                         "description": "Account",
@@ -61,7 +61,7 @@
                     "application/json"
                 ],
                 "summary": "Get an account",
-                "operationId": "jenkins-support-saas-subscription-service-get-account",
+                "operationId": "cloud-bill-saas-subscription-service-get-account",
                 "parameters": [
                     {
                         "type": "string",
@@ -101,7 +101,7 @@
                     "application/json"
                 ],
                 "summary": "Delete an account",
-                "operationId": "jenkins-support-saas-subscription-service-delete-account",
+                "operationId": "cloud-bill-saas-subscription-service-delete-account",
                 "parameters": [
                     {
                         "type": "string",
@@ -133,6 +133,115 @@
                 }
             }
         },
+        "/contacts": {
+            "put": {
+                "description": "Upsert an contact passing contact json",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Upsert an contact",
+                "operationId": "cloud-bill-saas-subscription-service-upsert-contact",
+                "responses": {
+                    "204": {
+                        "description": "Upserted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/{accountName}": {
+            "get": {
+                "description": "Retrieves an contact by account name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get an contact",
+                "operationId": "cloud-bill-saas-subscription-service-get-contact",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account Name",
+                        "name": "accountName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/persistence.Contact"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing account name in path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an contact",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete an contact",
+                "operationId": "cloud-bill-saas-subscription-service-delete-contact",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account Name",
+                        "name": "accountName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing account name in path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/entitlements": {
             "put": {
                 "description": "Upsert an entitlement passing entitlement json",
@@ -143,7 +252,7 @@
                     "application/json"
                 ],
                 "summary": "Upsert an entitlement",
-                "operationId": "jenkins-support-saas-subscription-service-upsert-entitlement",
+                "operationId": "cloud-bill-saas-subscription-service-upsert-entitlement",
                 "responses": {
                     "204": {
                         "description": "Upserted",
@@ -170,7 +279,7 @@
                     "application/json"
                 ],
                 "summary": "Get an entitlement",
-                "operationId": "jenkins-support-saas-subscription-service-get-entitlement",
+                "operationId": "cloud-bill-saas-subscription-service-get-entitlement",
                 "parameters": [
                     {
                         "type": "string",
@@ -210,7 +319,7 @@
                     "application/json"
                 ],
                 "summary": "Delete an entitlement",
-                "operationId": "jenkins-support-saas-subscription-service-delete-entitlement",
+                "operationId": "cloud-bill-saas-subscription-service-delete-entitlement",
                 "parameters": [
                     {
                         "type": "string",
@@ -250,27 +359,10 @@
                 "approvals": {
                     "type": "string"
                 },
-                "company": {
-                    "type": "string"
-                },
                 "createTime": {
                     "type": "string"
                 },
-                "emailAddress": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "description": "signup fields",
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
                 "name": {
-                    "description": "google fields",
-                    "type": "string"
-                },
-                "phone": {
                     "type": "string"
                 },
                 "provider": {
@@ -279,10 +371,33 @@
                 "state": {
                     "type": "string"
                 },
-                "timezone": {
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "persistence.Contact": {
+            "type": "object",
+            "properties": {
+                "accountName": {
                     "type": "string"
                 },
-                "updateTime": {
+                "company": {
+                    "type": "string"
+                },
+                "emailAddress": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "timezone": {
                     "type": "string"
                 }
             }

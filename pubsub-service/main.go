@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudbees/cloud-bill-saas/marketplace-agent-service/config"
+	"github.com/cloudbees/cloud-bill-saas/pubsub-service/config"
 	"log"
 )
 
@@ -40,7 +40,7 @@ type Account struct {
 }
 
 func main() {
-	fmt.Println("Starting Jenkins Support SaaS Agent Service...")
+	fmt.Println("Starting Cloud Bill SaaS PubSub Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {

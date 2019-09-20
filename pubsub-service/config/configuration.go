@@ -51,22 +51,22 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("CLOUD_BILLING_AGENT_CONFIG_FILE")
+		*configFile = os.Getenv("CLOUD_BILLING_PUBSUB_CONFIG_FILE")
 	}
 	if *pubSubSubscription == "" {
-		*pubSubSubscription = os.Getenv("CLOUD_BILLING_AGENT_PUBSUB_SUBSCRIPTION")
+		*pubSubSubscription = os.Getenv("CLOUD_BILLING_PUBSUB_SUBSCRIPTION")
 	}
 	if *pubSubTopicPrefix == "" {
-		*pubSubTopicPrefix = os.Getenv("CLOUD_BILLING_AGENT_PUBSUB_TOPIC_PREFIX")
+		*pubSubTopicPrefix = os.Getenv("CLOUD_BILLING_PUBSUB_TOPIC_PREFIX")
 	}
 	if *cloudCommerceProcurementUrl == "" {
-		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILLING_AGENT_CLOUD_COMMERCE_PROCUREMENT_URL")
+		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILLING_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL")
 	}
 	if *partnerId == "" {
-		*partnerId = os.Getenv("CLOUD_BILLING_AGENT_PARTNER_ID")
+		*partnerId = os.Getenv("CLOUD_BILLING_PUBSUB_PARTNER_ID")
 	}
 	if *gcpProjectId == "" {
-		*gcpProjectId = os.Getenv("CLOUD_BILLING_AGENT_GCP_PROJECT_ID")
+		*gcpProjectId = os.Getenv("CLOUD_BILLING_PUBSUB_GCP_PROJECT_ID")
 	}
 
 	if *configFile == "" {
