@@ -12,9 +12,9 @@ To successfully run the subscription service, configuration must be set through 
 command-line options > environment variables
 
 ### Environment Variables
-* CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
-* CLOUD_BILLING_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
-* CLOUD_BILLING_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILL_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
+* CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
+* CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable for production.
 
@@ -24,7 +24,7 @@ command-line options > environment variables
 * gcpProjectId - _GCP Project ID_ from above.
 
 ### Configuration File
-The configFile command-line option or CLOUD_BILLING_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
+The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "subscriptionServiceEndpoint": ":8085",
@@ -49,7 +49,7 @@ Then mount the file and set it as an environment variable.
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/datastore-service-account/service-account.json
-            - name: CLOUD_BILLING_SUBSCRIPTION_CONFIG_FILE
+            - name: CLOUD_BILL_SUBSCRIPTION_CONFIG_FILE
               value: /auth/subscription-service-config/subscription-service-config.json
           ports:
             - containerPort: 8085
@@ -125,7 +125,7 @@ docker push gcr.io/cloud-bill-dev/subscription-service:1
 
 ## Running the docker image locally with environment variables
 ```
-docker run -it --rm -p 8085:8085 -e CLOUD_BILLING_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT=8085 -e CLOUD_BILLING_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILLING_SAAS_PARTNER_ID='123456' -e CLOUD_BILLING_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-subscription-service subscription-service-1:<tag>
+docker run -it --rm -p 8085:8085 -e CLOUD_BILL_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT=8085 -e CLOUD_BILL_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILL_SAAS_PARTNER_ID='123456' -e CLOUD_BILL_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-subscription-service subscription-service-1:<tag>
 
 ```
 

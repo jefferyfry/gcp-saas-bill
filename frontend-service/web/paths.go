@@ -16,8 +16,8 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 	r.Methods(http.MethodGet).Path("/login").HandlerFunc(handler.Auth0Login)
 	r.Methods(http.MethodGet).Path("/").HandlerFunc(handler.EmailConfirm)
 	r.Methods(http.MethodGet).Path("/callback").HandlerFunc(handler.Auth0Callback)
-	r.Methods(http.MethodGet).Path("/finishtest").HandlerFunc(handler.FinishTest)
-	r.Methods(http.MethodPost).Path("/finish").HandlerFunc(handler.Finish)
+	r.Methods(http.MethodPost).Path("/finishSaas").HandlerFunc(handler.FinishSaas)
+	r.Methods(http.MethodPost).Path("/finishProd").HandlerFunc(handler.FinishProd)
 
 	return http.ListenAndServe(":"+serviceEndpoint, r)
 }

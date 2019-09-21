@@ -12,9 +12,9 @@ To successfully run the pubsub service, configuration must be set through either
 command-line options > environment variables
 
 ### Environment Variables
-* CLOUD_BILLING_PUBSUB_CONFIG_FILE - Path to a configuration file (see below).
-* CLOUD_BILLING_PUBSUB_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
-* CLOUD_BILLING_PUBSUB_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILL_PUBSUB_CONFIG_FILE - Path to a configuration file (see below).
+* CLOUD_BILL_PUBSUB_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
+* CLOUD_BILL_PUBSUB_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like PubSub. This is a required environment variable for production.
 
@@ -24,7 +24,7 @@ command-line options > environment variables
 * gcpProjectId - _GCP Project ID_ from above.
 
 ### Configuration File
-The configFile command-line option or CLOUD_BILLING_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
+The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "pubSubSubscription": "codelab",
@@ -50,19 +50,19 @@ Then mount the file and set it as an environment variable.
         - name: pubsub-service
           image: gcr.io/cloud-bill-dev/pubsub-service:latest
           env:
-            #            - name: CLOUD_BILLING_PUBSUB_SUBSCRIPTION
+            #            - name: CLOUD_BILL_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
-            #            - name: CLOUD_BILLING_PUBSUB_TOPIC_PREFIX
+            #            - name: CLOUD_BILL_PUBSUB_TOPIC_PREFIX
             #              value: "DEMO-"
-            #            - name: CLOUD_BILLING_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
+            #            - name: CLOUD_BILL_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
             #              value: "https://cloudcommerceprocurement.googleapis.com/"
-            #            - name: CLOUD_BILLING_PUBSUB_PARTNER_ID
+            #            - name: CLOUD_BILL_PUBSUB_PARTNER_ID
             #              value: "<yourpartnerid>"
-            #            - name: CLOUD_BILLING_PUBSUB_GCP_PROJECT_ID
+            #            - name: CLOUD_BILL_PUBSUB_GCP_PROJECT_ID
             #              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/pubsub-service-account/service-account.json
-            - name: CLOUD_BILLING_PUBSUB_CONFIG_FILE
+            - name: CLOUD_BILL_PUBSUB_CONFIG_FILE
               value: /auth/pubsub-service-config/pubsub-service-config.json
           ports:
             - containerPort: 8085
@@ -122,7 +122,7 @@ docker push gcr.io/cloud-bill-dev/pubsub-service:1
 
 ## Running the docker image locally with environment variables
 ```
-docker run -it --rm -p 8085:8085 -e CLOUD_BILLING_SAAS_PUBSUB_SERVICE_ENDPOINT=8085 -e CLOUD_BILLING_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILLING_SAAS_PARTNER_ID='123456' -e CLOUD_BILLING_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-pubsub-service pubsub-service-1:<tag>
+docker run -it --rm -p 8085:8085 -e CLOUD_BILL_SAAS_PUBSUB_SERVICE_ENDPOINT=8085 -e CLOUD_BILL_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILL_SAAS_PARTNER_ID='123456' -e CLOUD_BILL_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-pubsub-service pubsub-service-1:<tag>
 
 ```
 

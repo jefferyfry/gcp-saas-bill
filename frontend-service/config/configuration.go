@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"fmt"
+	"log"
 	"os"
+	"strings"
 )
 
 var (
@@ -47,10 +48,10 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Unable to determine working directory.")
+		log.Println("Unable to determine working directory.")
 		return conf, err
 	}
-	fmt.Printf("Running subscription service with working directory %s \n",dir)
+	log.Printf("Running subscription service with working directory %s \n",dir)
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
@@ -68,34 +69,34 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//try environment variables if necessary
 	if *configFile == "" {
-		*configFile = os.Getenv("CLOUD_BILLING_FRONTEND_CONFIG_FILE")
+		*configFile = os.Getenv("CLOUD_BILL_FRONTEND_CONFIG_FILE")
 	}
 	if *frontendServiceEndpoint == "" {
-		*frontendServiceEndpoint = os.Getenv("CLOUD_BILLING_FRONTEND_SERVICE_ENDPOINT")
+		*frontendServiceEndpoint = os.Getenv("CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT")
 	}
 	if *subscriptionServiceUrl == "" {
-		*subscriptionServiceUrl = os.Getenv("CLOUD_BILLING_SUBSCRIPTION_SERVICE_URL")
+		*subscriptionServiceUrl = os.Getenv("CLOUD_BILL_SUBSCRIPTION_SERVICE_URL")
 	}
 	if *clientId == "" {
-		*clientId = os.Getenv("CLOUD_BILLING_FRONTEND_CLIENT_ID")
+		*clientId = os.Getenv("CLOUD_BILL_FRONTEND_CLIENT_ID")
 	}
 	if *clientSecret == "" {
-		*clientSecret = os.Getenv("CLOUD_BILLING_FRONTEND_CLIENT_SECRET")
+		*clientSecret = os.Getenv("CLOUD_BILL_FRONTEND_CLIENT_SECRET")
 	}
 	if *callbackUrl == "" {
-		*callbackUrl = os.Getenv("CLOUD_BILLING_FRONTEND_CALLBACK_URL")
+		*callbackUrl = os.Getenv("CLOUD_BILL_FRONTEND_CALLBACK_URL")
 	}
 	if *issuer == "" {
-		*issuer = os.Getenv("CLOUD_BILLING_FRONTEND_ISSUER")
+		*issuer = os.Getenv("CLOUD_BILL_FRONTEND_ISSUER")
 	}
 	if *sessionKey == "" {
-		*sessionKey = os.Getenv("CLOUD_BILLING_FRONTEND_SESSION_KEY")
+		*sessionKey = os.Getenv("CLOUD_BILL_FRONTEND_SESSION_KEY")
 	}
 	if *cloudCommerceProcurementUrl == "" {
-		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILLING_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL")
+		*cloudCommerceProcurementUrl = os.Getenv("CLOUD_BILL_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL")
 	}
 	if *partnerId == "" {
-		*partnerId = os.Getenv("CLOUD_BILLING_FRONTEND_PARTNER_ID")
+		*partnerId = os.Getenv("CLOUD_BILL_FRONTEND_PARTNER_ID")
 	}
 
 
@@ -113,62 +114,66 @@ func GetConfiguration() (ServiceConfig, error) {
 	} else {
 		file, err := os.Open(*configFile)
 		if err != nil {
-			fmt.Printf("Error reading confile file %s %s", *configFile, err)
+			log.Printf("Error reading confile file %s %s", *configFile, err)
 			return conf, err
 		}
 
 		err = json.NewDecoder(file).Decode(&conf)
 		if err != nil {
-			fmt.Println("Configuration file not found. Continuing with default values.")
+			log.Println("Configuration file not found. Continuing with default values.")
 			return conf, err
 		}
-		fmt.Printf("Using confile file %s to launch subscription frontend service \n", *configFile)
+		log.Printf("Using confile file %s to launch subscription frontend service \n", *configFile)
 	}
 
 	valid := true
 
 	if conf.FrontendServiceEndpoint == "" {
-		fmt.Println("FrontendServiceEndpoint was not set.")
+		log.Println("FrontendServiceEndpoint was not set.")
 		valid = false
 	}
 
 	if conf.SubscriptionServiceUrl == "" {
-		fmt.Println("Subscription Service URL was not set.")
+		log.Println("Subscription Service URL was not set.")
 		valid = false
+	} else if strings.HasSuffix(conf.SubscriptionServiceUrl,"/"){
+		conf.SubscriptionServiceUrl = conf.SubscriptionServiceUrl[:len(conf.SubscriptionServiceUrl)-1]
 	}
 
 	if conf.ClientId == "" {
-		fmt.Println("Client ID was not set.")
+		log.Println("Client ID was not set.")
 		valid = false
 	}
 
 	if conf.ClientSecret == "" {
-		fmt.Println("ClientSecret was not set.")
+		log.Println("ClientSecret was not set.")
 		valid = false
 	}
 
 	if conf.CallbackUrl == "" {
-		fmt.Println("Callback URL was not set.")
+		log.Println("Callback URL was not set.")
 		valid = false
 	}
 
 	if conf.Issuer == "" {
-		fmt.Println("Issuer was not set.")
+		log.Println("Issuer was not set.")
 		valid = false
 	}
 
 	if conf.SessionKey == "" {
-		fmt.Println("SessionKey was not set.")
+		log.Println("SessionKey was not set.")
 		valid = false
 	}
 
 	if conf.CloudCommerceProcurementUrl == "" {
-		fmt.Println("CloudCommerceProcurementUrl was not set.")
+		log.Println("CloudCommerceProcurementUrl was not set.")
 		valid = false
+	} else if strings.HasSuffix(conf.CloudCommerceProcurementUrl,"/"){
+		conf.CloudCommerceProcurementUrl = conf.CloudCommerceProcurementUrl[:len(conf.CloudCommerceProcurementUrl)-1]
 	}
 
 	if conf.PartnerId == "" {
-		fmt.Println("PartnerId was not set.")
+		log.Println("PartnerId was not set.")
 		valid = false
 	}
 

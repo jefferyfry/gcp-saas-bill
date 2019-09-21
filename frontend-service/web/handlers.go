@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http/httputil"
 	"strings"
+	"time"
 
 	"context"
 	"encoding/base64"
@@ -37,15 +38,23 @@ type SubscriptionFrontendHandler struct {
 	PartnerId string
 }
 
+type Product struct {
+	Name     			string	`json:"name"`
+	Account   			string	`json:"account"`
+	Product  			string	`json:"product"`
+	State    	  		int64	`json:"state"`
+	UpdateTime    	  	string	`json:"updateTime"`
+	CreateTime    	  	string	`json:"createTime"`
+}
+
 type Contact struct {
-	//google fields
-	AccountName  	string     	`json:"accountName"`
-	FirstName 		string     	`json:"firstName"`
-	LastName		string     	`json:"lastName"`
+	AccountName 	string     	`json:"accountName"`
+	FirstName 		string     	`json:"firstName,omitempty"`
+	LastName		string     	`json:"lastName,omitempty"`
 	EmailAddress	string     	`json:"emailAddress"`
-	Phone			string     	`json:"phone"`
-	Company			string     	`json:"company"`
-	Timezone		string     	`json:"timezone"`
+	Phone			string     	`json:"phone,omitempty"`
+	Company			string     	`json:"company,omitempty"`
+	Timezone		string     	`json:"timezone,omitempty"`
 }
 
 func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string) *SubscriptionFrontendHandler {
@@ -309,7 +318,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 	if profile["firstName"] == nil && profile["name"] != nil {
 		split := strings.Split(profile["name"].(string), " ")
 		ln := len(split)
-		switch(ln){
+		switch ln {
 			case 2:
 				profile["lastName"] = split[1]
 				fallthrough
@@ -319,14 +328,15 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 	}
 
 	profile["acct"] = session.Values["acct"]
+	profile["prod"] = "saas"
 	prod := session.Values["prod"]
-	if prod == nil {
-		profile["prod"] = "saas"
-	} else {
+	tmplHtml := "templates/confirmSaas.html"
+	if prod != nil {
 		profile["prod"] = session.Values["prod"]
+		tmplHtml = "templates/confirmProd.html"
 	}
-	fmt.Println("map:", profile)
-	tmpl, err := template.ParseFiles("templates/confirm.html")
+	log.Println("map:", profile)
+	tmpl, err := template.ParseFiles(tmplHtml)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -335,18 +345,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 	tmpl.Execute(w,profile)
 }
 
-func (hdlr *SubscriptionFrontendHandler) FinishTest(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/confirm.html")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	var profile map[string]interface{}
-	tmpl.Execute(w,profile)
-}
-
-func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.Request) {
+func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *http.Request) {
 	contact := Contact{}
 	contact.AccountName = r.PostFormValue("acct")
 	contact.Company = r.PostFormValue("company")
@@ -355,29 +354,13 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 	contact.LastName = r.PostFormValue("lastName")
 	contact.Phone = r.PostFormValue("phone")
 	contact.Timezone = r.PostFormValue("timezone")
-	prod := r.PostFormValue("prod")
 
 	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 		return
 	}
 
-	if prod == "saas" {
-		sendAccountApprove(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountName, w)
-	} else { //integrated prod support
-		//TODO query subscription API for more details
-		//createProduct(prod,contact.AccountName,hdlr.SubscriptionServiceUrl, w)
-	}
-
-	//delete the session
-	session, err := Store.Get(r, "auth-session")
-	if err == nil {
-		session.Options.MaxAge = -1
-		err = session.Save(r, w)
-		if err != nil {
-			fmt.Println("failed to delete session")
-		}
-	}
+	postAccountApproval(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountName, w)
 
 	tmpl, err := template.ParseFiles("templates/finish.html")
 
@@ -388,28 +371,68 @@ func (hdlr *SubscriptionFrontendHandler) Finish(w http.ResponseWriter, r *http.R
 	tmpl.Execute(w, contact)
 }
 
-/*func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
-	contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes))
+func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *http.Request) {
+	contact := Contact{}
+	contact.AccountName = r.PostFormValue("acct")
+	contact.Company = r.PostFormValue("company")
+	contact.EmailAddress = r.PostFormValue("emailAddress")
+	contact.FirstName = r.PostFormValue("firstName")
+	contact.LastName = r.PostFormValue("lastName")
+	contact.Phone = r.PostFormValue("phone")
+	contact.Timezone = r.PostFormValue("timezone")
+
+	prod := r.PostFormValue("prod")
+
+	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
+		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
+		return
+	}
+
+	//TODO query subscription API
+
+	createProduct(prod,contact.AccountName,hdlr.SubscriptionServiceUrl, w)
+
+	tmpl, err := template.ParseFiles("templates/finish.html")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, contact)
+}
+
+func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+	loc, _ := time.LoadLocation("UTC")
+	now := time.Now().In(loc).String()
+	product := Product {
+		Name: accountName+"-"+prod,
+		Product: prod,
+		Account: accountName,
+		CreateTime: now,
+		UpdateTime: now,
+	}
+	productBytes, err := json.Marshal(product)
+	prodReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/entitlements", bytes.NewBuffer(productBytes))
 	if nil != err {
 		w.WriteHeader(500)
-		fmt.Fprint(w, `{"error": "error with creating contact upsert request %s"}`, err)
+		fmt.Fprint(w, `{"error": "error with creating product upsert request %s"}`, err)
 		return false
 	}
-	contactResp, err := http.DefaultClient.Do(contactReq)
+	prodResp, err := http.DefaultClient.Do(prodReq)
 	if nil != err {
-		w.WriteHeader(contactResp.StatusCode)
+		w.WriteHeader(prodResp.StatusCode)
 		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
 		return false
 	}
-	defer contactResp.Body.Close()
+	defer prodResp.Body.Close()
 	return true
-}*/
+}
 
 func createContact(contact Contact, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	//submit to subscript service
 	contactBytes, err := json.Marshal(contact)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false
 	}
 	contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes))
@@ -428,13 +451,13 @@ func createContact(contact Contact, subscriptionServiceUrl string, w http.Respon
 	return true
 }
 
-func sendAccountApprove(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) bool {
+func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) bool {
 	procurementUrl := cloudCommerceProcurementUrl + "/" + partnerId + "/accounts/" + accountName + ":approve"
 	jsonApproval := []byte(`
 			{
 				"approvalName": "signup"
 			}`)
-	procReq, err := http.NewRequest(http.MethodPut, procurementUrl, bytes.NewBuffer(jsonApproval))
+	procReq, err := http.NewRequest(http.MethodPost, procurementUrl, bytes.NewBuffer(jsonApproval))
 	if nil != err {
 		w.WriteHeader(500)
 		fmt.Fprint(w, `{"error": "error with creating account approval request %s"}`, err)
@@ -449,9 +472,9 @@ func sendAccountApprove(cloudCommerceProcurementUrl string, partnerId string,acc
 	defer procResp.Body.Close()
 	responseDump, err := httputil.DumpResponse(procResp, true)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-	fmt.Println(string(responseDump))
+	log.Println(string(responseDump))
 	return true
 }
 

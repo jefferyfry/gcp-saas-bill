@@ -9,7 +9,7 @@ import (
 )
 
 type SubscriptionServiceHandler struct {
-	dbHandler    persistence.DatabaseHandler
+	dbHandler persistence.DatabaseHandler
 }
 
 func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler) *SubscriptionServiceHandler {

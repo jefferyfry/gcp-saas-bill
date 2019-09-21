@@ -1,9 +1,9 @@
 package datastoreclient
 
 import (
-	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
-	"context"
 	"cloud.google.com/go/datastore"
+	"context"
+	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
 	"log"
 )
 

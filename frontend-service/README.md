@@ -33,16 +33,16 @@ To successfully run the subscription service, configuration must be set through 
 command-line options > environment variables
 
 ### Environment Variables
-* CLOUD_BILLING_FRONTEND_CONFIG_FILE - Path to a configuration file (see below).
-* CLOUD_BILLING_FRONTEND_SERVICE_ENDPOINT 
-* CLOUD_BILLING_SUBSCRIPTION_SERVICE_URL 
-* CLOUD_BILLING_FRONTEND_CLIENT_ID 
-* CLOUD_BILLING_FRONTEND_CLIENT_SECRET 
-* CLOUD_BILLING_FRONTEND_CALLBACK_URL
-* CLOUD_BILLING_FRONTEND_ISSUER
-* CLOUD_BILLING_FRONTEND_SESSION_KEY
-* CLOUD_BILLING_CLOUD_COMMERCE_PROCUREMENT_URL
-* CLOUD_BILLING_PARTNER_ID
+* CLOUD_BILL_FRONTEND_CONFIG_FILE - Path to a configuration file (see below).
+* CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT 
+* CLOUD_BILL_SUBSCRIPTION_SERVICE_URL 
+* CLOUD_BILL_FRONTEND_CLIENT_ID 
+* CLOUD_BILL_FRONTEND_CLIENT_SECRET 
+* CLOUD_BILL_FRONTEND_CALLBACK_URL
+* CLOUD_BILL_FRONTEND_ISSUER
+* CLOUD_BILL_FRONTEND_SESSION_KEY
+* CLOUD_BILL_CLOUD_COMMERCE_PROCUREMENT_URL
+* CLOUD_BILL_PARTNER_ID
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
@@ -55,7 +55,7 @@ command-line options > environment variables
 * sessionKey 
 
 ### Configuration File
-The configFile command-line option or CLOUD_BILLING_FRONTEND_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
+The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "frontendServiceEndpoint": "8086",
@@ -85,7 +85,7 @@ Then mount the file and set it as an environment variable.
         - name: frontend-service
           image: gcr.io/cloud-bill-dev/frontend-service:latest
           env:
-            - name: CLOUD_BILLING_FRONTEND_CONFIG_FILE
+            - name: CLOUD_BILL_FRONTEND_CONFIG_FILE
               value: /auth/frontend-service-config/frontend-service-config.json
           ports:
             - containerPort: 8086
@@ -127,6 +127,6 @@ docker push gcr.io/cloud-bill-dev/frontend-service:1
 
 ## Running the docker image locally with environment variables
 ```
-docker run -it --rm -p 8086:8086 -e CLOUD_BILLING_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e CLOUD_BILLING_SUB_SERVICE_URL='http://localhost:8085' -e CLOUD_BILLING_SUB_FRONTEND_CLIENT_ID='abcdef' -e CLOUD_BILLING_SUB_FRONTEND_CLIENT_SECRET='123456' -e CLOUD_BILLING_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e CLOUD_BILLING_SUB_FRONTEND_ISSUER='issuer' -e CLOUD_BILLING_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1:<tag>
+docker run -it --rm -p 8086:8086 -e CLOUD_BILL_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e CLOUD_BILL_SUB_SERVICE_URL='http://localhost:8085' -e CLOUD_BILL_SUB_FRONTEND_CLIENT_ID='abcdef' -e CLOUD_BILL_SUB_FRONTEND_CLIENT_SECRET='123456' -e CLOUD_BILL_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e CLOUD_BILL_SUB_FRONTEND_ISSUER='issuer' -e CLOUD_BILL_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1:<tag>
 
 ```
