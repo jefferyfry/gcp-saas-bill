@@ -1,30 +1,30 @@
-# Jenkins Support SaaS
-This document describes the technical architecture and implementation for a prototype SaaS service that enables a Jenkins Support listing in the Google Cloud Platform (GCP) marketplace. This solution will allow CloudBees to list Jenkins Support as a separate and independent offering in the GCP marketplace so that customers can purchase and transact via the marketplace. The listing would target open source Jenkins users and CloudBees Jenkins Distribution users.
+# Cloud Bill SaaS
+This document describes the technical architecture and implementation for a prototype SaaS service that enables a marketplace transactions in the Google Cloud Platform (GCP) marketplace. 
 
-The Jenkins Support SaaS service will act as an agent between the GCP marketplace enablement APIs and the CloudBees support systems. The service will be responsible for processing notifications from the GCP marketplace. These notifications include:
+The Cloud Bill SaaS service will act as an agent between the GCP marketplace enablement APIs and the CloudBees support systems. The service will be responsible for processing notifications from the GCP marketplace. These notifications include:
 
-* New subscriptions to Jenkins Support 
+* New subscriptions 
 * Cancellations
 * Upgrades
 * Renewals
 
-The service will manage the Jenkins Support subscriptions through a centrally stored customer subscription database which would include:
+The service will manage the subscriptions through a centrally stored customer subscription database which would include:
 
 * Customer contact info
 * Subscription period
 * Subscription tier
 
 ## Additional READMEs
+* front-end service [README](/frontend-service/README.md)
 * subscription service [README](/subscription-service/README.md)
-* front-end service [README](/subscription-frontend/README.md)
-* pubsub service README
+* pubsub service [README](/pubsub-service/README.md)
 
 ## Architecture
 ![Architecture](https://user-images.githubusercontent.com/6440106/64708575-ae27a880-d469-11e9-8006-e947c950cc91.png)
 
 ### Components
 #### Google/Auth0 Components
-* GCP Marketplace - This is the Google Cloud Platform marketplace where the Jenkins Support listing resides and a customer initiates a subscription.
+* GCP Marketplace - This is the Google Cloud Platform marketplace where the listing resides and a customer initiates a subscription.
 * GCP Marketplace Pub/Sub - A GCP marketplace pub/sub topics notifies the Agent Cloud Function of new subscriptions, cancellations, upgrades and renewals.
 * Procurement API - The Procurement API is required to determine the subscription entitlement (User Tier) and status for an account.
 * Google Kubernetes Engine with Istio - CloudBees components are run on GKE with Istio. Istio is used for some routing and security policies.
@@ -43,9 +43,9 @@ The service will manage the Jenkins Support subscriptions through a centrally st
 ## Data Workflow
 ![Data Workflow](https://user-images.githubusercontent.com/6440106/64708366-5d17b480-d469-11e9-8137-2977472a1515.png)
 
-1 - Customer subscribes (or makes changes) to Jenkins Support in the marketplace.
+1 - Customer subscribes (or makes changes) to the listing in the marketplace.
 
-2a - Agent Cloud Function receives a notification of a change to a Jenkins Support subscription. This can be a new subscription, cancellation, update or renewal. 
+2a - Agent Cloud Function receives a notification of a change to a subscription. This can be a new subscription, cancellation, update or renewal. 
 
 2b - For new accounts, the marketplace directs the customer to a signup page served by the Subscription Service. 
 
