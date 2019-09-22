@@ -115,15 +115,15 @@ func GetConfiguration() (ServiceConfig, error) {
 	if conf.SubscriptionServiceUrl == "" {
 		log.Println("Subscription Service URL was not set.")
 		valid = false
-	} else if strings.HasSuffix(conf.SubscriptionServiceUrl,"/"){
-		conf.SubscriptionServiceUrl = conf.SubscriptionServiceUrl[:len(conf.SubscriptionServiceUrl)-1]
+	} else {
+		conf.SubscriptionServiceUrl = strings.TrimSuffix(conf.SubscriptionServiceUrl,"/")
 	}
 
 	if conf.CloudCommerceProcurementUrl == "" {
 		log.Println("CloudCommerceProcurementUrl was not set.")
 		valid = false
-	} else if strings.HasSuffix(conf.CloudCommerceProcurementUrl,"/"){
-		conf.CloudCommerceProcurementUrl = conf.CloudCommerceProcurementUrl[:len(conf.CloudCommerceProcurementUrl)-1]
+	} else {
+		conf.CloudCommerceProcurementUrl = strings.TrimSuffix(conf.CloudCommerceProcurementUrl,"/")
 	}
 
 	if conf.PartnerId == "" {

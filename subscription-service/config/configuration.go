@@ -10,7 +10,7 @@ import (
 
 var (
 	SubscriptionServiceEndpoint 		= ":8085"
-	GcpProjectId				        = "cloud-billing-saas"
+	GcpProjectId				        = "cloud-bill-saas"
 )
 
 type ServiceConfig struct {

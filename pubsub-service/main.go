@@ -51,22 +51,26 @@ type Entitlement struct {
 	MessageToUser    	string	`json:"messageToUser"`
 }
 
+var serviceConfig config.ServiceConfig
+
 func main() {
 	log.Println("Starting Cloud Bill SaaS PubSub Service...")
-	config, err := config.GetConfiguration()
+	cfg, err := config.GetConfiguration()
+
+	serviceConfig = cfg;
 
 	if err != nil {
 		log.Fatalf("Invalid configuration: %#v", err)
 	}
 
 	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, config.GcpProjectId)
+	client, err := pubsub.NewClient(ctx, serviceConfig.GcpProjectId)
 	if err != nil {
-		log.Fatalf("Error creating pubsub client %s: %#v", config.PubSubSubscription, err)
+		log.Fatalf("Error creating pubsub client %s: %#v", serviceConfig.PubSubSubscription, err)
 		log.Fatal(err)
 	}
 
-	topicId := config.PubSubTopicPrefix+config.GcpProjectId
+	topicId := serviceConfig.PubSubTopicPrefix+serviceConfig.GcpProjectId
 	topic := client.Topic(topicId)
 	exists, errTp := topic.Exists(ctx)
 	if errTp != nil {
@@ -78,7 +82,7 @@ func main() {
 		}
 	}
 
-	subscription := client.Subscription(config.PubSubSubscription)
+	subscription := client.Subscription(serviceConfig.PubSubSubscription)
 
 	exists, errSub := subscription.Exists(ctx)
 	if errSub != nil {
@@ -86,13 +90,13 @@ func main() {
 	}
 
 	if !exists {
-		if _, err = client.CreateSubscription(ctx, config.PubSubSubscription, pubsub.SubscriptionConfig{Topic: topic}); err != nil {
+		if _, err = client.CreateSubscription(ctx, serviceConfig.PubSubSubscription, pubsub.SubscriptionConfig{Topic: topic}); err != nil {
 			log.Fatalf("Failed to create subscription: %#v", err)
 		}
-		log.Fatalf("GCP marketplace pubsub subscription does not exist %s: %#v", config.PubSubSubscription, err)
+		log.Fatalf("GCP marketplace pubsub subscription does not exist %s: %#v", serviceConfig.PubSubSubscription, err)
 	}
 
-	log.Printf("Begin receiving messages from %s \n", config.PubSubSubscription)
+	log.Printf("Begin receiving messages from %s \n", serviceConfig.PubSubSubscription)
 	errRcv := subscription.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		pubSubMsg := PubSubMsg{}
 		if err := json.Unmarshal(msg.Data, &pubSubMsg); err != nil {
@@ -176,12 +180,12 @@ func processMsg(pubSubMsg PubSubMsg) bool {
 }
 
 func postEntitlementApproval(entitlementId string, planChange bool) error {
-	procurementUrl := config.CloudCommerceProcurementUrl + "/" + config.PartnerId + "/entitlements/" + entitlementId + ":approve"
+	procurementUrl := serviceConfig.CloudCommerceProcurementUrl + "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId + ":approve"
 	if planChange {
-		procurementUrl = config.CloudCommerceProcurementUrl + "/" + config.PartnerId + "/entitlements/" + entitlementId + ":approveChange"
+		procurementUrl = serviceConfig.CloudCommerceProcurementUrl + "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId + ":approveChange"
 	}
 
-	procReq, err := http.NewRequest(http.MethodPut, procurementUrl, nil)
+	procReq, err := http.NewRequest(http.MethodPost, procurementUrl, nil)
 	if nil != err {
 		log.Printf("Failed creating entitlement approval request %s %#v \n",procurementUrl, err)
 		return err
@@ -194,6 +198,7 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 	defer procResp.Body.Close()
 	responseDump, err := httputil.DumpResponse(procResp, true)
 	log.Println(string(responseDump))
+	log.Printf("Successfully approved entitlement %s", entitlementId)
 	return nil
 }
 
@@ -213,7 +218,7 @@ func syncEntitlement(entitlementName string) error {
 }
 
 func getEntitlement(entitlementId string,entitlement *Entitlement) error {
-	path := config.CloudCommerceProcurementUrl+ "/" + config.PartnerId + "/entitlements/" + entitlementId
+	path := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId
 	resp, err := http.Get(path)
 	if err != nil {
 		log.Printf("Failed to get entitlement %s %#v \n",path, err)
@@ -237,14 +242,14 @@ func updateEntitlement(entitlement *Entitlement) error {
 		log.Printf("Error marshalling entitlement %#v \n", err)
 		return err
 	}
-	entitlementReq, err := http.NewRequest(http.MethodPut, config.SubscriptionServiceUrl+"/entitlements", bytes.NewBuffer(entitlementBytes))
+	entitlementReq, err := http.NewRequest(http.MethodPut, serviceConfig.SubscriptionServiceUrl+"/entitlements", bytes.NewBuffer(entitlementBytes))
 	if nil != err {
-		log.Printf("Failed creating entitlement update request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed creating entitlement update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	entitlementResp, err := http.DefaultClient.Do(entitlementReq)
 	if err != nil {
-		log.Printf("Failed sending entitlement update request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed sending entitlement update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	defer entitlementResp.Body.Close()
@@ -252,14 +257,14 @@ func updateEntitlement(entitlement *Entitlement) error {
 }
 
 func deleteEntitlement(entitlementId string) error {
-	entitlementReq, err := http.NewRequest(http.MethodDelete, config.SubscriptionServiceUrl+"/entitlements/"+entitlementId,nil)
+	entitlementReq, err := http.NewRequest(http.MethodDelete, serviceConfig.SubscriptionServiceUrl+"/entitlements/"+entitlementId,nil)
 	if nil != err {
-		log.Printf("Failed creating entitlement delete request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed creating entitlement delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	entitlementResp, err := http.DefaultClient.Do(entitlementReq)
 	if err != nil {
-		log.Printf("Failed sending entitlement delete request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed sending entitlement delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	defer entitlementResp.Body.Close()
@@ -282,7 +287,7 @@ func syncAccount(accountName string) error {
 }
 
 func getAccount(accountId string,account *Account) error {
-	path := config.CloudCommerceProcurementUrl+ "/" + config.PartnerId + "/accounts/" + accountId
+	path := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/accounts/" + accountId
 	resp, err := http.Get(path)
 	if err != nil {
 		log.Printf("Failed to get account %s %#v \n",path, err)
@@ -306,14 +311,14 @@ func updateAccount(account *Account) error {
 		log.Printf("Error marshalling account %#v \n", err)
 		return err
 	}
-	accountReq, err := http.NewRequest(http.MethodPut, config.SubscriptionServiceUrl+"/accounts", bytes.NewBuffer(accountBytes))
+	accountReq, err := http.NewRequest(http.MethodPut, serviceConfig.SubscriptionServiceUrl+"/accounts", bytes.NewBuffer(accountBytes))
 	if nil != err {
-		log.Printf("Failed creating account update request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed creating account update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	accountResp, err := http.DefaultClient.Do(accountReq)
 	if err != nil {
-		log.Printf("Failed sending account update request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed sending account update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	defer accountResp.Body.Close()
@@ -321,14 +326,14 @@ func updateAccount(account *Account) error {
 }
 
 func deleteAccount(accountId string) error {
-	accountReq, err := http.NewRequest(http.MethodDelete, config.SubscriptionServiceUrl+"/accounts/"+accountId,nil)
+	accountReq, err := http.NewRequest(http.MethodDelete, serviceConfig.SubscriptionServiceUrl+"/accounts/"+accountId,nil)
 	if nil != err {
-		log.Printf("Failed creating account delete request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed creating account delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	accountResp, err := http.DefaultClient.Do(accountReq)
 	if err != nil {
-		log.Printf("Failed sending account delete request %s %#v \n",config.SubscriptionServiceUrl, err)
+		log.Printf("Failed sending account delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
 	defer accountResp.Body.Close()
