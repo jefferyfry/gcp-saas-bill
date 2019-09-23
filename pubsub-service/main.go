@@ -196,6 +196,7 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 		return clientErr
 	}
 
+	log.Printf("Sending entitlement approval: %s \n", procurementUrl)
 	procResp, err := client.Post(procurementUrl,"",nil)
 	if nil != err {
 		log.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
@@ -204,7 +205,6 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 	defer procResp.Body.Close()
 	responseDump, err := httputil.DumpResponse(procResp, true)
 	log.Println(string(responseDump))
-	log.Printf("Successfully approved entitlement %s", entitlementId)
 	return nil
 }
 
@@ -233,6 +233,7 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 		return clientErr
 	}
 
+	log.Printf("Getting entitlement: %s \n", procurementUrl)
 	resp, err := client.Get(procurementUrl)
 	if err != nil {
 		log.Printf("Failed to get entitlement %s %#v \n",procurementUrl, err)
@@ -247,6 +248,8 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 		log.Printf("Error decoding entitlement %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return err
 	}
+	responseDump, err := httputil.DumpResponse(resp, true)
+	log.Println(string(responseDump))
 	return nil
 }
 
@@ -309,6 +312,7 @@ func getAccount(accountId string,account *Account) error {
 		return clientErr
 	}
 
+	log.Printf("Getting account: %s \n", procurementUrl)
 	resp, err := client.Get(procurementUrl)
 	if err != nil {
 		log.Printf("Failed to get account %s %#v \n",procurementUrl, err)
@@ -323,6 +327,8 @@ func getAccount(accountId string,account *Account) error {
 		log.Printf("Failed to decode account %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return errJson
 	}
+	responseDump, err := httputil.DumpResponse(resp, true)
+	log.Println(string(responseDump))
 	return nil
 }
 

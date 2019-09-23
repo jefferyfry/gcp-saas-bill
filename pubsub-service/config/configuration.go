@@ -144,8 +144,10 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	_, gAppCredPathErr := os.Stat(gAppCredPath)
 	if os.IsNotExist(gAppCredPathErr) {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: %s.",gAppCredPath)
+		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ",gAppCredPath)
 		valid = false
+	} else {
+		log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ",gAppCredPath)
 	}
 
 	gProcCredPath,gProcCredExists := os.LookupEnv("GOOGLE_PROCUREMENT_CREDENTIALS")
@@ -156,8 +158,10 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	_, gProcCredPathErr := os.Stat(gProcCredPath)
 	if os.IsNotExist(gProcCredPathErr) {
-		log.Println("GOOGLE_PROCUREMENT_CREDENTIALS file does not exist: %s.",gProcCredPath)
+		log.Println("GOOGLE_PROCUREMENT_CREDENTIALS file does not exist: ",gProcCredPath)
 		valid = false
+	} else {
+		log.Println("Using GOOGLE_PROCUREMENT_CREDENTIALS file: ",gProcCredPath)
 	}
 
 	if !valid {

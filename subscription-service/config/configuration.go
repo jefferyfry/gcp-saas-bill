@@ -87,8 +87,10 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	_, errPath := os.Stat(credPath)
 	if os.IsNotExist(errPath) {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: %s.",credPath)
+		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ",credPath)
 		valid = false
+	} else {
+		log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ",credPath)
 	}
 
 	if !valid {
