@@ -5,7 +5,11 @@ pubsubs coming from the GCP marketplace.
 ## Configuration
 To successfully run the pubsub service, configuration must be set through either environment variables, command-line options or a configuration file. You may chose an option based on on your intent (development, testing, production deployment). The following configuration is required:
 
-* Subscription Service Endpoint - This is the listening port for the service.
+* PubSub Subscription -
+* PubSub Topic -
+* Subscription Service URL -
+* Cloud Commerce Procurement URL
+* Partner ID -
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
 
 ### Configuration Precedence
@@ -13,23 +17,33 @@ command-line options > environment variables
 
 ### Environment Variables
 * CLOUD_BILL_PUBSUB_CONFIG_FILE - Path to a configuration file (see below).
-* CLOUD_BILL_PUBSUB_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
+* CLOUD_BILL_PUBSUB_SUBSCRIPTION - _Subscription Service Endpoint_ from above.
+* CLOUD_BILL_PUBSUB_TOPIC_PREFIX
+* CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
+* CLOUD_BILL_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
+* CLOUD_BILL_PUBSUB_PARTNER_ID
 * CLOUD_BILL_PUBSUB_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
-* **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like PubSub. This is a required environment variable for production.
+* **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP PubSub. This is a required environment variable for production.
+* **GOOGLE_PROCUREMENT_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP Procurement API. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
-* pubsubServiceEndpoint - _Subscription Service Endpoint_ from above.
+* pubSubSubscription - _Subscription Service Endpoint_ from above.
+* pubSubTopicPrefix
+* subscriptionServiceUrl
+* cloudCommerceProcurementUrl
+* partnerId
 * gcpProjectId - _GCP Project ID_ from above.
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
-  "pubSubSubscription": "codelab",
   "pubSubTopicPrefix": "DEMO-",
-  "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/",
+  "pubSubSubscription": "codelab",
+  "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
+  "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/v1/",
   "partnerId": "DEMO-codelab-project",
   "gcpProjectId": "cloud-bill-dev"
 }
@@ -54,6 +68,8 @@ Then mount the file and set it as an environment variable.
             #              value: "codelab"
             #            - name: CLOUD_BILL_PUBSUB_TOPIC_PREFIX
             #              value: "DEMO-"
+            #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
+            #              value: "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
             #            - name: CLOUD_BILL_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
             #              value: "https://cloudcommerceprocurement.googleapis.com/"
             #            - name: CLOUD_BILL_PUBSUB_PARTNER_ID
@@ -62,13 +78,16 @@ Then mount the file and set it as an environment variable.
             #              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/pubsub-service-account/service-account.json
+            - name: GOOGLE_PROCUREMENT_CREDENTIALS
+              value: /auth/procurement-service-account/procurement-service-account.json
             - name: CLOUD_BILL_PUBSUB_CONFIG_FILE
               value: /auth/pubsub-service-config/pubsub-service-config.json
-          ports:
-            - containerPort: 8085
           volumeMounts:
             - name: pubsub-service-account
               mountPath: "/auth/pubsub-service-account"
+              readOnly: true
+            - name: procurement-service-account
+              mountPath: "/auth/procurement-service-account"
               readOnly: true
             - name: pubsub-service-config
               mountPath: "/auth/pubsub-service-config"
@@ -77,13 +96,16 @@ Then mount the file and set it as an environment variable.
         - name: pubsub-service-account
           secret:
             secretName: pubsub-service-account
+        - name: procurement-service-account
+          secret:
+            secretName: procurement-service-account
         - name: pubsub-service-config
           secret:
             secretName: pubsub-service-config
 ```
 
-## PubSub
-The pubsub service uses GCP PubSub. Connecting the service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials required to access GCP resources like PubSub. Also ensure that you have set the correct GCP Project ID. 
+## PubSub Service Account
+The pubsub service uses GCP PubSub. Connecting the service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials required to access GCP PubSub.
 
 ### Creating the GCP Service Account to Access PubSub
 Follow the instructions [here](https://cloud.google.com/pubsub/docs/reference/libraries#setting_up_authentication) to create a service account and download the key.
@@ -91,6 +113,13 @@ Follow the instructions [here](https://cloud.google.com/pubsub/docs/reference/li
 Then create the kubernetes secret.
 ```
 kubectl create secret generic pubsub-service-account --from-file pubsub-service-account.json
+```
+## Cloud Commerce Procurement API Service Account
+The pubsub service uses the Cloud Commerce Procurement API. Connecting the service requires setting the environment variable **GOOGLE_PROCUREMENT_CREDENTIALS**. This is the path to your GCP service account credentials required to access the Cloud Commerce Procurement API.
+
+Then create the kubernetes secret.
+```
+kubectl create secret generic procurement-service-account --from-file procurement-service-account.json
 ```
 
 ## Running Locally

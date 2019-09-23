@@ -136,14 +136,27 @@ func GetConfiguration() (ServiceConfig, error) {
 		valid = false
 	}
 
-	credPath,envExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
-	if !envExists {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set or path does not exist. This is fine with an emulator but will fail in production. ")
+	gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+	if !gAppCredExists {
+		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
+		valid = false
 	}
 
-	_, errPath := os.Stat(credPath)
-	if os.IsNotExist(errPath) {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: %s.",credPath)
+	_, gAppCredPathErr := os.Stat(gAppCredPath)
+	if os.IsNotExist(gAppCredPathErr) {
+		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: %s.",gAppCredPath)
+		valid = false
+	}
+
+	gProcCredPath,gProcCredExists := os.LookupEnv("GOOGLE_PROCUREMENT_CREDENTIALS")
+	if !gProcCredExists {
+		log.Println("GOOGLE_PROCUREMENT_CREDENTIALS was not set.")
+		valid = false
+	}
+
+	_, gProcCredPathErr := os.Stat(gProcCredPath)
+	if os.IsNotExist(gProcCredPathErr) {
+		log.Println("GOOGLE_PROCUREMENT_CREDENTIALS file does not exist: %s.",gProcCredPath)
 		valid = false
 	}
 

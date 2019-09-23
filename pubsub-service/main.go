@@ -5,10 +5,14 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/config"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"golang.org/x/oauth2/google"
+	"os"
 )
 
 type PubSubMsg struct {
@@ -185,12 +189,14 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 		procurementUrl = serviceConfig.CloudCommerceProcurementUrl + "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId + ":approveChange"
 	}
 
-	procReq, err := http.NewRequest(http.MethodPost, procurementUrl, nil)
-	if nil != err {
-		log.Printf("Failed creating entitlement approval request %s %#v \n",procurementUrl, err)
-		return err
+	client, clientErr := getProcurementHttpClient()
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return clientErr
 	}
-	procResp, err := http.DefaultClient.Do(procReq)
+
+	procResp, err := client.Post(procurementUrl,"",nil)
 	if nil != err {
 		log.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
 		return err
@@ -218,10 +224,18 @@ func syncEntitlement(entitlementName string) error {
 }
 
 func getEntitlement(entitlementId string,entitlement *Entitlement) error {
-	path := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId
-	resp, err := http.Get(path)
+	procurementUrl := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId
+
+	client, clientErr := getProcurementHttpClient()
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return clientErr
+	}
+
+	resp, err := client.Get(procurementUrl)
 	if err != nil {
-		log.Printf("Failed to get entitlement %s %#v \n",path, err)
+		log.Printf("Failed to get entitlement %s %#v \n",procurementUrl, err)
 		return err
 	}
 	
@@ -230,7 +244,7 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 	defer resp.Body.Close()
 
 	if err != nil {
-		log.Printf("Error decoding entitlement %s %#v %#v \n", path, resp.Body, err)
+		log.Printf("Error decoding entitlement %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return err
 	}
 	return nil
@@ -287,10 +301,17 @@ func syncAccount(accountName string) error {
 }
 
 func getAccount(accountId string,account *Account) error {
-	path := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/accounts/" + accountId
-	resp, err := http.Get(path)
+	procurementUrl := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/accounts/" + accountId
+	client, clientErr := getProcurementHttpClient()
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return clientErr
+	}
+
+	resp, err := client.Get(procurementUrl)
 	if err != nil {
-		log.Printf("Failed to get account %s %#v \n",path, err)
+		log.Printf("Failed to get account %s %#v \n",procurementUrl, err)
 		return err
 	}
 
@@ -299,7 +320,7 @@ func getAccount(accountId string,account *Account) error {
 	defer resp.Body.Close()
 
 	if errJson != nil {
-		log.Printf("Failed to decode account %s %#v %#v \n", path, resp.Body, err)
+		log.Printf("Failed to decode account %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return errJson
 	}
 	return nil
@@ -338,4 +359,22 @@ func deleteAccount(accountId string) error {
 	}
 	defer accountResp.Body.Close()
 	return nil
+}
+
+func getProcurementHttpClient() (*http.Client, error) {
+	gProcCredPath,gProcCredExists := os.LookupEnv("GOOGLE_PROCUREMENT_CREDENTIALS")
+	if !gProcCredExists {
+		return nil, errors.New("GOOGLE_PROCUREMENT_CREDENTIALS was not set.")
+	}
+
+	data, err := ioutil.ReadFile(gProcCredPath)
+	if err != nil {
+		return nil, err
+	}
+	conf, err := google.JWTConfigFromJSON(data, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, err
+	}
+
+	return conf.Client(context.Background()), nil
 }
