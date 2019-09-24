@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"net/http/httputil"
 	"strings"
 	"time"
@@ -42,7 +44,7 @@ type Product struct {
 	Name     			string	`json:"name"`
 	Account   			string	`json:"account"`
 	Product  			string	`json:"product"`
-	State    	  		int64	`json:"state"`
+	State    	  		string	`json:"state"`
 	UpdateTime    	  	string	`json:"updateTime"`
 	CreateTime    	  	string	`json:"createTime"`
 }
@@ -179,6 +181,23 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r
 		return
 	}
 	tmpl.Execute(w,acct)
+}
+
+func (hdlr *SubscriptionFrontendHandler) ResetSaas(w http.ResponseWriter, r *http.Request) {
+	acct, acctOk := r.URL.Query()["acct"]
+
+	if !acctOk || len(acct[0]) < 1 {
+		http.Error(w, "Missing acct parameter.", http.StatusBadRequest)
+		return
+	}
+
+	err := postAccountReset(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, acct[0], w)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w,"Account %s has been reset.",acct[0])
 }
 
 func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *http.Request) {
@@ -335,7 +354,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 		profile["prod"] = session.Values["prod"]
 		tmplHtml = "templates/confirmProd.html"
 	}
-	log.Println("map:", profile)
+
 	tmpl, err := template.ParseFiles(tmplHtml)
 
 	if err != nil {
@@ -451,31 +470,60 @@ func createContact(contact Contact, subscriptionServiceUrl string, w http.Respon
 	return true
 }
 
-func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) bool {
-	procurementUrl := cloudCommerceProcurementUrl + "/" + partnerId + "/accounts/" + accountName + ":approve"
+func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) error {
+	procurementUrl := cloudCommerceProcurementUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":approve"
 	jsonApproval := []byte(`
 			{
 				"approvalName": "signup"
 			}`)
-	procReq, err := http.NewRequest(http.MethodPost, procurementUrl, bytes.NewBuffer(jsonApproval))
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprint(w, `{"error": "error with creating account approval request %s"}`, err)
-		return false
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return clientErr
 	}
-	procResp, err := http.DefaultClient.Do(procReq)
+
+	log.Printf("Sending account approval: %s \n", procurementUrl)
+	procResp, err := client.Post(procurementUrl,"",bytes.NewBuffer(jsonApproval))
 	if nil != err {
-		w.WriteHeader(procResp.StatusCode)
-		fmt.Fprintf(w, `{"error": "error received from procurement api service %s"}`, err)
-		return false
+		log.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
+		return err
 	}
 	defer procResp.Body.Close()
-	responseDump, err := httputil.DumpResponse(procResp, true)
-	if err != nil {
-		log.Println(err)
+	if procResp.StatusCode != 200 {
+		log.Println("Account approval received error response: ",procResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(procResp, true)
+		log.Println(string(responseDump))
+		return errors.New("Account approval received error response: "+procResp.Status)
+	} else {
+		log.Printf("%s %s",procurementUrl,procResp.Status)
 	}
-	log.Println(string(responseDump))
-	return true
+	return nil
+}
+
+func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accountName string,w http.ResponseWriter) error {
+	procurementUrl := cloudCommerceProcurementUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":reset"
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return clientErr
+	}
+
+	log.Printf("Sending account reset: %s \n", procurementUrl)
+	procResp, err := client.Post(procurementUrl,"",nil)
+	if nil != err {
+		log.Printf("Failed sending account reset request %s %#v \n",procurementUrl, err)
+		return err
+	}
+	defer procResp.Body.Close()
+	if procResp.StatusCode != 200 {
+		log.Println("Account reset received error response: ",procResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(procResp, true)
+		log.Println(string(responseDump))
+		return errors.New("Account reset received error response: "+procResp.Status)
+	}
+	return nil
 }
 
 

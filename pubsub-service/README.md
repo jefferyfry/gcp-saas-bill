@@ -77,49 +77,36 @@ Then mount the file and set it as an environment variable.
             #            - name: CLOUD_BILL_PUBSUB_GCP_PROJECT_ID
             #              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: /auth/pubsub-service-account/service-account.json
-            - name: GOOGLE_PROCUREMENT_CREDENTIALS
-              value: /auth/procurement-service-account/procurement-service-account.json
+              value: /auth/gcp-service-account/gcp-service-account.json
             - name: CLOUD_BILL_PUBSUB_CONFIG_FILE
               value: /auth/pubsub-service-config/pubsub-service-config.json
           volumeMounts:
-            - name: pubsub-service-account
-              mountPath: "/auth/pubsub-service-account"
-              readOnly: true
-            - name: procurement-service-account
-              mountPath: "/auth/procurement-service-account"
+            - name: gcp-service-account
+              mountPath: "/auth/gcp-service-account"
               readOnly: true
             - name: pubsub-service-config
               mountPath: "/auth/pubsub-service-config"
               readOnly: true
       volumes:
-        - name: pubsub-service-account
+        - name: gcp-service-account
           secret:
-            secretName: pubsub-service-account
-        - name: procurement-service-account
-          secret:
-            secretName: procurement-service-account
+            secretName: gcp-service-account
         - name: pubsub-service-config
           secret:
             secretName: pubsub-service-config
 ```
 
-## PubSub Service Account
-The pubsub service uses GCP PubSub. Connecting the service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials required to access GCP PubSub.
+## GCP Service Accounts
+The pubsub service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials.
 
-### Creating the GCP Service Account to Access PubSub
-Follow the instructions [here](https://cloud.google.com/pubsub/docs/reference/libraries#setting_up_authentication) to create a service account and download the key.
-
-Then create the kubernetes secret.
-```
-kubectl create secret generic pubsub-service-account --from-file pubsub-service-account.json
-```
-## Cloud Commerce Procurement API Service Account
-The pubsub service uses the Cloud Commerce Procurement API. Connecting the service requires setting the environment variable **GOOGLE_PROCUREMENT_CREDENTIALS**. This is the path to your GCP service account credentials required to access the Cloud Commerce Procurement API.
+The following roles are required:
+* PubSub Editor - Used to access marketplace PubSub events.
+* Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
+It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
 
 Then create the kubernetes secret.
 ```
-kubectl create secret generic procurement-service-account --from-file procurement-service-account.json
+kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
 ```
 
 ## Running Locally

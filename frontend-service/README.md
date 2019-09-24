@@ -81,22 +81,57 @@ Then mount the file and set it as an environment variable.
 
 ```
     spec:
-      containers:
-        - name: frontend-service
-          image: gcr.io/cloud-bill-dev/frontend-service:latest
-          env:
-            - name: CLOUD_BILL_FRONTEND_CONFIG_FILE
-              value: /auth/frontend-service-config/frontend-service-config.json
-          ports:
-            - containerPort: 8086
-          volumeMounts:
+          containers:
+            - name: frontend-service
+              image: gcr.io/cloud-bill-dev/frontend-service:latest
+              env:
+    #            - name: CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT
+    #              value: "8086"
+    #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
+    #              value: "http://subscription-service.default.svc.cluster.local:8085/api/v1"
+    #            - name: CLOUD_BILL_FRONTEND_CLIENT_ID
+    #              value: "<yourauth0clientid>"
+    #            - name: CLOUD_BILL_FRONTEND_CLIENT_SECRET
+    #              value: "<yourauth0clientsecret>"
+    #            - name: CLOUD_BILL_FRONTEND_CALLBACK_URL
+    #              value: "https://<yourhost>/callback"
+    #            - name: CLOUD_BILL_FRONTEND_ISSUER
+    #              value: "https://<yourdomain/>"
+    #            - name: CLOUD_BILL_FRONTEND_SESSION_KEY
+    #              value: "<yoursessionkey>"
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /auth/gcp-service-account/gcp-service-account.json
+                - name: CLOUD_BILL_FRONTEND_CONFIG_FILE
+                  value: /auth/frontend-service-config/frontend-service-config.json
+              ports:
+                - containerPort: 8086
+              volumeMounts:
+                - name: gcp-service-account
+                  mountPath: "/gcp-service-account"
+                  readOnly: true
+                - name: frontend-service-config
+                  mountPath: "/auth/frontend-service-config"
+                  readOnly: true
+          volumes:
+            - name: gcp-service-account
+              secret:
+                secretName: gcp-service-account
             - name: frontend-service-config
-              mountPath: "/auth/frontend-service-config"
-              readOnly: true
-      volumes:
-        - name: frontend-service-config
-          secret:
-            secretName: frontend-service-config
+              secret:
+                secretName: frontend-service-config
+```
+
+## GCP Service Accounts
+The frontend service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials.
+
+The following roles are required:
+* PubSub Editor - Used to access marketplace PubSub events.
+* Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
+* Billing Account Administrator (NOT FOR PRODUCTION) - Allows the reset of test accounts.
+It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
+Then create the kubernetes secret.
+```
+kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
 ```
 
 ## Running Locally

@@ -3,12 +3,25 @@ definitions:
   persistence.Account:
     properties:
       approvals:
-        type: string
+        items:
+          $ref: '#/definitions/persistence.Approval'
+        type: array
       createTime:
         type: string
       name:
         type: string
       provider:
+        type: string
+      state:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  persistence.Approval:
+    properties:
+      name:
+        type: string
+      reason:
         type: string
       state:
         type: string
@@ -51,7 +64,7 @@ definitions:
       provider:
         type: string
       state:
-        type: integer
+        type: string
       updateTime:
         type: string
       usageReportingId:

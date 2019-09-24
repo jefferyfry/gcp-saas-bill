@@ -7,7 +7,14 @@ type Account struct {
 	CreateTime      string    	`json:"createTime,omitempty"`
 	Provider     	string		`json:"provider,omitempty"`
 	State 	 		string      `json:"state,omitempty"`
-	Approvals    	string     	`json:"approvals,omitempty"`
+	Approvals    	[]Approval     `json:"approvals,omitempty"`
+}
+
+type Approval struct {
+	Name  			string     	`json:"name"`
+	State  			string     	`json:"state"`
+	Reason  		string     	`json:"reason"`
+	UpdateTime  	string     	`json:"updateTime"`
 }
 
 //cloudbees signup fields
@@ -29,7 +36,7 @@ type Entitlement struct {
 	Product  			string	`json:"product"`
 	Plan     	  		string	`json:"plan"`
 	NewPendingPlan 	  	string	`json:"newPendingPlan"`
-	State    	  		int64	`json:"state"`
+	State    	  		string	`json:"state"`
 	UpdateTime    	  	string	`json:"updateTime"`
 	CreateTime    	  	string	`json:"createTime"`
 	UsageReportingId    string	`json:"usageReportingId"`

@@ -47,37 +47,46 @@ Then mount the file and set it as an environment variable.
         - name: subscription-service
           image: gcr.io/cloud-bill-dev/subscription-service:latest
           env:
+#            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT
+#              value: "8085"
+#            - name: CLOUD_BILL_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL
+#              value: "https://cloudcommerceprocurement.googleapis.com/"
+#            - name: CLOUD_BILL_SUBSCRIPTION_PARTNER_ID
+#              value: "<yourpartnerid>"
+#            - name: CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID
+#              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: /auth/datastore-service-account/service-account.json
+              value: /auth/gcp-service-account/gcp-service-account.json
             - name: CLOUD_BILL_SUBSCRIPTION_CONFIG_FILE
               value: /auth/subscription-service-config/subscription-service-config.json
           ports:
             - containerPort: 8085
           volumeMounts:
-            - name: datastore-service-account
-              mountPath: "/auth/datastore-service-account"
+            - name: gcp-service-account
+              mountPath: "/auth/gcp-service-account"
               readOnly: true
             - name: subscription-service-config
               mountPath: "/auth/subscription-service-config"
               readOnly: true
       volumes:
-        - name: datastore-service-account
+        - name: gcp-service-account
           secret:
-            secretName: datastore-service-account
+            secretName: gcp-service-account
         - name: subscription-service-config
           secret:
             secretName: subscription-service-config
 ```
 
-## Persistence
-The subscription service uses GCP Datastore/Firestore NoSQL. Connecting the service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials required to access GCP resources like Datastore. Also ensure that you have set the correct GCP Project ID. This should be the same as where you created your Datastore database. 
+## GCP Service Accounts
+The subscription service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials. Also ensure that you have set the correct GCP Project ID. This should be the same as where you created your Datastore database. 
 
-### Creating the GCP Service Account to Access Datastore
-Follow the instructions [here](https://cloud.google.com/datastore/docs/activate#other-platforms) to create a service account with permission Cloud Datastore Owner and download the key.
+The following roles are required:
+* Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
+It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
 
 Then create the kubernetes secret.
 ```
-kubectl create secret generic datastore-service-account --from-file datastore-service-account.json
+kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
 ```
 
 ### Using the Datastore Emulator

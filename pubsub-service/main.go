@@ -7,12 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/config"
-	"io/ioutil"
+	"golang.org/x/oauth2"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"golang.org/x/oauth2/google"
-	"os"
 )
 
 type PubSubMsg struct {
@@ -38,7 +37,14 @@ type Account struct {
 	CreateTime      string    	`json:"createTime,omitempty"`
 	Provider     	string		`json:"provider,omitempty"`
 	State 	 		string      `json:"state,omitempty"`
-	Approvals    	string     	`json:"approvals,omitempty"`
+	Approvals    	[]Approval     `json:"approvals,omitempty"`
+}
+
+type Approval struct {
+	Name  			string     	`json:"name"`
+	State  			string     	`json:"state"`
+	Reason  		string     	`json:"reason"`
+	UpdateTime  	string     	`json:"updateTime"`
 }
 
 type Entitlement struct {
@@ -48,7 +54,7 @@ type Entitlement struct {
 	Product  			string	`json:"product"`
 	Plan     	  		string	`json:"plan"`
 	NewPendingPlan 	  	string	`json:"newPendingPlan"`
-	State    	  		int64	`json:"state"`
+	State    	  		string	`json:"state"`
 	UpdateTime    	  	string	`json:"updateTime"`
 	CreateTime    	  	string	`json:"createTime"`
 	UsageReportingId    string	`json:"usageReportingId"`
@@ -112,6 +118,8 @@ func main() {
 		log.Printf("Received msg %#v", pubSubMsg)
 		if processMsg(pubSubMsg) {
 			msg.Ack()
+		} else {
+			msg.Nack()
 		}
 	})
 	if errRcv != nil {
@@ -129,14 +137,20 @@ func processMsg(pubSubMsg PubSubMsg) bool {
 		}
 	case "ENTITLEMENT_CREATION_REQUESTED":
 		err := postEntitlementApproval(pubSubMsg.Entitlement.Id, false)
-		if err == nil {
+		if err != nil {
+			log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
+			return false
+		} else {
 			err := syncEntitlement(pubSubMsg.Entitlement.Id)
 			if err != nil {
 				log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 				return false
 			}
-		} else {
-			log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
+		}
+	case "ENTITLEMENT_ACTIVE":
+		err := syncEntitlement(pubSubMsg.Entitlement.Id)
+		if err != nil {
+			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGE_REQUESTED":
@@ -158,11 +172,11 @@ func processMsg(pubSubMsg PubSubMsg) bool {
 			return false
 		}
 	case "ENTITLEMENT_PENDING_CANCELLATION":
-		fallthrough
+		log.Println("ENTITLEMENT_PENDING_CANCELLATION ignored.")
 	case "ENTITLEMENT_CANCELLED":
 		err := syncEntitlement(pubSubMsg.Entitlement.Id)
 		if err != nil {
-			log.Printf("Unable to cancel entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
+			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_DELETED":
@@ -189,7 +203,7 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 		procurementUrl = serviceConfig.CloudCommerceProcurementUrl + "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId + ":approveChange"
 	}
 
-	client, clientErr := getProcurementHttpClient()
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
 
 	if clientErr != nil {
 		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
@@ -203,8 +217,14 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 		return err
 	}
 	defer procResp.Body.Close()
-	responseDump, err := httputil.DumpResponse(procResp, true)
-	log.Println(string(responseDump))
+	if procResp.StatusCode != 200 {
+		log.Println("Entitlement approval received error response: ",procResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(procResp, true)
+		log.Println(string(responseDump))
+		return errors.New("Entitlement approval received error response: "+procResp.Status)
+	} else {
+		log.Printf("%s %s",procurementUrl,procResp.Status)
+	}
 	return nil
 }
 
@@ -226,7 +246,7 @@ func syncEntitlement(entitlementName string) error {
 func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 	procurementUrl := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/entitlements/" + entitlementId
 
-	client, clientErr := getProcurementHttpClient()
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
 
 	if clientErr != nil {
 		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
@@ -239,6 +259,14 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 		log.Printf("Failed to get entitlement %s %#v \n",procurementUrl, err)
 		return err
 	}
+	if resp.StatusCode != 200 {
+		log.Println("Get entitlement received error response: ",resp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		log.Println(string(responseDump))
+		return errors.New(resp.Status)
+	} else {
+		log.Printf("%s %s",procurementUrl,resp.Status)
+	}
 	
 	err = json.NewDecoder(resp.Body).Decode(&entitlement)
 
@@ -248,8 +276,7 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 		log.Printf("Error decoding entitlement %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return err
 	}
-	responseDump, err := httputil.DumpResponse(resp, true)
-	log.Println(string(responseDump))
+
 	return nil
 }
 
@@ -259,7 +286,8 @@ func updateEntitlement(entitlement *Entitlement) error {
 		log.Printf("Error marshalling entitlement %#v \n", err)
 		return err
 	}
-	entitlementReq, err := http.NewRequest(http.MethodPut, serviceConfig.SubscriptionServiceUrl+"/entitlements", bytes.NewBuffer(entitlementBytes))
+	url := serviceConfig.SubscriptionServiceUrl+"/entitlements";
+	entitlementReq, err := http.NewRequest(http.MethodPut, url , bytes.NewBuffer(entitlementBytes))
 	if nil != err {
 		log.Printf("Failed creating entitlement update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
@@ -269,12 +297,21 @@ func updateEntitlement(entitlement *Entitlement) error {
 		log.Printf("Failed sending entitlement update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
+	if entitlementResp.StatusCode != 204 {
+		log.Println("Update entitlement received error response: ",entitlementResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(entitlementResp, true)
+		log.Println(string(responseDump))
+		return errors.New(entitlementResp.Status)
+	} else {
+		log.Printf("%s %s",url,entitlementResp.Status)
+	}
 	defer entitlementResp.Body.Close()
 	return nil
 }
 
 func deleteEntitlement(entitlementId string) error {
-	entitlementReq, err := http.NewRequest(http.MethodDelete, serviceConfig.SubscriptionServiceUrl+"/entitlements/"+entitlementId,nil)
+	url := serviceConfig.SubscriptionServiceUrl+"/entitlements/"+entitlementId
+	entitlementReq, err := http.NewRequest(http.MethodDelete, url,nil)
 	if nil != err {
 		log.Printf("Failed creating entitlement delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
@@ -283,6 +320,14 @@ func deleteEntitlement(entitlementId string) error {
 	if err != nil {
 		log.Printf("Failed sending entitlement delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
+	}
+	if entitlementResp.StatusCode != 204 {
+		log.Println("Delete entitlement received error response: ",entitlementResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(entitlementResp, true)
+		log.Println(string(responseDump))
+		return errors.New(entitlementResp.Status)
+	} else {
+		log.Printf("%s %s",url,entitlementResp.Status)
 	}
 	defer entitlementResp.Body.Close()
 	return nil
@@ -305,7 +350,7 @@ func syncAccount(accountName string) error {
 
 func getAccount(accountId string,account *Account) error {
 	procurementUrl := serviceConfig.CloudCommerceProcurementUrl+ "/providers/" + serviceConfig.PartnerId + "/accounts/" + accountId
-	client, clientErr := getProcurementHttpClient()
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
 
 	if clientErr != nil {
 		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
@@ -317,6 +362,15 @@ func getAccount(accountId string,account *Account) error {
 	if err != nil {
 		log.Printf("Failed to get account %s %#v \n",procurementUrl, err)
 		return err
+	}
+
+	if resp.StatusCode != 200 {
+		log.Println("Get account received error response: ",resp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		log.Println(string(responseDump))
+		return errors.New(resp.Status)
+	} else {
+		log.Printf("%s %s",procurementUrl,resp.Status)
 	}
 
 	errJson := json.NewDecoder(resp.Body).Decode(&account)
@@ -338,7 +392,8 @@ func updateAccount(account *Account) error {
 		log.Printf("Error marshalling account %#v \n", err)
 		return err
 	}
-	accountReq, err := http.NewRequest(http.MethodPut, serviceConfig.SubscriptionServiceUrl+"/accounts", bytes.NewBuffer(accountBytes))
+	url := serviceConfig.SubscriptionServiceUrl+"/accounts"
+	accountReq, err := http.NewRequest(http.MethodPut, url , bytes.NewBuffer(accountBytes))
 	if nil != err {
 		log.Printf("Failed creating account update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
@@ -348,12 +403,22 @@ func updateAccount(account *Account) error {
 		log.Printf("Failed sending account update request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
+	if accountResp.StatusCode != 204 {
+		log.Println("Update account received error response: ",accountResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(accountResp, true)
+		log.Println(string(responseDump))
+		return errors.New(accountResp.Status)
+	} else {
+		log.Printf("%s %s",url,accountResp.Status)
+	}
 	defer accountResp.Body.Close()
+
 	return nil
 }
 
 func deleteAccount(accountId string) error {
-	accountReq, err := http.NewRequest(http.MethodDelete, serviceConfig.SubscriptionServiceUrl+"/accounts/"+accountId,nil)
+	url := serviceConfig.SubscriptionServiceUrl+"/accounts/"+accountId
+	accountReq, err := http.NewRequest(http.MethodDelete, url,nil)
 	if nil != err {
 		log.Printf("Failed creating account delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
@@ -363,24 +428,14 @@ func deleteAccount(accountId string) error {
 		log.Printf("Failed sending account delete request %s %#v \n",serviceConfig.SubscriptionServiceUrl, err)
 		return err
 	}
+	if accountResp.StatusCode != 204 {
+		log.Println("Delete entitlement received error response: ",accountResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(accountResp, true)
+		log.Println(string(responseDump))
+		return errors.New(accountResp.Status)
+	} else {
+		log.Printf("%s %s",url,accountResp.Status)
+	}
 	defer accountResp.Body.Close()
 	return nil
-}
-
-func getProcurementHttpClient() (*http.Client, error) {
-	gProcCredPath,gProcCredExists := os.LookupEnv("GOOGLE_PROCUREMENT_CREDENTIALS")
-	if !gProcCredExists {
-		return nil, errors.New("GOOGLE_PROCUREMENT_CREDENTIALS was not set.")
-	}
-
-	data, err := ioutil.ReadFile(gProcCredPath)
-	if err != nil {
-		return nil, err
-	}
-	conf, err := google.JWTConfigFromJSON(data, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, err
-	}
-
-	return conf.Client(context.Background()), nil
 }

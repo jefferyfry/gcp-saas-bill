@@ -150,20 +150,6 @@ func GetConfiguration() (ServiceConfig, error) {
 		log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ",gAppCredPath)
 	}
 
-	gProcCredPath,gProcCredExists := os.LookupEnv("GOOGLE_PROCUREMENT_CREDENTIALS")
-	if !gProcCredExists {
-		log.Println("GOOGLE_PROCUREMENT_CREDENTIALS was not set.")
-		valid = false
-	}
-
-	_, gProcCredPathErr := os.Stat(gProcCredPath)
-	if os.IsNotExist(gProcCredPathErr) {
-		log.Println("GOOGLE_PROCUREMENT_CREDENTIALS file does not exist: ",gProcCredPath)
-		valid = false
-	} else {
-		log.Println("Using GOOGLE_PROCUREMENT_CREDENTIALS file: ",gProcCredPath)
-	}
-
 	if !valid {
 		err = errors.New("Subscription service configuration is not valid!")
 	}

@@ -101,3 +101,11 @@ Before applying the manifest update the environment variables or providing confi
 ```
 kubectl apply -f manifests/cloud-bill-saas.yaml
 ```
+
+#### GCP Service Accounts
+The following roles are required:
+* PubSub Editor - Used to access marketplace PubSub events.
+* Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
+* Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
+* Billing Account Administrator (NOT FOR PRODUCTION) - Allows the reset of test accounts.
+It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.

@@ -357,7 +357,10 @@
             "type": "object",
             "properties": {
                 "approvals": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/persistence.Approval"
+                    }
                 },
                 "createTime": {
                     "type": "string"
@@ -366,6 +369,23 @@
                     "type": "string"
                 },
                 "provider": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "persistence.Approval": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "reason": {
                     "type": "string"
                 },
                 "state": {
@@ -430,7 +450,7 @@
                     "type": "string"
                 },
                 "state": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updateTime": {
                     "type": "string"

@@ -177,6 +177,20 @@ func GetConfiguration() (ServiceConfig, error) {
 		valid = false
 	}
 
+	gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+	if !gAppCredExists {
+		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
+		valid = false
+	}
+
+	_, gAppCredPathErr := os.Stat(gAppCredPath)
+	if os.IsNotExist(gAppCredPathErr) {
+		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ",gAppCredPath)
+		valid = false
+	} else {
+		log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ",gAppCredPath)
+	}
+
 	if !valid {
 		err = errors.New("Subscription frontend service configuration is not valid!")
 	}
