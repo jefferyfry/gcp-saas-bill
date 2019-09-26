@@ -97,32 +97,26 @@ func (lstnr *PubSubListener) Listen() error {
 
 	topicId := lstnr.PubSubTopicPrefix+lstnr.GcpProjectId
 	topic := client.Topic(topicId)
-	exists, errTp := topic.Exists(ctx)
-	if errTp != nil {
-		log.Printf("Error checking for topic: %#v", errTp)
-		return errTp
-	}
-	if !exists {
+	if exists, errTp := topic.Exists(ctx); !exists && errTp == nil {
 		if _, err := client.CreateTopic(ctx, topicId); err != nil {
 			log.Printf("Failed to create topic: %#v", err)
 			return err
 		}
+	} else if errTp != nil {
+		log.Printf("Error checking for topic: %#v", errTp)
+		return errTp
 	}
 
 	subscription := client.Subscription(lstnr.PubSubSubscription)
 
-	exists, errSub := subscription.Exists(ctx)
-	if errSub != nil {
-		log.Printf("Error checking for subscription: %#v", errSub)
-		return errSub
-	}
-
-	if !exists {
-		_, err = client.CreateSubscription(ctx, lstnr.PubSubSubscription, pubsub.SubscriptionConfig{Topic: topic})
-		if err != nil {
+	if exists, errSub := subscription.Exists(ctx); !exists && errSub == nil {
+		if _, err = client.CreateSubscription(ctx, lstnr.PubSubSubscription, pubsub.SubscriptionConfig{Topic: topic}); err != nil {
 			log.Printf("Failed to create subscription: %#v", err)
 			return err
 		}
+	} else if errSub != nil{
+		log.Printf("Error checking for subscription: %#v", errSub)
+		return errSub
 	}
 
 	log.Printf("Begin receiving messages from %s \n", lstnr.PubSubSubscription)
@@ -135,12 +129,12 @@ func (lstnr *PubSubListener) Listen() error {
 		}
 
 		log.Printf("Received msg %#v", pubSubMsg)
-		if processMsg(pubSubMsg) {
+		if processPubSubMsg(pubSubMsg) {
 			msg.Ack()
-			log.Println("Message acked.")
+			log.Printf("Message %s acked.",pubSubMsg.EventId)
 		} else {
 			msg.Nack()
-			log.Println("Message nacked.")
+			log.Printf("Message %s nacked.",pubSubMsg.EventId)
 		}
 	})
 	if errRcv != nil {
@@ -149,38 +143,31 @@ func (lstnr *PubSubListener) Listen() error {
 	return nil
 }
 
-func processMsg(pubSubMsg PubSubMsg) bool {
+func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 	switch pubSubMsg.EventType {
 	case "ACCOUNT_ACTIVE":
-		err := syncAccount(pubSubMsg.Account.Id)
-		if err != nil {
+		if err := syncAccount(pubSubMsg.Account.Id); err != nil {
 			log.Printf("Unable to update account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 		//check to see if we have any entitlements we need to approve
 	case "ENTITLEMENT_CREATION_REQUESTED":
-		//query to get the entitlement
-		//get the account name
-		//query for the account, contact
-		//if it exists approve
-		//if not store it for later
-		err := syncEntitlement(pubSubMsg.Entitlement.Id)
-		if err != nil {
-			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
-			return false
-		}
-		return false
-		/*err := postEntitlementApproval(pubSubMsg.Entitlement.Id, false)
-		if err != nil {
-			log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
-			return false
-		} else {
-			err := syncEntitlement(pubSubMsg.Entitlement.Id)
-			if err != nil {
-				log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
+		rcvdEntitlement := Entitlement{}
+		if err := getEntitlement(pubSubMsg.Entitlement.Id, &rcvdEntitlement); err != nil {
+			if accountExists, acctErr := accountExists(rcvdEntitlement.Account); accountExists && acctErr == nil {
+				if postErr := postEntitlementApproval(pubSubMsg.Entitlement.Id,false); postErr != nil {
+					log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, postErr)
+					return false
+				}
+			} else if !accountExists && acctErr == nil {
+				if err := updateEntitlement(&rcvdEntitlement); err != nil {
+					log.Printf("Unable to update entitlement %#v due to error %#v \n", rcvdEntitlement, err)
+				}
+			} else {
+				log.Printf("Unable to determine if account %#v exists due to error %#v \n", rcvdEntitlement.Account, acctErr)
 				return false
 			}
-		}*/
+		}
 	case "ENTITLEMENT_ACTIVE":
 		err := syncEntitlement(pubSubMsg.Entitlement.Id)
 		if err != nil {
@@ -208,20 +195,17 @@ func processMsg(pubSubMsg PubSubMsg) bool {
 	case "ENTITLEMENT_PENDING_CANCELLATION":
 		log.Println("ENTITLEMENT_PENDING_CANCELLATION ignored.")
 	case "ENTITLEMENT_CANCELLED":
-		err := syncEntitlement(pubSubMsg.Entitlement.Id)
-		if err != nil {
+		if err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_DELETED":
-		err := deleteEntitlement(pubSubMsg.Entitlement.Id)
-		if err != nil {
+		if err := deleteEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			log.Printf("Unable to delete entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ACCOUNT_DELETED":
-		err := deleteAccount(pubSubMsg.Account.Id)
-		if err != nil {
+		if err := deleteAccount(pubSubMsg.Account.Id); err != nil {
 			log.Printf("Unable to delete account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
@@ -264,10 +248,8 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 
 func syncEntitlement(entitlementName string) error {
 	rcvdEntitlement := Entitlement{}
-	err := getEntitlement(entitlementName, &rcvdEntitlement)
-	if err == nil {
-		err := updateEntitlement(&rcvdEntitlement)
-		if err != nil {
+	if err := getEntitlement(entitlementName, &rcvdEntitlement); err == nil {
+		if err := updateEntitlement(&rcvdEntitlement); err != nil {
 			log.Printf("Unable to update entitlement %#v due to error %#v \n", rcvdEntitlement, err)
 		}
 	} else {
@@ -301,12 +283,9 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 	} else {
 		log.Printf("%s %s",procurementUrl,resp.Status)
 	}
-
-	err = json.NewDecoder(resp.Body).Decode(&entitlement)
-
 	defer resp.Body.Close()
 
-	if err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&entitlement); err != nil {
 		log.Printf("Error decoding entitlement %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return err
 	}
@@ -322,7 +301,7 @@ func updateEntitlement(entitlement *Entitlement) error {
 	}
 	url := subscriptionServiceBaseUrl+"/entitlements";
 	entitlementReq, err := http.NewRequest(http.MethodPut, url , bytes.NewBuffer(entitlementBytes))
-	if nil != err {
+	if err != nil {
 		log.Printf("Failed creating entitlement update request %s %#v \n",subscriptionServiceBaseUrl, err)
 		return err
 	}
@@ -369,8 +348,7 @@ func deleteEntitlement(entitlementId string) error {
 
 func syncAccount(accountName string) error {
 	rcvdAcct := Account{}
-	err := getAccount(accountName, &rcvdAcct)
-	if err == nil {
+	if err := getAccount(accountName, &rcvdAcct); err == nil {
 		err := updateAccount(&rcvdAcct)
 		if err != nil {
 			log.Printf("Unable to update account %#v due to error %#v \n", rcvdAcct, err)
@@ -380,6 +358,29 @@ func syncAccount(accountName string) error {
 		return err
 	}
 	return nil
+}
+
+func accountExists(accountId string) (bool, error){
+	procurementUrl := cloudCommerceProcurementBaseUrl + "/accounts/" + accountId
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return false, clientErr
+	}
+
+	log.Printf("Getting account: %s \n", procurementUrl)
+	resp, err := client.Get(procurementUrl)
+	if err != nil {
+		log.Printf("Failed to get account %s %#v \n",procurementUrl, err)
+		return false, err
+	}
+
+	if resp.StatusCode != 200 {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func getAccount(accountId string,account *Account) error {
@@ -407,16 +408,13 @@ func getAccount(accountId string,account *Account) error {
 		log.Printf("%s %s",procurementUrl,resp.Status)
 	}
 
-	errJson := json.NewDecoder(resp.Body).Decode(&account)
-
 	defer resp.Body.Close()
 
-	if errJson != nil {
+	if errJson := json.NewDecoder(resp.Body).Decode(&account); errJson != nil {
 		log.Printf("Failed to decode account %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return errJson
 	}
-	responseDump, err := httputil.DumpResponse(resp, true)
-	log.Println(string(responseDump))
+
 	return nil
 }
 

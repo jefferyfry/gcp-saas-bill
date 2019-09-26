@@ -37,12 +37,12 @@ func GetConfiguration() (ServiceConfig, error) {
 		GcpProjectId,
 	}
 
-	dir, err := os.Getwd()
-	if err != nil {
+	if dir, err := os.Getwd(); err != nil {
 		log.Println("Unable to determine working directory.")
 		return conf, err
+	} else {
+		log.Printf("Running service with working directory %s \n", dir)
 	}
-	log.Printf("Running subscription service with working directory %s \n",dir)
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
@@ -86,18 +86,15 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.PartnerId = *partnerId
 		conf.GcpProjectId = *gcpProjectId
 	} else {
-		file, err := os.Open(*configFile)
-		if err != nil {
+		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
 			return conf, err
+		} else {
+			if err = json.NewDecoder(file).Decode(&conf); err != nil {
+				return conf, errors.New("Configuration file not found.")
+			}
+			log.Printf("Using confile file %s to launch subscription frontend service \n", *configFile)
 		}
-
-		err = json.NewDecoder(file).Decode(&conf)
-		if err != nil {
-			log.Println("Configuration file not found. Continuing with default values.")
-			return conf, err
-		}
-		log.Printf("Using confile file %s to launch subscription service \n", *configFile)
 	}
 
 	valid := true
@@ -136,23 +133,21 @@ func GetConfiguration() (ServiceConfig, error) {
 		valid = false
 	}
 
-	gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
-	if !gAppCredExists {
+	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {
 		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
 		valid = false
-	}
-
-	_, gAppCredPathErr := os.Stat(gAppCredPath)
-	if os.IsNotExist(gAppCredPathErr) {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ",gAppCredPath)
-		valid = false
 	} else {
-		log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ",gAppCredPath)
+		if _, gAppCredPathErr := os.Stat(gAppCredPath); os.IsNotExist(gAppCredPathErr) {
+			log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", gAppCredPath)
+			valid = false
+		} else {
+			log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", gAppCredPath)
+		}
 	}
 
 	if !valid {
-		err = errors.New("Subscription service configuration is not valid!")
+		return conf, errors.New("Subscription service configuration is not valid!")
+	} else {
+		return conf, nil
 	}
-
-	return conf, err
 }

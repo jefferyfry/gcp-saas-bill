@@ -141,21 +141,19 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *ht
 		return
 	}
 
-	session, err := Store.Get(r, "auth-session")
-	if err != nil {
+	if session, err := Store.Get(r, "auth-session"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		session.Values["acct"] = sub
+		session.Save(r, w)
 	}
-	session.Values["acct"] = sub
-	session.Save(r,w)
 
-	tmpl, err := template.ParseFiles("templates/signup.html")
 
-	if err != nil {
+	if tmpl, err := template.ParseFiles("templates/signup.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		tmpl.Execute(w,sub)
 	}
-	tmpl.Execute(w,sub)
 }
 
 func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r *http.Request) {
@@ -166,21 +164,19 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r
 		return
 	}
 
-	session, err := Store.Get(r, "auth-session")
-	if err != nil {
+	if session, err := Store.Get(r, "auth-session"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	} else {
+		session.Values["acct"] = acct[0]
+		session.Save(r, w)
 	}
-	session.Values["acct"] = acct[0]
-	session.Save(r,w)
 
-	tmpl, err := template.ParseFiles("templates/signup.html")
-
-	if err != nil {
+	if tmpl, err := template.ParseFiles("templates/signup.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		tmpl.Execute(w, acct)
 	}
-	tmpl.Execute(w,acct)
 }
 
 func (hdlr *SubscriptionFrontendHandler) ResetSaas(w http.ResponseWriter, r *http.Request) {
@@ -191,13 +187,11 @@ func (hdlr *SubscriptionFrontendHandler) ResetSaas(w http.ResponseWriter, r *htt
 		return
 	}
 
-	err := postAccountReset(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, acct[0], w)
-
-	if err != nil {
+	if err := postAccountReset(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, acct[0], w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		fmt.Fprintf(w,"Account %s has been reset.",acct[0])
 	}
-	fmt.Fprintf(w,"Account %s has been reset.",acct[0])
 }
 
 func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *http.Request) {
@@ -216,22 +210,20 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 		return
 	}
 
-	session, err := Store.Get(r, "auth-session")
-	if err != nil {
+	if session, err := Store.Get(r, "auth-session"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	} else {
+		session.Values["acct"] = accountName
+		session.Values["prod"] = prod[0]
+		session.Save(r,w)
 	}
-	session.Values["acct"] = accountName
-	session.Values["prod"] = prod[0]
-	session.Save(r,w)
 
-	tmpl, err := template.ParseFiles("templates/signup.html")
-
-	if err != nil {
+	if tmpl, err := template.ParseFiles("templates/signup.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		tmpl.Execute(w, accountName)
 	}
-	tmpl.Execute(w,accountName)
 }
 
 func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *http.Request) {
@@ -242,45 +234,38 @@ func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/emailConfirm.html")
-
-	if err != nil {
+	if tmpl, err := template.ParseFiles("templates/emailConfirm.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		tmpl.Execute(w, email)
 	}
-	tmpl.Execute(w,email)
 }
 
 //redirects to Auth0 for authentication, this should not be called unless istio fails
 func (hdlr *SubscriptionFrontendHandler) Auth0Login(w http.ResponseWriter, r *http.Request) {
 	// Generate random state
 	b := make([]byte, 32)
-	_, err := rand.Read(b)
-	if err != nil {
+	if _, err := rand.Read(b); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	state := base64.StdEncoding.EncodeToString(b)
 
-	session, err := Store.Get(r, "auth-session")
-	if err != nil {
+	if session, err := Store.Get(r, "auth-session"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	session.Values["state"] = state
-	err = session.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		session.Values["state"] = state
+		if err = session.Save(r, w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
-	authenticator, err := auth.NewAuthenticator(hdlr.Issuer,hdlr.ClientId,hdlr.ClientSecret,hdlr.CallbackUrl)
-	if err != nil {
+	if authenticator, err := auth.NewAuthenticator(hdlr.Issuer,hdlr.ClientId,hdlr.ClientSecret,hdlr.CallbackUrl); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		http.Redirect(w, r, authenticator.Config.AuthCodeURL(state), http.StatusTemporaryRedirect)
 	}
-
-	http.Redirect(w, r, authenticator.Config.AuthCodeURL(state), http.StatusTemporaryRedirect)
 }
 
 //handles auth0 callback, stores profile data, confirms account and redirects to confirmation
@@ -355,13 +340,11 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 		tmplHtml = "templates/confirmProd.html"
 	}
 
-	tmpl, err := template.ParseFiles(tmplHtml)
-
-	if err != nil {
+	if tmpl, err := template.ParseFiles(tmplHtml); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		tmpl.Execute(w, profile)
 	}
-	tmpl.Execute(w,profile)
 }
 
 func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *http.Request) {
@@ -376,18 +359,15 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 
 	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
-		return
+	} else {
+		postAccountApproval(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountName, w)
+
+		if tmpl, err := template.ParseFiles("templates/finish.html"); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			tmpl.Execute(w, contact)
+		}
 	}
-
-	postAccountApproval(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountName, w)
-
-	tmpl, err := template.ParseFiles("templates/finish.html")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, contact)
 }
 
 func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *http.Request) {
@@ -404,20 +384,17 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 
 	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
-		return
+	} else {
+		//TODO query subscription API
+
+		createProduct(prod, contact.AccountName, hdlr.SubscriptionServiceUrl, w)
+
+		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			tmpl.Execute(w, contact)
+		}
 	}
-
-	//TODO query subscription API
-
-	createProduct(prod,contact.AccountName,hdlr.SubscriptionServiceUrl, w)
-
-	tmpl, err := template.ParseFiles("templates/finish.html")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, contact)
 }
 
 func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
@@ -430,44 +407,47 @@ func createProduct(prod string, accountName string, subscriptionServiceUrl strin
 		CreateTime: now,
 		UpdateTime: now,
 	}
-	productBytes, err := json.Marshal(product)
-	prodReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/entitlements", bytes.NewBuffer(productBytes))
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprint(w, `{"error": "error with creating product upsert request %s"}`, err)
-		return false
+	if productBytes, err := json.Marshal(product); err != nil {
+		fmt.Fprintf(w, `{"error": "unable to decode product object %s"}`, err)
+	} else {
+		if prodReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/entitlements", bytes.NewBuffer(productBytes)); nil != err {
+			w.WriteHeader(500)
+			fmt.Fprint(w, `{"error": "error with creating product upsert request %s"}`, err)
+			return false
+		} else {
+			if prodResp, err := http.DefaultClient.Do(prodReq); nil != err {
+				w.WriteHeader(prodResp.StatusCode)
+				fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
+				return false
+			} else {
+				defer prodResp.Body.Close()
+				return true
+			}
+		}
 	}
-	prodResp, err := http.DefaultClient.Do(prodReq)
-	if nil != err {
-		w.WriteHeader(prodResp.StatusCode)
-		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
-		return false
-	}
-	defer prodResp.Body.Close()
-	return true
 }
 
 func createContact(contact Contact, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	//submit to subscript service
-	contactBytes, err := json.Marshal(contact)
-	if err != nil {
+	if contactBytes, err := json.Marshal(contact); err != nil {
 		log.Println(err)
 		return false
+	} else {
+		if contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes)); nil != err {
+			w.WriteHeader(500)
+			fmt.Fprint(w, `{"error": "error with creating contact upsert request %s"}`, err)
+			return false
+		} else {
+			if contactResp, err := http.DefaultClient.Do(contactReq); nil != err {
+				w.WriteHeader(contactResp.StatusCode)
+				fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
+				return false
+			} else {
+				defer contactResp.Body.Close()
+				return true
+			}
+		}
 	}
-	contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes))
-	if nil != err {
-		w.WriteHeader(500)
-		fmt.Fprint(w, `{"error": "error with creating contact upsert request %s"}`, err)
-		return false
-	}
-	contactResp, err := http.DefaultClient.Do(contactReq)
-	if nil != err {
-		w.WriteHeader(contactResp.StatusCode)
-		fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
-		return false
-	}
-	defer contactResp.Body.Close()
-	return true
 }
 
 func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) error {
@@ -476,54 +456,50 @@ func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,ac
 			{
 				"approvalName": "signup"
 			}`)
-	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
-
-	if clientErr != nil {
+	if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
 		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return clientErr
-	}
-
-	log.Printf("Sending account approval: %s \n", procurementUrl)
-	procResp, err := client.Post(procurementUrl,"",bytes.NewBuffer(jsonApproval))
-	if nil != err {
-		log.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
-		return err
-	}
-	defer procResp.Body.Close()
-	if procResp.StatusCode != 200 {
-		log.Println("Account approval received error response: ",procResp.StatusCode)
-		responseDump, _ := httputil.DumpResponse(procResp, true)
-		log.Println(string(responseDump))
-		return errors.New("Account approval received error response: "+procResp.Status)
 	} else {
-		log.Printf("%s %s",procurementUrl,procResp.Status)
+		log.Printf("Sending account approval: %s \n", procurementUrl)
+		if procResp, err := client.Post(procurementUrl, "", bytes.NewBuffer(jsonApproval)); nil != err {
+			log.Printf("Failed sending entitlement approval request %s %#v \n", procurementUrl, err)
+			return err
+		} else {
+			defer procResp.Body.Close()
+			if procResp.StatusCode != 200 {
+				log.Println("Account approval received error response: ", procResp.StatusCode)
+				responseDump, _ := httputil.DumpResponse(procResp, true)
+				log.Println(string(responseDump))
+				return errors.New("Account approval received error response: " + procResp.Status)
+			} else {
+				log.Printf("%s %s", procurementUrl, procResp.Status)
+			}
+			return nil
+		}
 	}
-	return nil
 }
 
 func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accountName string,w http.ResponseWriter) error {
 	procurementUrl := cloudCommerceProcurementUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":reset"
-	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
-
-	if clientErr != nil {
+	if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
 		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return clientErr
+	} else {
+		log.Printf("Sending account reset: %s \n", procurementUrl)
+		if procResp, err := client.Post(procurementUrl, "", nil); nil != err {
+			log.Printf("Failed sending account reset request %s %#v \n", procurementUrl, err)
+			return err
+		} else {
+			defer procResp.Body.Close()
+			if procResp.StatusCode != 200 {
+				log.Println("Account reset received error response: ", procResp.StatusCode)
+				responseDump, _ := httputil.DumpResponse(procResp, true)
+				log.Println(string(responseDump))
+				return errors.New("Account reset received error response: " + procResp.Status)
+			}
+			return nil
+		}
 	}
-
-	log.Printf("Sending account reset: %s \n", procurementUrl)
-	procResp, err := client.Post(procurementUrl,"",nil)
-	if nil != err {
-		log.Printf("Failed sending account reset request %s %#v \n",procurementUrl, err)
-		return err
-	}
-	defer procResp.Body.Close()
-	if procResp.StatusCode != 200 {
-		log.Println("Account reset received error response: ",procResp.StatusCode)
-		responseDump, _ := httputil.DumpResponse(procResp, true)
-		log.Println(string(responseDump))
-		return errors.New("Account reset received error response: "+procResp.Status)
-	}
-	return nil
 }
 
 
