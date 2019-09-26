@@ -89,7 +89,7 @@ Then create the kubernetes secret.
 kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
 ```
 
-### Using the Datastore Emulator
+## Using the Datastore Emulator
 For development and testing, GCP provides a [Datastore emulator](https://cloud.google.com/datastore/docs/tools/datastore-emulator). Follow the [instructions](https://cloud.google.com/datastore/docs/tools/datastore-emulator#installing_the_emulator) to install the emulator. Then start the datastore emulator:
 
 ```
@@ -104,6 +104,29 @@ export DATASTORE_EMULATOR_HOST_PATH=::1:8039/datastore
 export DATASTORE_HOST=http://::1:8039
 export DATASTORE_PROJECT_ID=cloud-bill
 ```
+
+### Importing Cloud Datastore DB to the Emulator for Testing
+1. Follow these [instructions] to create a GCS bucket.
+2. Export the database to the GCS bucket. Ensure you are authenticated, have the correct permissions, and have the correct project set.
+```
+gcloud datastore export gs://${BUCKET} --async
+```
+3. Use gsutil to copy the bucket to your local directory.
+```
+gsutil cp -r gs://cloud-bill-dev.appspot.com .
+```
+4. With the emulator running, use curl to import the data.
+```
+curl -X POST localhost:8081/v1/projects/[PROJECT_ID]:import \
+-H 'Content-Type: application/json' \
+-d '{"input_url":"[ENTITY_EXPORT_FILES]"}'
+
+ex.
+curl -X POST localhost:8116/v1/projects/cloud-bill:import \
+-H 'Content-Type: application/json' \
+-d '{"input_url":"/Users/jefferyfry/tmp/emulator_db/cloud-bill-dev.appspot.com/2019-09-26T15:54:16_87320/2019-09-26T15:54:16_87320.overall_export_metadata"}'
+```
+Modify localhost:8081 if the emulator uses a different port.
 
 ## Running Locally
 The following will run the service locally.
