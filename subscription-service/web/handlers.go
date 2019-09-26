@@ -6,10 +6,11 @@ import (
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
 	"github.com/gorilla/mux"
 	"net/http"
+	"strings"
 )
 
 type SubscriptionServiceHandler struct {
-	dbHandler persistence.DatabaseHandler
+	dbHandler             persistence.DatabaseHandler
 }
 
 func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler) *SubscriptionServiceHandler {
@@ -44,6 +45,35 @@ func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *htt
 	} else {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(&account)
+	}
+}
+
+// @Summary GetAccounts
+// @Description Gets an array of accounts
+// @ID cloud-bill-saas-subscription-service-get-accounts
+// @Accept  json
+// @Produce  json
+// @Param filters query string false "optional comma separated list of filter"
+// @Param order query string false "optional order"
+// @Success 200 {array} persistence.Account
+// @Failure 500 {string} string "Error"
+// @Router /accounts [get]
+func (hdlr *SubscriptionServiceHandler) GetAccounts(w http.ResponseWriter, r *http.Request){
+	vars := mux.Vars(r)
+	filtersParam := vars["filters"]
+	var filters []string = nil
+	if filtersParam != "" {
+		filters = strings.Split(filtersParam,",")
+	}
+	orderParam := vars["order"]
+
+	if accounts, dbErr := hdlr.dbHandler.QueryAccounts(filters,orderParam); nil != dbErr {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		return
+	} else {
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(&accounts)
 	}
 }
 
@@ -203,6 +233,77 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r 
 	} else {
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(&entitlement)
+	}
+}
+
+// @Summary GetEntitlements
+// @Description Gets an array of entitlements
+// @ID cloud-bill-saas-subscription-service-get-entitlements
+// @Accept  json
+// @Produce  json
+// @Param filters query string false "optional comma separated list of filter"
+// @Param order query string false "optional order"
+// @Success 200 {array} persistence.Entitlement
+// @Failure 500 {string} string "Error"
+// @Router /entitlements [get]
+func (hdlr *SubscriptionServiceHandler) GetEntitlements(w http.ResponseWriter, r *http.Request){
+	vars := mux.Vars(r)
+	filtersParam := vars["filters"]
+	var filters []string = nil
+	if filtersParam != "" {
+		filters = strings.Split(filtersParam,",")
+	}
+	orderParam := vars["order"]
+
+	if entitlements, dbErr := hdlr.dbHandler.QueryEntitlements(filters,orderParam); nil != dbErr {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		return
+	} else {
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(&entitlements)
+	}
+}
+
+// @Summary GetAccountEntitlements
+// @Description Gets an array of entitlements for an account
+// @ID cloud-bill-saas-subscription-service-get-account-entitlements
+// @Accept  json
+// @Produce  json
+// @Param acct path string true "account"
+// @Param filters query string false "optional comma separated list of filter"
+// @Param order query string false "optional order"
+// @Success 200 {array} persistence.Entitlement
+// @Failure 500 {string} string "Error"
+// @Router /accounts/{accountName}/entitlements [get]
+func (hdlr *SubscriptionServiceHandler) GetAccountEntitlements(w http.ResponseWriter, r *http.Request){
+	vars := mux.Vars(r)
+	accountName := vars["acct"]
+
+	if accountName == "" {
+		http.Error(w,`{"error": "missing account name"}`,400)
+		return
+	}
+
+	filtersParam, ok := r.URL.Query()["filters"]
+	var filters []string = nil
+	if ok || len(filtersParam) > 0 {
+		filters = strings.Split(filtersParam[0],",")
+	}
+
+	ordersParam, ok := r.URL.Query()["order"]
+	var order = ""
+	if ok || len(ordersParam) > 0 {
+		order = ordersParam[0]
+	}
+
+	if entitlements, dbErr := hdlr.dbHandler.QueryAccountEntitlements(accountName,filters,order); nil != dbErr {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		return
+	} else {
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(&entitlements)
 	}
 }
 

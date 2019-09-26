@@ -159,7 +159,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *ht
 func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r *http.Request) {
 	acct, ok := r.URL.Query()["acct"]
 
-	if !ok || len(acct[0]) < 1 {
+	if !ok || len(acct) < 1 {
 		http.Error(w, "Missing acct parameter.", http.StatusBadRequest)
 		return
 	}
@@ -182,7 +182,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r
 func (hdlr *SubscriptionFrontendHandler) ResetSaas(w http.ResponseWriter, r *http.Request) {
 	acct, acctOk := r.URL.Query()["acct"]
 
-	if !acctOk || len(acct[0]) < 1 {
+	if !acctOk || len(acct) < 1 {
 		http.Error(w, "Missing acct parameter.", http.StatusBadRequest)
 		return
 	}
@@ -205,7 +205,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 
 	prod, ok := r.URL.Query()["prod"]
 
-	if !ok || len(prod[0]) < 1 {
+	if !ok || len(prod) < 1 {
 		http.Error(w, "Missing prod parameter.", http.StatusBadRequest)
 		return
 	}
@@ -229,7 +229,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *http.Request) {
 	email, ok := r.URL.Query()["email"]
 
-	if !ok {
+	if !ok || len(email) < 1 {
 		http.Error(w, "Missing email parameter.", http.StatusBadRequest)
 		return
 	}
@@ -409,6 +409,7 @@ func createProduct(prod string, accountName string, subscriptionServiceUrl strin
 	}
 	if productBytes, err := json.Marshal(product); err != nil {
 		fmt.Fprintf(w, `{"error": "unable to decode product object %s"}`, err)
+		return false
 	} else {
 		if prodReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/entitlements", bytes.NewBuffer(productBytes)); nil != err {
 			w.WriteHeader(500)

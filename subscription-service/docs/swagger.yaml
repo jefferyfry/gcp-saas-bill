@@ -80,6 +80,34 @@ info:
   termsOfService: https://www.cloudbees.com/products/terms-service
 paths:
   /accounts:
+    get:
+      consumes:
+      - application/json
+      description: Gets an array of accounts
+      operationId: cloud-bill-saas-subscription-service-get-accounts
+      parameters:
+      - description: optional comma separated list of filter
+        in: query
+        name: filters
+        type: string
+      - description: optional order
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/persistence.Account'
+            type: array
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: GetAccounts
     put:
       consumes:
       - application/json
@@ -160,6 +188,40 @@ paths:
           schema:
             type: string
       summary: Get an account
+  /accounts/{accountName}/entitlements:
+    get:
+      consumes:
+      - application/json
+      description: Gets an array of entitlements for an account
+      operationId: cloud-bill-saas-subscription-service-get-account-entitlements
+      parameters:
+      - description: account
+        in: path
+        name: acct
+        required: true
+        type: string
+      - description: optional comma separated list of filter
+        in: query
+        name: filters
+        type: string
+      - description: optional order
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/persistence.Entitlement'
+            type: array
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: GetAccountEntitlements
   /contacts:
     put:
       consumes:
@@ -234,6 +296,34 @@ paths:
             type: string
       summary: Get an contact
   /entitlements:
+    get:
+      consumes:
+      - application/json
+      description: Gets an array of entitlements
+      operationId: cloud-bill-saas-subscription-service-get-entitlements
+      parameters:
+      - description: optional comma separated list of filter
+        in: query
+        name: filters
+        type: string
+      - description: optional order
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/persistence.Entitlement'
+            type: array
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: GetEntitlements
     put:
       consumes:
       - application/json

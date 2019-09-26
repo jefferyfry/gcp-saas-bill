@@ -13,6 +13,48 @@
     "basePath": "/api/v1",
     "paths": {
         "/accounts": {
+            "get": {
+                "description": "Gets an array of accounts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "GetAccounts",
+                "operationId": "cloud-bill-saas-subscription-service-get-accounts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "optional comma separated list of filter",
+                        "name": "filters",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "optional order",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/persistence.Account"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Upsert an account passing account json",
                 "consumes": [
@@ -133,6 +175,57 @@
                 }
             }
         },
+        "/accounts/{accountName}/entitlements": {
+            "get": {
+                "description": "Gets an array of entitlements for an account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "GetAccountEntitlements",
+                "operationId": "cloud-bill-saas-subscription-service-get-account-entitlements",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "account",
+                        "name": "acct",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "optional comma separated list of filter",
+                        "name": "filters",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "optional order",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/persistence.Entitlement"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/contacts": {
             "put": {
                 "description": "Upsert an contact passing contact json",
@@ -243,6 +336,48 @@
             }
         },
         "/entitlements": {
+            "get": {
+                "description": "Gets an array of entitlements",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "GetEntitlements",
+                "operationId": "cloud-bill-saas-subscription-service-get-entitlements",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "optional comma separated list of filter",
+                        "name": "filters",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "optional order",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/persistence.Entitlement"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Upsert an entitlement passing entitlement json",
                 "consumes": [

@@ -149,6 +149,8 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 		if err := syncAccount(pubSubMsg.Account.Id); err != nil {
 			log.Printf("Unable to update account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
+		} else {
+
 		}
 		//check to see if we have any entitlements we need to approve
 	case "ENTITLEMENT_CREATION_REQUESTED":

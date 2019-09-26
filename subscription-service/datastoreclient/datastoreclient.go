@@ -3,8 +3,11 @@ package datastoreclient
 import (
 	"cloud.google.com/go/datastore"
 	"context"
+	"errors"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
+	"google.golang.org/api/iterator"
 	"log"
+	"strings"
 )
 
 const (
@@ -154,6 +157,128 @@ func (datastoreClient *DatastoreClient) GetEntitlement(entitlementName string) (
 		return &entitlement, gtErr
 	}
 }
+
+func (datastoreClient *DatastoreClient) QueryEntitlements(filters []string, order string) ([]persistence.Entitlement, error){
+	ctx := context.Background()
+
+	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return nil,err
+	} else {
+		q := datastore.NewQuery(ENTITLEMENT)
+		if order != "" {
+			q = q.Order(order)
+		}
+
+		if filters != nil && len(filters)>0 {
+			for _, s := range filters {
+				if filter := strings.SplitAfter(s, "="); len(filter) > 0 {
+					filterStr := filter[0]
+					value := filter[1]
+					q = q.Filter(filterStr, value)
+				}
+			}
+		}
+
+		t := client.Run(ctx, q)
+		var entitlements []persistence.Entitlement
+		for {
+			entitlement := persistence.Entitlement{}
+			_, err := t.Next(&entitlement)
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+			entitlements = append(entitlements, entitlement)
+		}
+		return entitlements, nil
+	}
+}
+
+func (datastoreClient *DatastoreClient) QueryAccountEntitlements(accountName string,filters []string, order string) ([]persistence.Entitlement, error){
+	if accountName == "" {
+		return nil,errors.New("Must specify account name.")
+	}
+	ctx := context.Background()
+
+	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return nil,err
+	} else {
+		q := datastore.NewQuery(ENTITLEMENT)
+		q.Filter("Account=",accountName)
+		if order != "" {
+			q = q.Order(order)
+		}
+
+		if filters != nil && len(filters)>0 {
+			for _, s := range filters {
+				if filter := strings.SplitAfter(s, "="); len(filter) > 0 {
+					filterStr := filter[0]
+					value := filter[1]
+					q = q.Filter(filterStr, value)
+				}
+			}
+		}
+
+		t := client.Run(ctx, q)
+		var entitlements []persistence.Entitlement
+		for {
+			entitlement := persistence.Entitlement{}
+			_, err := t.Next(&entitlement)
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+			entitlements = append(entitlements, entitlement)
+		}
+		return entitlements, nil
+	}
+}
+
+func (datastoreClient *DatastoreClient) QueryAccounts(filters []string, order string) ([]persistence.Account, error){
+	ctx := context.Background()
+
+	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return nil,err
+	} else {
+		q := datastore.NewQuery(ACCOUNT)
+		if order != "" {
+			q = q.Order(order)
+		}
+
+		if filters != nil && len(filters)>0 {
+			for _, s := range filters {
+				if filter := strings.SplitAfter(s, "="); len(filter) > 0 {
+					filterStr := filter[0]
+					value := filter[1]
+					q = q.Filter(filterStr, value)
+				}
+			}
+		}
+
+		t := client.Run(ctx, q)
+		var accounts []persistence.Account
+		for {
+			account := persistence.Account{}
+			_, err := t.Next(&account)
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+			accounts = append(accounts, account)
+		}
+		return accounts, nil
+	}
+}
+
 
 
 
