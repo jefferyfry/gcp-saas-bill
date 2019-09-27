@@ -8,6 +8,8 @@ definitions:
         type: array
       createTime:
         type: string
+      id:
+        type: string
       name:
         type: string
       provider:
@@ -30,7 +32,7 @@ definitions:
     type: object
   persistence.Contact:
     properties:
-      accountName:
+      accountId:
         type: string
       company:
         type: string
@@ -50,6 +52,8 @@ definitions:
       account:
         type: string
       createTime:
+        type: string
+      id:
         type: string
       messageToUser:
         type: string
@@ -133,16 +137,16 @@ paths:
           schema:
             type: string
       summary: Upsert an account
-  /accounts/{accountName}:
+  /accounts/{accountId}:
     delete:
       consumes:
       - application/json
       description: Delete an account
       operationId: cloud-bill-saas-subscription-service-delete-account
       parameters:
-      - description: Account Name
+      - description: Account ID
         in: path
-        name: accountName
+        name: accountId
         required: true
         type: string
       produces:
@@ -153,7 +157,7 @@ paths:
           schema:
             type: string
         "400":
-          description: Missing account name in path
+          description: Missing account ID in path
           schema:
             type: string
         "500":
@@ -164,12 +168,12 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves an account by account name
+      description: Retrieves an account by account ID
       operationId: cloud-bill-saas-subscription-service-get-account
       parameters:
-      - description: Account Name
+      - description: Account ID
         in: path
-        name: accountName
+        name: accountId
         required: true
         type: string
       produces:
@@ -180,7 +184,7 @@ paths:
           schema:
             $ref: '#/definitions/persistence.Account'
         "400":
-          description: Missing account name in path
+          description: Missing account ID in path
           schema:
             type: string
         "500":
@@ -188,7 +192,7 @@ paths:
           schema:
             type: string
       summary: Get an account
-  /accounts/{accountName}/entitlements:
+  /accounts/{accountId}/entitlements:
     get:
       consumes:
       - application/json
@@ -223,10 +227,38 @@ paths:
             type: string
       summary: GetAccountEntitlements
   /contacts:
+    get:
+      consumes:
+      - application/json
+      description: Gets an array of contacts
+      operationId: cloud-bill-saas-subscription-service-get-contacts
+      parameters:
+      - description: optional comma separated list of filter
+        in: query
+        name: filters
+        type: string
+      - description: optional order
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/persistence.Contact'
+            type: array
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: GetContacts
     put:
       consumes:
       - application/json
-      description: Upsert an contact passing contact json
+      description: Upsert a contact passing contact json
       operationId: cloud-bill-saas-subscription-service-upsert-contact
       produces:
       - application/json
@@ -239,17 +271,17 @@ paths:
           description: Error
           schema:
             type: string
-      summary: Upsert an contact
-  /contacts/{accountName}:
+      summary: Upsert a contact
+  /contacts/{accountId}:
     delete:
       consumes:
       - application/json
       description: Delete an contact
       operationId: cloud-bill-saas-subscription-service-delete-contact
       parameters:
-      - description: Account Name
+      - description: Account ID
         in: path
-        name: accountName
+        name: accountId
         required: true
         type: string
       produces:
@@ -260,7 +292,7 @@ paths:
           schema:
             type: string
         "400":
-          description: Missing account name in path
+          description: Missing account ID in path
           schema:
             type: string
         "500":
@@ -271,12 +303,12 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves an contact by account name
+      description: Retrieves an contact by account ID
       operationId: cloud-bill-saas-subscription-service-get-contact
       parameters:
-      - description: Account Name
+      - description: Account ID
         in: path
-        name: accountName
+        name: accountId
         required: true
         type: string
       produces:
@@ -287,7 +319,7 @@ paths:
           schema:
             $ref: '#/definitions/persistence.Contact'
         "400":
-          description: Missing account name in path
+          description: Missing account ID in path
           schema:
             type: string
         "500":
@@ -341,16 +373,16 @@ paths:
           schema:
             type: string
       summary: Upsert an entitlement
-  /entitlements/{entitlementName}:
+  /entitlements/{entitlementId}:
     delete:
       consumes:
       - application/json
       description: Delete an entitlement
       operationId: cloud-bill-saas-subscription-service-delete-entitlement
       parameters:
-      - description: Entitlement Name
+      - description: Entitlement ID
         in: path
-        name: entitlementName
+        name: entitlementId
         required: true
         type: string
       produces:
@@ -361,7 +393,7 @@ paths:
           schema:
             type: string
         "400":
-          description: Missing entitlement name in path
+          description: Missing entitlement ID in path
           schema:
             type: string
         "500":
@@ -372,12 +404,12 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves an entitlement by entitlement name
+      description: Retrieves an entitlement by entitlement ID
       operationId: cloud-bill-saas-subscription-service-get-entitlement
       parameters:
-      - description: Entitlement Name
+      - description: Entitlement ID
         in: path
-        name: entitlementName
+        name: entitlementId
         required: true
         type: string
       produces:
@@ -388,7 +420,7 @@ paths:
           schema:
             $ref: '#/definitions/persistence.Entitlement'
         "400":
-          description: Missing entitlement name in path
+          description: Missing entitlement ID in path
           schema:
             type: string
         "500":

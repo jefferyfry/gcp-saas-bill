@@ -34,14 +34,14 @@ func (datastoreClient *DatastoreClient) UpsertAccount(account *persistence.Accou
 		return err
 	} else {
 		kind := ACCOUNT
-		name := account.Name
-		key := datastore.NameKey(kind, name, nil)
+		id := account.Id
+		key := datastore.NameKey(kind, id, nil)
 		_,ptErr := client.Put(ctx, key, account)
 		return ptErr
 	}
 }
 
-func (datastoreClient *DatastoreClient) DeleteAccount(name string) error {
+func (datastoreClient *DatastoreClient) DeleteAccount(accountId string) error {
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
@@ -49,13 +49,12 @@ func (datastoreClient *DatastoreClient) DeleteAccount(name string) error {
 		return err
 	} else {
 		kind := ACCOUNT
-		key := datastore.NameKey(kind, name, nil)
-
+		key := datastore.NameKey(kind, accountId, nil)
 		return client.Delete(ctx, key)
 	}
 }
 
-func (datastoreClient *DatastoreClient) GetAccount(name string) (*persistence.Account, error){
+func (datastoreClient *DatastoreClient) GetAccount(accountId string) (*persistence.Account, error){
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
@@ -63,7 +62,7 @@ func (datastoreClient *DatastoreClient) GetAccount(name string) (*persistence.Ac
 		return nil,err
 	} else {
 		kind := ACCOUNT
-		key := datastore.NameKey(kind, name, nil)
+		key := datastore.NameKey(kind, accountId, nil)
 		account := persistence.Account{}
 		gtErr := client.Get(ctx,key, account)
 		return &account, gtErr
@@ -77,16 +76,15 @@ func (datastoreClient *DatastoreClient) UpsertContact(contact *persistence.Conta
 		log.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
-		accountKey := datastore.NameKey(ACCOUNT, contact.AccountName, nil)
 		kind := CONTACT
-		name := contact.AccountName
-		key := datastore.NameKey(kind, name, accountKey)
+		id := contact.AccountId
+		key := datastore.NameKey(kind, id, nil)
 		_, ptErr := client.Put(ctx, key, contact)
 		return ptErr
 	}
 }
 
-func (datastoreClient *DatastoreClient) DeleteContact(accountName string) error {
+func (datastoreClient *DatastoreClient) DeleteContact(accountId string) error {
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
@@ -94,12 +92,12 @@ func (datastoreClient *DatastoreClient) DeleteContact(accountName string) error 
 		return err
 	} else {
 		kind := CONTACT
-		key := datastore.NameKey(kind, accountName, nil)
+		key := datastore.NameKey(kind, accountId, nil)
 		return client.Delete(ctx, key)
 	}
 }
 
-func (datastoreClient *DatastoreClient) GetContact(accountName string) (*persistence.Contact, error){
+func (datastoreClient *DatastoreClient) GetContact(accountId string) (*persistence.Contact, error){
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
@@ -107,7 +105,7 @@ func (datastoreClient *DatastoreClient) GetContact(accountName string) (*persist
 		return nil,err
 	} else {
 		kind := CONTACT
-		key := datastore.NameKey(kind, accountName, nil)
+		key := datastore.NameKey(kind, accountId, nil)
 		contact := persistence.Contact{}
 		gtErr := client.Get(ctx, key, contact)
 		return &contact, gtErr
@@ -121,16 +119,15 @@ func (datastoreClient *DatastoreClient) UpsertEntitlement(entitlement *persisten
 		log.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
-		accountKey := datastore.NameKey(ACCOUNT, entitlement.Account, nil)
 		kind := ENTITLEMENT
-		name := entitlement.Name
-		key := datastore.NameKey(kind, name, accountKey)
+		id := entitlement.Id
+		key := datastore.NameKey(kind, id, nil)
 		_, ptErr := client.Put(ctx, key, entitlement)
 		return ptErr
 	}
 }
 
-func (datastoreClient *DatastoreClient) DeleteEntitlement(entitlementName string) error {
+func (datastoreClient *DatastoreClient) DeleteEntitlement(entitlementId string) error {
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
@@ -138,12 +135,12 @@ func (datastoreClient *DatastoreClient) DeleteEntitlement(entitlementName string
 		return err
 	} else {
 		kind := ENTITLEMENT
-		key := datastore.NameKey(kind, entitlementName, nil)
+		key := datastore.NameKey(kind, entitlementId, nil)
 		return client.Delete(ctx, key)
 	}
 }
 
-func (datastoreClient *DatastoreClient) GetEntitlement(entitlementName string) (*persistence.Entitlement, error){
+func (datastoreClient *DatastoreClient) GetEntitlement(entitlementId string) (*persistence.Entitlement, error){
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
@@ -151,7 +148,7 @@ func (datastoreClient *DatastoreClient) GetEntitlement(entitlementName string) (
 		return nil,err
 	} else {
 		kind := ENTITLEMENT
-		key := datastore.NameKey(kind, entitlementName, nil)
+		key := datastore.NameKey(kind, entitlementId, nil)
 		entitlement := persistence.Entitlement{}
 		gtErr := client.Get(ctx, key, entitlement)
 		return &entitlement, gtErr
@@ -197,8 +194,8 @@ func (datastoreClient *DatastoreClient) QueryEntitlements(filters []string, orde
 	}
 }
 
-func (datastoreClient *DatastoreClient) QueryAccountEntitlements(accountName string,filters []string, order string) ([]persistence.Entitlement, error){
-	if accountName == "" {
+func (datastoreClient *DatastoreClient) QueryAccountEntitlements(accountId string,filters []string, order string) ([]persistence.Entitlement, error){
+	if accountId == "" {
 		return nil,errors.New("Must specify account name.")
 	}
 	ctx := context.Background()
@@ -208,7 +205,7 @@ func (datastoreClient *DatastoreClient) QueryAccountEntitlements(accountName str
 		return nil,err
 	} else {
 		q := datastore.NewQuery(ENTITLEMENT)
-		q.Filter("Account=",accountName)
+		q.Filter("Account=",accountId)
 		if order != "" {
 			q = q.Order(order)
 		}
@@ -276,6 +273,45 @@ func (datastoreClient *DatastoreClient) QueryAccounts(filters []string, order st
 			accounts = append(accounts, account)
 		}
 		return accounts, nil
+	}
+}
+
+func (datastoreClient *DatastoreClient) QueryContacts(filters []string, order string) ([]persistence.Contact, error){
+	ctx := context.Background()
+
+	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return nil,err
+	} else {
+		q := datastore.NewQuery(CONTACT)
+		if order != "" {
+			q = q.Order(order)
+		}
+
+		if filters != nil && len(filters)>0 {
+			for _, s := range filters {
+				if filter := strings.SplitAfter(s, "="); len(filter) > 0 {
+					filterStr := filter[0]
+					value := filter[1]
+					q = q.Filter(filterStr, value)
+				}
+			}
+		}
+
+		t := client.Run(ctx, q)
+		var contacts []persistence.Contact
+		for {
+			contact := persistence.Contact{}
+			_, err := t.Next(&contact)
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+			contacts = append(contacts, contact)
+		}
+		return contacts, nil
 	}
 }
 

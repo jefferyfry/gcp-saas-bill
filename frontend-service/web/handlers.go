@@ -50,7 +50,7 @@ type Product struct {
 }
 
 type Contact struct {
-	AccountName 	string     	`json:"accountName"`
+	AccountId 		string     	`json:"accountId"`
 	FirstName 		string     	`json:"firstName,omitempty"`
 	LastName		string     	`json:"lastName,omitempty"`
 	EmailAddress	string     	`json:"emailAddress"`
@@ -196,9 +196,9 @@ func (hdlr *SubscriptionFrontendHandler) ResetSaas(w http.ResponseWriter, r *htt
 
 func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accountName := vars["accountName"]
+	accountId := vars["accountId"]
 
-	if accountName == "" {
+	if accountId == "" {
 		http.Error(w,`{"error": "missing account name in path"}`,400)
 		return
 	}
@@ -214,7 +214,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
-		session.Values["acct"] = accountName
+		session.Values["acct"] = accountId
 		session.Values["prod"] = prod[0]
 		session.Save(r,w)
 	}
@@ -222,7 +222,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 	if tmpl, err := template.ParseFiles("templates/signup.html"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		tmpl.Execute(w, accountName)
+		tmpl.Execute(w, accountId)
 	}
 }
 
@@ -349,7 +349,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 
 func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *http.Request) {
 	contact := Contact{}
-	contact.AccountName = r.PostFormValue("acct")
+	contact.AccountId = r.PostFormValue("acct")
 	contact.Company = r.PostFormValue("company")
 	contact.EmailAddress = r.PostFormValue("emailAddress")
 	contact.FirstName = r.PostFormValue("firstName")
@@ -360,7 +360,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 	} else {
-		postAccountApproval(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountName, w)
+		postAccountApproval(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountId, w)
 
 		if tmpl, err := template.ParseFiles("templates/finish.html"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -372,7 +372,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 
 func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *http.Request) {
 	contact := Contact{}
-	contact.AccountName = r.PostFormValue("acct")
+	contact.AccountId = r.PostFormValue("acct")
 	contact.Company = r.PostFormValue("company")
 	contact.EmailAddress = r.PostFormValue("emailAddress")
 	contact.FirstName = r.PostFormValue("firstName")
@@ -387,7 +387,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 	} else {
 		//TODO query subscription API
 
-		createProduct(prod, contact.AccountName, hdlr.SubscriptionServiceUrl, w)
+		createProduct(prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w)
 
 		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -397,13 +397,13 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 	}
 }
 
-func createProduct(prod string, accountName string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+func createProduct(prod string, accountId string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	loc, _ := time.LoadLocation("UTC")
 	now := time.Now().In(loc).String()
 	product := Product {
-		Name: accountName+"-"+prod,
+		Name: accountId+"-"+prod,
 		Product: prod,
-		Account: accountName,
+		Account: accountId,
 		CreateTime: now,
 		UpdateTime: now,
 	}

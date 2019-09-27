@@ -15,7 +15,7 @@ func main() {
 	}
 
 	//start service
-	pubSubListener := mpevents.GetPubSubListener(config.PubSubSubscription,config.PubSubTopicPrefix,config.SubscriptionServiceUrl,config.CloudCommerceProcurementUrl,config.PartnerId,config.GcpProjectId)
+	pubSubListener := mpevents.GetPubSubListener(config.PubSubSubscription,config.SubscriptionServiceUrl,config.CloudCommerceProcurementUrl,config.PartnerId,config.GcpProjectId)
 	log.Fatal(pubSubListener.Listen())
 }
 

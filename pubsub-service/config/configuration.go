@@ -11,7 +11,6 @@ import (
 
 var (
 	PubSubSubscription       			= "codelab"
-	PubSubTopicPrefix       			= "DEMO-"
 	SubscriptionServiceUrl 				= "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
 	PartnerId							= "000"
@@ -20,7 +19,6 @@ var (
 
 type ServiceConfig struct {
 	PubSubSubscription    			string	`json:"pubSubSubscription"`
-	PubSubTopicPrefix				string 	`json:"pubSubTopicPrefix"`
 	SubscriptionServiceUrl 			string `json:"subscriptionServiceUrl"`
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
 	PartnerId    					string	`json:"partnerId"`
@@ -30,7 +28,6 @@ type ServiceConfig struct {
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		PubSubSubscription,
-		PubSubTopicPrefix,
 		SubscriptionServiceUrl,
 		CloudCommerceProcurementUrl,
 		PartnerId,
@@ -47,7 +44,6 @@ func GetConfiguration() (ServiceConfig, error) {
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
 	pubSubSubscription := flag.String("pubSubSubscription", "", "set the value of the pubsub subscription")
-	pubSubTopicPrefix := flag.String("pubSubTopicPrefix", "", "set the value of the pubsub topic prefix")
 	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
 	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
@@ -60,9 +56,6 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 	if *pubSubSubscription == "" {
 		*pubSubSubscription = os.Getenv("CLOUD_BILL_PUBSUB_SUBSCRIPTION")
-	}
-	if *pubSubTopicPrefix == "" {
-		*pubSubTopicPrefix = os.Getenv("CLOUD_BILL_PUBSUB_TOPIC_PREFIX")
 	}
 	if *subscriptionServiceUrl == "" {
 		*subscriptionServiceUrl = os.Getenv("CLOUD_BILL_SUBSCRIPTION_SERVICE_URL")
@@ -80,7 +73,6 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *configFile == "" {
 		//try other flags
 		conf.PubSubSubscription = *pubSubSubscription
-		conf.PubSubTopicPrefix = *pubSubTopicPrefix
 		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
 		conf.PartnerId = *partnerId
@@ -93,7 +85,7 @@ func GetConfiguration() (ServiceConfig, error) {
 			if err = json.NewDecoder(file).Decode(&conf); err != nil {
 				return conf, errors.New("Configuration file not found.")
 			}
-			log.Printf("Using confile file %s to launch subscription frontend service \n", *configFile)
+			log.Printf("Using confile file %s \n", *configFile)
 		}
 	}
 
@@ -101,11 +93,6 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.PubSubSubscription == "" {
 		log.Println("PubSubSubscription was not set.")
-		valid = false
-	}
-
-	if conf.PubSubTopicPrefix == "" {
-		log.Println("PubSubTopicPrefix was not set.")
 		valid = false
 	}
 

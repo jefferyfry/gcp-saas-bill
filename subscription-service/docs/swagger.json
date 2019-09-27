@@ -93,9 +93,9 @@
                 }
             }
         },
-        "/accounts/{accountName}": {
+        "/accounts/{accountId}": {
             "get": {
-                "description": "Retrieves an account by account name",
+                "description": "Retrieves an account by account ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -107,8 +107,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Account Name",
-                        "name": "accountName",
+                        "description": "Account ID",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     }
@@ -121,7 +121,7 @@
                         }
                     },
                     "400": {
-                        "description": "Missing account name in path",
+                        "description": "Missing account ID in path",
                         "schema": {
                             "type": "string"
                         }
@@ -147,8 +147,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Account Name",
-                        "name": "accountName",
+                        "description": "Account ID",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     }
@@ -161,7 +161,7 @@
                         }
                     },
                     "400": {
-                        "description": "Missing account name in path",
+                        "description": "Missing account ID in path",
                         "schema": {
                             "type": "string"
                         }
@@ -175,7 +175,7 @@
                 }
             }
         },
-        "/accounts/{accountName}/entitlements": {
+        "/accounts/{accountId}/entitlements": {
             "get": {
                 "description": "Gets an array of entitlements for an account",
                 "consumes": [
@@ -227,15 +227,57 @@
             }
         },
         "/contacts": {
-            "put": {
-                "description": "Upsert an contact passing contact json",
+            "get": {
+                "description": "Gets an array of contacts",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Upsert an contact",
+                "summary": "GetContacts",
+                "operationId": "cloud-bill-saas-subscription-service-get-contacts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "optional comma separated list of filter",
+                        "name": "filters",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "optional order",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/persistence.Contact"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Upsert a contact passing contact json",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Upsert a contact",
                 "operationId": "cloud-bill-saas-subscription-service-upsert-contact",
                 "responses": {
                     "204": {
@@ -253,9 +295,9 @@
                 }
             }
         },
-        "/contacts/{accountName}": {
+        "/contacts/{accountId}": {
             "get": {
-                "description": "Retrieves an contact by account name",
+                "description": "Retrieves an contact by account ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -267,8 +309,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Account Name",
-                        "name": "accountName",
+                        "description": "Account ID",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     }
@@ -281,7 +323,7 @@
                         }
                     },
                     "400": {
-                        "description": "Missing account name in path",
+                        "description": "Missing account ID in path",
                         "schema": {
                             "type": "string"
                         }
@@ -307,8 +349,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Account Name",
-                        "name": "accountName",
+                        "description": "Account ID",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     }
@@ -321,7 +363,7 @@
                         }
                     },
                     "400": {
-                        "description": "Missing account name in path",
+                        "description": "Missing account ID in path",
                         "schema": {
                             "type": "string"
                         }
@@ -404,9 +446,9 @@
                 }
             }
         },
-        "/entitlements/{entitlementName}": {
+        "/entitlements/{entitlementId}": {
             "get": {
-                "description": "Retrieves an entitlement by entitlement name",
+                "description": "Retrieves an entitlement by entitlement ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -418,8 +460,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Entitlement Name",
-                        "name": "entitlementName",
+                        "description": "Entitlement ID",
+                        "name": "entitlementId",
                         "in": "path",
                         "required": true
                     }
@@ -432,7 +474,7 @@
                         }
                     },
                     "400": {
-                        "description": "Missing entitlement name in path",
+                        "description": "Missing entitlement ID in path",
                         "schema": {
                             "type": "string"
                         }
@@ -458,8 +500,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Entitlement Name",
-                        "name": "entitlementName",
+                        "description": "Entitlement ID",
+                        "name": "entitlementId",
                         "in": "path",
                         "required": true
                     }
@@ -472,7 +514,7 @@
                         }
                     },
                     "400": {
-                        "description": "Missing entitlement name in path",
+                        "description": "Missing entitlement ID in path",
                         "schema": {
                             "type": "string"
                         }
@@ -498,6 +540,9 @@
                     }
                 },
                 "createTime": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "name": {
@@ -534,7 +579,7 @@
         "persistence.Contact": {
             "type": "object",
             "properties": {
-                "accountName": {
+                "accountId": {
                     "type": "string"
                 },
                 "company": {
@@ -564,6 +609,9 @@
                     "type": "string"
                 },
                 "createTime": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "messageToUser": {

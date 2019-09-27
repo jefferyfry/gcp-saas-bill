@@ -31,12 +31,13 @@ type AccountMeta struct {
 }
 
 type Account struct {
+	Id  			string     	`json:"id"`
 	Name  			string     	`json:"name"`
 	UpdateTime   	string    	`json:"updateTime,omitempty"`
 	CreateTime      string    	`json:"createTime,omitempty"`
 	Provider     	string		`json:"provider,omitempty"`
 	State 	 		string      `json:"state,omitempty"`
-	Approvals    	[]Approval     `json:"approvals,omitempty"`
+	Approvals    	[]Approval  `json:"approvals,omitempty"`
 }
 
 type Approval struct {
@@ -47,6 +48,7 @@ type Approval struct {
 }
 
 type Entitlement struct {
+	Id     				string	`json:"id"`
 	Name     			string	`json:"name"`
 	Account   			string	`json:"account"`
 	Provider    		string	`json:"provider"`
@@ -62,7 +64,6 @@ type Entitlement struct {
 
 type PubSubListener struct {
 	PubSubSubscription    			string
-	PubSubTopicPrefix				string
 	SubscriptionServiceUrl 			string
 	CloudCommerceProcurementUrl    	string
 	PartnerId    					string
@@ -74,12 +75,11 @@ var (
 	subscriptionServiceBaseUrl string
 )
 
-func GetPubSubListener(pubSubSubscription string, pubSubTopicPrefix string, subscriptionServiceUrl string, cloudCommerceProcurementUrl string, partnerId string, gcpProjectId string) *PubSubListener {
+func GetPubSubListener(pubSubSubscription string, subscriptionServiceUrl string, cloudCommerceProcurementUrl string, partnerId string, gcpProjectId string) *PubSubListener {
 	cloudCommerceProcurementBaseUrl = cloudCommerceProcurementUrl + "/providers/" + partnerId
 	subscriptionServiceBaseUrl = subscriptionServiceUrl
 	return &PubSubListener{
 		pubSubSubscription,
-		pubSubTopicPrefix,
 		subscriptionServiceUrl,
 		cloudCommerceProcurementUrl,
 		partnerId,
@@ -91,35 +91,18 @@ func (lstnr *PubSubListener) Listen() error {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, lstnr.GcpProjectId)
 	if err != nil {
-		log.Printf("Error creating pubsub client %s: %#v", lstnr.PubSubSubscription, err)
-		return err
-	}
-
-	topicId := lstnr.PubSubTopicPrefix+lstnr.GcpProjectId
-	topic := client.Topic(topicId)
-	if exists, errTp := topic.Exists(ctx); !exists && errTp == nil {
-		if _, err := client.CreateTopic(ctx, topicId); err != nil {
-			log.Printf("Failed to create topic: %#v", err)
-			return err
-		}
-	} else if errTp != nil {
-		log.Printf("Error checking for topic: %#v", errTp)
-		return errTp
+		log.Fatalf("Error creating pubsub client %s: %#v", lstnr.PubSubSubscription, err)
 	}
 
 	subscription := client.Subscription(lstnr.PubSubSubscription)
 
 	if exists, errSub := subscription.Exists(ctx); !exists && errSub == nil {
-		if _, err = client.CreateSubscription(ctx, lstnr.PubSubSubscription, pubsub.SubscriptionConfig{Topic: topic}); err != nil {
-			log.Printf("Failed to create subscription: %#v", err)
-			return err
-		}
+		log.Fatalf("Marketplace subscription %s does not exist \n", subscription.String())
 	} else if errSub != nil{
-		log.Printf("Error checking for subscription: %#v", errSub)
-		return errSub
+		log.Fatalf("Error checking for subscription: %#v", errSub)
 	}
 
-	log.Printf("Begin receiving messages from %s \n", lstnr.PubSubSubscription)
+	log.Printf("Begin receiving messages from subscription %s \n", subscription.String())
 	errRcv := subscription.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		pubSubMsg := PubSubMsg{}
 		if err := json.Unmarshal(msg.Data, &pubSubMsg); err != nil {
@@ -146,41 +129,41 @@ func (lstnr *PubSubListener) Listen() error {
 func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 	switch pubSubMsg.EventType {
 	case "ACCOUNT_ACTIVE":
-		if err := syncAccount(pubSubMsg.Account.Id); err != nil {
+		if _,err := syncAccount(pubSubMsg.Account.Id); err != nil {
 			log.Printf("Unable to update account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		} else {
-
+			if entitlements, err := getUnapprovedEntitlementsFromDb(pubSubMsg.Account.Id); err != nil {
+				log.Printf("Unable to check for unapproved entitlements %#v due to error %#v \n", pubSubMsg.Entitlement, err)
+				return false
+			} else if entitlements!=nil && len(entitlements) > 0 {
+				for _, ent := range entitlements {
+					postEntitlementApprovalToCommerceApi(ent.Id,false)
+				}
+			} else {
+				log.Printf("No unapproved entitlments were found for account %s",pubSubMsg.Account.Id)
+			}
 		}
-		//check to see if we have any entitlements we need to approve
 	case "ENTITLEMENT_CREATION_REQUESTED":
-		rcvdEntitlement := Entitlement{}
-		if err := getEntitlement(pubSubMsg.Entitlement.Id, &rcvdEntitlement); err != nil {
-			if accountExists, acctErr := accountExists(rcvdEntitlement.Account); accountExists && acctErr == nil {
-				if postErr := postEntitlementApproval(pubSubMsg.Entitlement.Id,false); postErr != nil {
+		if entitlement,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
+			if accountExists, acctErr := accountExistsInDb(entitlement.Account); acctErr != nil {
+				log.Printf("Unable to determine if account %#v exists due to error %#v \n", entitlement.Account, acctErr)
+				return false
+			} else if accountExists {
+				if postErr := postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id,false); postErr != nil {
 					log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, postErr)
 					return false
 				}
-			} else if !accountExists && acctErr == nil {
-				if err := updateEntitlement(&rcvdEntitlement); err != nil {
-					log.Printf("Unable to update entitlement %#v due to error %#v \n", rcvdEntitlement, err)
-				}
-			} else {
-				log.Printf("Unable to determine if account %#v exists due to error %#v \n", rcvdEntitlement.Account, acctErr)
-				return false
 			}
 		}
 	case "ENTITLEMENT_ACTIVE":
-		err := syncEntitlement(pubSubMsg.Entitlement.Id)
-		if err != nil {
+		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGE_REQUESTED":
-		err := postEntitlementApproval(pubSubMsg.Entitlement.Id, true)
-		if err == nil {
-			err := syncEntitlement(pubSubMsg.Entitlement.Id)
-			if err != nil {
+		if err := postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id, true); err == nil {
+			if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 				log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 				return false
 			}
@@ -189,35 +172,36 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGED":
-		err := syncEntitlement(pubSubMsg.Entitlement.Id)
-		if err != nil {
+		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_PENDING_CANCELLATION":
 		log.Println("ENTITLEMENT_PENDING_CANCELLATION ignored.")
 	case "ENTITLEMENT_CANCELLED":
-		if err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
+		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_DELETED":
-		if err := deleteEntitlement(pubSubMsg.Entitlement.Id); err != nil {
+		if err := deleteEntitlementFromDb(pubSubMsg.Entitlement.Id); err != nil {
 			log.Printf("Unable to delete entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ACCOUNT_DELETED":
-		if err := deleteAccount(pubSubMsg.Account.Id); err != nil {
+		if err := deleteAccountFromDb(pubSubMsg.Account.Id); err != nil {
 			log.Printf("Unable to delete account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
+	case "TEST":
+		log.Printf("Test message %s was received \n", pubSubMsg.EventId)
 	default:
 		log.Printf("Unknown pubsub event type %#v \n", pubSubMsg)
 	}
 	return true
 }
 
-func postEntitlementApproval(entitlementId string, planChange bool) error {
+func postEntitlementApprovalToCommerceApi(entitlementId string, planChange bool) error {
 	procurementUrl := cloudCommerceProcurementBaseUrl + "/entitlements/" + entitlementId + ":approve"
 	if planChange {
 		procurementUrl = cloudCommerceProcurementBaseUrl + "/entitlements/" + entitlementId + ":approveChange"
@@ -248,20 +232,20 @@ func postEntitlementApproval(entitlementId string, planChange bool) error {
 	return nil
 }
 
-func syncEntitlement(entitlementName string) error {
-	rcvdEntitlement := Entitlement{}
-	if err := getEntitlement(entitlementName, &rcvdEntitlement); err == nil {
-		if err := updateEntitlement(&rcvdEntitlement); err != nil {
-			log.Printf("Unable to update entitlement %#v due to error %#v \n", rcvdEntitlement, err)
+func syncEntitlement(entitlementId string) (*Entitlement,error) {
+	entitlement := Entitlement{}
+	if err := getEntitlementFromCommerceApi(entitlementId, &entitlement); err == nil {
+		if err := saveEntitlementToDb(&entitlement); err != nil {
+			log.Printf("Unable to update entitlement %#v due to error %#v \n", entitlement, err)
 		}
 	} else {
-		log.Printf("Unable to retrieve entitlement %s due to error %#v \n", rcvdEntitlement, err)
-		return err
+		log.Printf("Unable to retrieve entitlement %s due to error %#v \n", entitlement, err)
+		return nil, err
 	}
-	return nil
+	return &entitlement,nil
 }
 
-func getEntitlement(entitlementId string,entitlement *Entitlement) error {
+func getEntitlementFromCommerceApi(entitlementId string,entitlement *Entitlement) error {
 	procurementUrl := cloudCommerceProcurementBaseUrl + "/entitlements/" + entitlementId
 
 	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
@@ -291,11 +275,40 @@ func getEntitlement(entitlementId string,entitlement *Entitlement) error {
 		log.Printf("Error decoding entitlement %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return err
 	}
+	entitlement.Id = entitlementId
 
 	return nil
 }
 
-func updateEntitlement(entitlement *Entitlement) error {
+func getUnapprovedEntitlementsFromDb(accountId string) ([]Entitlement, error) {
+	procurementUrl := subscriptionServiceBaseUrl + "/accounts/"+accountId+"/entitlements?filter?state=ENTITLEMENT_CREATION_REQUESTED"
+
+	log.Printf("Getting unapproved entitlements: %s \n", procurementUrl)
+	resp, err := http.Get(procurementUrl)
+	if err != nil {
+		log.Printf("Failed to get entitlement %s %#v \n",procurementUrl, err)
+		return nil,err
+	}
+	if resp.StatusCode != 200 {
+		log.Println("Get entitlement received error response: ",resp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		log.Println(string(responseDump))
+		return nil,errors.New(resp.Status)
+	} else {
+		log.Printf("%s %s",procurementUrl,resp.Status)
+	}
+	defer resp.Body.Close()
+
+	entitlements := make([]Entitlement,0)
+	if err = json.NewDecoder(resp.Body).Decode(&entitlements); err != nil {
+		log.Printf("Error decoding entitlements %s %#v %#v \n", procurementUrl, resp.Body, err)
+		return nil,err
+	}
+
+	return entitlements,nil
+}
+
+func saveEntitlementToDb(entitlement *Entitlement) error {
 	entitlementBytes, err := json.Marshal(entitlement)
 	if err != nil {
 		log.Printf("Error marshalling entitlement %#v \n", err)
@@ -324,7 +337,7 @@ func updateEntitlement(entitlement *Entitlement) error {
 	return nil
 }
 
-func deleteEntitlement(entitlementId string) error {
+func deleteEntitlementFromDb(entitlementId string) error {
 	url := subscriptionServiceBaseUrl+"/entitlements/"+entitlementId
 	entitlementReq, err := http.NewRequest(http.MethodDelete, url,nil)
 	if nil != err {
@@ -348,33 +361,27 @@ func deleteEntitlement(entitlementId string) error {
 	return nil
 }
 
-func syncAccount(accountName string) error {
-	rcvdAcct := Account{}
-	if err := getAccount(accountName, &rcvdAcct); err == nil {
-		err := updateAccount(&rcvdAcct)
+func syncAccount(accountId string) (*Account, error) {
+	account := Account{}
+	if err := getAccountFromCommerceApi(accountId, &account); err == nil {
+		err := saveAccountToDb(&account)
 		if err != nil {
-			log.Printf("Unable to update account %#v due to error %#v \n", rcvdAcct, err)
+			log.Printf("Unable to update account %#v due to error %#v \n", account, err)
 		}
 	} else {
-		log.Printf("Unable to retrieve account %s due to error %#v \n", accountName, err)
-		return err
+		log.Printf("Unable to retrieve account %s due to error %#v \n", accountId, err)
+		return nil,err
 	}
-	return nil
+	return &account,nil
 }
 
-func accountExists(accountId string) (bool, error){
-	procurementUrl := cloudCommerceProcurementBaseUrl + "/accounts/" + accountId
-	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
+func accountExistsInDb(accountId string) (bool, error){
+	subscriptionServiceUrl := subscriptionServiceBaseUrl+"/accounts/"+accountId
 
-	if clientErr != nil {
-		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
-		return false, clientErr
-	}
-
-	log.Printf("Getting account: %s \n", procurementUrl)
-	resp, err := client.Get(procurementUrl)
+	log.Printf("Getting account: %s \n", subscriptionServiceUrl)
+	resp, err := http.Get(subscriptionServiceUrl)
 	if err != nil {
-		log.Printf("Failed to get account %s %#v \n",procurementUrl, err)
+		log.Printf("Failed to get account %s %#v \n",subscriptionServiceUrl, err)
 		return false, err
 	}
 
@@ -385,7 +392,7 @@ func accountExists(accountId string) (bool, error){
 	}
 }
 
-func getAccount(accountId string,account *Account) error {
+func getAccountFromCommerceApi(accountId string,account *Account) error {
 	procurementUrl := cloudCommerceProcurementBaseUrl + "/accounts/" + accountId
 	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
 
@@ -416,11 +423,12 @@ func getAccount(accountId string,account *Account) error {
 		log.Printf("Failed to decode account %s %#v %#v \n", procurementUrl, resp.Body, err)
 		return errJson
 	}
+	account.Id = accountId
 
 	return nil
 }
 
-func updateAccount(account *Account) error {
+func saveAccountToDb(account *Account) error {
 	accountBytes, err := json.Marshal(account)
 	if err != nil {
 		log.Printf("Error marshalling account %#v \n", err)
@@ -450,7 +458,7 @@ func updateAccount(account *Account) error {
 	return nil
 }
 
-func deleteAccount(accountId string) error {
+func deleteAccountFromDb(accountId string) error {
 	url := subscriptionServiceBaseUrl+"/accounts/"+accountId
 	accountReq, err := http.NewRequest(http.MethodDelete, url,nil)
 	if nil != err {

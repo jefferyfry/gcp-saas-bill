@@ -20,31 +20,38 @@ func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler) *Subsc
 }
 
 // @Summary Get an account
-// @Description Retrieves an account by account name
+// @Description Retrieves an account by account ID
 // @ID cloud-bill-saas-subscription-service-get-account
 // @Accept  json
 // @Produce  json
-// @Param accountName path string true "Account Name"
+// @Param accountId path string true "Account ID"
 // @Success 200 {object} persistence.Account
-// @Failure 400 {string} string "Missing account name in path"
+// @Failure 400 {string} string "Missing account ID in path"
 // @Failure 500 {string} string "Internal server error"
-// @Router /accounts/{accountName} [get]
+// @Router /accounts/{accountId} [get]
 func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accountName := vars["accountName"]
+	accountId := vars["accountId"]
 
-	if accountName == "" {
-		http.Error(w,`{"error": "missing account name"}`,400)
+	if accountId == "" {
+		http.Error(w,`{"error": "missing account ID"}`,400)
 		return
 	}
 
-	if account, dbErr := hdlr.dbHandler.GetAccount(accountName); nil != dbErr {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
-		return
+	if account, dbErr := hdlr.dbHandler.GetAccount(accountId); nil != dbErr {
+		if dbErr.Error() == "datastore: no such entity" {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		}
 	} else {
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(&account)
+		if account == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&account)
+		}
 	}
 }
 
@@ -59,21 +66,28 @@ func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *htt
 // @Failure 500 {string} string "Error"
 // @Router /accounts [get]
 func (hdlr *SubscriptionServiceHandler) GetAccounts(w http.ResponseWriter, r *http.Request){
-	vars := mux.Vars(r)
-	filtersParam := vars["filters"]
+	filtersParam, ok := r.URL.Query()["filters"]
 	var filters []string = nil
-	if filtersParam != "" {
-		filters = strings.Split(filtersParam,",")
+	if ok || len(filtersParam) > 0 {
+		filters = strings.Split(filtersParam[0],",")
 	}
-	orderParam := vars["order"]
 
-	if accounts, dbErr := hdlr.dbHandler.QueryAccounts(filters,orderParam); nil != dbErr {
+	ordersParam, ok := r.URL.Query()["order"]
+	var order = ""
+	if ok || len(ordersParam) > 0 {
+		order = ordersParam[0]
+	}
+
+	if accounts, dbErr := hdlr.dbHandler.QueryAccounts(filters,order); nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
-		return
 	} else {
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(&accounts)
+		if accounts == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&accounts)
+		}
 	}
 }
 
@@ -106,21 +120,21 @@ func (hdlr *SubscriptionServiceHandler) UpsertAccount(w http.ResponseWriter, r *
 // @ID cloud-bill-saas-subscription-service-delete-account
 // @Accept  json
 // @Produce  json
-// @Param accountName path string true "Account Name"
+// @Param accountId path string true "Account ID"
 // @Success 204 {string} string "Deleted"
-// @Failure 400 {string} string "Missing account name in path"
+// @Failure 400 {string} string "Missing account ID in path"
 // @Failure 500 {string} string "Internal server error"
-// @Router /accounts/{accountName} [delete]
+// @Router /accounts/{accountId} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accountName := vars["accountName"]
+	accountId := vars["accountId"]
 
-	if accountName == "" {
-		http.Error(w,`{"error": "missing account name"}`,400)
+	if accountId == "" {
+		http.Error(w,`{"error": "missing account ID"}`,400)
 		return
 	}
 
-	if dbErr := hdlr.dbHandler.DeleteAccount(accountName); nil != dbErr {
+	if dbErr := hdlr.dbHandler.DeleteAccount(accountId); nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while deleting account %s", dbErr)
 	} else {
@@ -129,36 +143,43 @@ func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *
 }
 
 // @Summary Get an contact
-// @Description Retrieves an contact by account name
+// @Description Retrieves an contact by account ID
 // @ID cloud-bill-saas-subscription-service-get-contact
 // @Accept  json
 // @Produce  json
-// @Param accountName path string true "Account Name"
+// @Param accountId path string true "Account ID"
 // @Success 200 {object} persistence.Contact
-// @Failure 400 {string} string "Missing account name in path"
+// @Failure 400 {string} string "Missing account ID in path"
 // @Failure 500 {string} string "Error"
-// @Router /contacts/{accountName} [get]
+// @Router /contacts/{accountId} [get]
 func (hdlr *SubscriptionServiceHandler) GetContact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accountName := vars["accountName"]
+	accountId := vars["accountId"]
 
-	if accountName == "" {
-		http.Error(w,`{"error": "missing account name in path"}`,400)
+	if accountId == "" {
+		http.Error(w,`{"error": "missing account ID in path"}`,400)
 		return
 	}
 
-	if contact, dbErr := hdlr.dbHandler.GetContact(accountName); nil != dbErr {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting contact %s", dbErr)
-		return
+	if contact, dbErr := hdlr.dbHandler.GetContact(accountId); nil != dbErr {
+		if dbErr.Error() == "datastore: no such entity" {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "error occured while getting contact %s", dbErr)
+		}
 	} else {
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(&contact)
+		if contact == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&contact)
+		}
 	}
 }
 
-// @Summary Upsert an contact
-// @Description Upsert an contact passing contact json
+// @Summary Upsert a contact
+// @Description Upsert a contact passing contact json
 // @ID cloud-bill-saas-subscription-service-upsert-contact
 // @Accept  json
 // @Produce  json
@@ -186,21 +207,21 @@ func (hdlr *SubscriptionServiceHandler) UpsertContact(w http.ResponseWriter, r *
 // @ID cloud-bill-saas-subscription-service-delete-contact
 // @Accept  json
 // @Produce  json
-// @Param accountName path string true "Account Name"
+// @Param accountId path string true "Account ID"
 // @Success 204 {string} string "Deleted"
-// @Failure 400 {string} string "Missing account name in path"
+// @Failure 400 {string} string "Missing account ID in path"
 // @Failure 500 {string} string "Error"
-// @Router /contacts/{accountName} [delete]
+// @Router /contacts/{accountId} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accountName := vars["accountName"]
+	accountId := vars["accountId"]
 
-	if accountName == "" {
+	if accountId == "" {
 		http.Error(w,`{"error": "missing contact name in path"}`,400)
 		return
 	}
 
-	if dbErr := hdlr.dbHandler.DeleteContact(accountName); nil != dbErr {
+	if dbErr := hdlr.dbHandler.DeleteContact(accountId); nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while deleting contact %s", dbErr)
 	} else {
@@ -208,31 +229,75 @@ func (hdlr *SubscriptionServiceHandler) DeleteContact(w http.ResponseWriter, r *
 	}
 }
 
+// @Summary GetContacts
+// @Description Gets an array of contacts
+// @ID cloud-bill-saas-subscription-service-get-contacts
+// @Accept  json
+// @Produce  json
+// @Param filters query string false "optional comma separated list of filter"
+// @Param order query string false "optional order"
+// @Success 200 {array} persistence.Contact
+// @Failure 500 {string} string "Error"
+// @Router /contacts [get]
+func (hdlr *SubscriptionServiceHandler) GetContacts(w http.ResponseWriter, r *http.Request){
+	filtersParam, ok := r.URL.Query()["filters"]
+	var filters []string = nil
+	if ok || len(filtersParam) > 0 {
+		filters = strings.Split(filtersParam[0],",")
+	}
+
+	ordersParam, ok := r.URL.Query()["order"]
+	var order = ""
+	if ok || len(ordersParam) > 0 {
+		order = ordersParam[0]
+	}
+
+	if contacts, dbErr := hdlr.dbHandler.QueryContacts(filters,order); nil != dbErr {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+	} else {
+		if contacts == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&contacts)
+		}
+	}
+}
+
 // @Summary Get an entitlement
-// @Description Retrieves an entitlement by entitlement name
+// @Description Retrieves an entitlement by entitlement ID
 // @ID cloud-bill-saas-subscription-service-get-entitlement
 // @Accept  json
 // @Produce  json
-// @Param entitlementName path string true "Entitlement Name"
+// @Param entitlementId path string true "Entitlement ID"
 // @Success 200 {object} persistence.Entitlement
-// @Failure 400 {string} string "Missing entitlement name in path"
+// @Failure 400 {string} string "Missing entitlement ID in path"
 // @Failure 500 {string} string "Error"
-// @Router /entitlements/{entitlementName} [get]
+// @Router /entitlements/{entitlementId} [get]
 func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	entitlementName := vars["entitlementName"]
+	entitlementId := vars["entitlementId"]
 
-	if entitlementName == "" {
-		http.Error(w,`{"error": "missing entitlement name in path"}`,400)
+	if entitlementId == "" {
+		http.Error(w,`{"error": "missing entitlement ID in path"}`,400)
 		return
 	}
 
-	if entitlement, dbErr := hdlr.dbHandler.GetEntitlement(entitlementName); nil != dbErr {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting entitlement %s", dbErr)
+	if entitlement, dbErr := hdlr.dbHandler.GetEntitlement(entitlementId); nil != dbErr {
+		if dbErr.Error() == "datastore: no such entity" {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "error occured while getting entitlement %s", dbErr)
+		}
 	} else {
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(&entitlement)
+		if entitlement == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&entitlement)
+		}
 	}
 }
 
@@ -247,21 +312,28 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r 
 // @Failure 500 {string} string "Error"
 // @Router /entitlements [get]
 func (hdlr *SubscriptionServiceHandler) GetEntitlements(w http.ResponseWriter, r *http.Request){
-	vars := mux.Vars(r)
-	filtersParam := vars["filters"]
+	filtersParam, ok := r.URL.Query()["filters"]
 	var filters []string = nil
-	if filtersParam != "" {
-		filters = strings.Split(filtersParam,",")
+	if ok || len(filtersParam) > 0 {
+		filters = strings.Split(filtersParam[0],",")
 	}
-	orderParam := vars["order"]
 
-	if entitlements, dbErr := hdlr.dbHandler.QueryEntitlements(filters,orderParam); nil != dbErr {
+	ordersParam, ok := r.URL.Query()["order"]
+	var order = ""
+	if ok || len(ordersParam) > 0 {
+		order = ordersParam[0]
+	}
+
+	if entitlements, dbErr := hdlr.dbHandler.QueryEntitlements(filters,order); nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
-		return
 	} else {
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(&entitlements)
+		if entitlements == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&entitlements)
+		}
 	}
 }
 
@@ -275,13 +347,13 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlements(w http.ResponseWriter, r
 // @Param order query string false "optional order"
 // @Success 200 {array} persistence.Entitlement
 // @Failure 500 {string} string "Error"
-// @Router /accounts/{accountName}/entitlements [get]
+// @Router /accounts/{accountId}/entitlements [get]
 func (hdlr *SubscriptionServiceHandler) GetAccountEntitlements(w http.ResponseWriter, r *http.Request){
 	vars := mux.Vars(r)
-	accountName := vars["acct"]
+	accountId := vars["accountId"]
 
-	if accountName == "" {
-		http.Error(w,`{"error": "missing account name"}`,400)
+	if accountId == "" {
+		http.Error(w,`{"error": "missing account ID"}`,400)
 		return
 	}
 
@@ -297,13 +369,16 @@ func (hdlr *SubscriptionServiceHandler) GetAccountEntitlements(w http.ResponseWr
 		order = ordersParam[0]
 	}
 
-	if entitlements, dbErr := hdlr.dbHandler.QueryAccountEntitlements(accountName,filters,order); nil != dbErr {
+	if entitlements, dbErr := hdlr.dbHandler.QueryAccountEntitlements(accountId,filters,order); nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
-		return
 	} else {
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(&entitlements)
+		if entitlements == nil {
+			w.WriteHeader(404)
+		} else {
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(&entitlements)
+		}
 	}
 }
 
@@ -335,21 +410,21 @@ func (hdlr *SubscriptionServiceHandler) UpsertEntitlement(w http.ResponseWriter,
 // @ID cloud-bill-saas-subscription-service-delete-entitlement
 // @Accept  json
 // @Produce  json
-// @Param entitlementName path string true "Entitlement Name"
+// @Param entitlementId path string true "Entitlement ID"
 // @Success 204 {string} string "Deleted"
-// @Failure 400 {string} string "Missing entitlement name in path"
+// @Failure 400 {string} string "Missing entitlement ID in path"
 // @Failure 500 {string} string "Error"
-// @Router /entitlements/{entitlementName} [delete]
+// @Router /entitlements/{entitlementId} [delete]
 func (hdlr *SubscriptionServiceHandler) DeleteEntitlement(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	entitlementName := vars["entitlementName"]
+	entitlementId := vars["entitlementId"]
 
-	if entitlementName == "" {
-		http.Error(w,`{"error": "missing entitlement name in path"}`,400)
+	if entitlementId == "" {
+		http.Error(w,`{"error": "missing entitlement ID in path"}`,400)
 		return
 	}
 
-	if dbErr := hdlr.dbHandler.DeleteEntitlement(entitlementName); nil != dbErr {
+	if dbErr := hdlr.dbHandler.DeleteEntitlement(entitlementId); nil != dbErr {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "error occured while deleting entitlement %s", dbErr)
 	} else {

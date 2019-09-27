@@ -119,7 +119,7 @@ func GetConfiguration() (ServiceConfig, error) {
 			if err = json.NewDecoder(file).Decode(&conf); err != nil {
 				return conf, errors.New("Configuration file not found.")
 			}
-			log.Printf("Using confile file %s to launch subscription frontend service \n", *configFile)
+			log.Printf("Using confile file %s \n", *configFile)
 		}
 	}
 

@@ -12,7 +12,7 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 
 	r.Methods(http.MethodGet).Path("/resetsaas").HandlerFunc(handler.ResetSaas)
 	r.Methods(http.MethodGet).Path("/signupsaastest").HandlerFunc(handler.SignupSaasTest)
-	r.Methods(http.MethodGet).Path("/signupprod/{accountName}").HandlerFunc(handler.SignupProd)
+	r.Methods(http.MethodGet).Path("/signupprod/{accountId}").HandlerFunc(handler.SignupProd)
 	r.Methods(http.MethodPost).Path("/signupsaas").HandlerFunc(handler.SignupSaas)
 	r.Methods(http.MethodGet).Path("/login").HandlerFunc(handler.Auth0Login)
 	r.Methods(http.MethodGet).Path("/").HandlerFunc(handler.EmailConfirm)

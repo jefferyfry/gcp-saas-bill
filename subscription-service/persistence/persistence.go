@@ -14,6 +14,7 @@ type DatabaseHandler interface {
 	GetContact(string) (*Contact, error)
 
 	QueryEntitlements(filters []string, order string) ([]Entitlement, error)
-	QueryAccountEntitlements(accountName string,filters []string, order string) ([]Entitlement, error)
+	QueryAccountEntitlements(accountId string,filters []string, order string) ([]Entitlement, error)
 	QueryAccounts(filters []string, order string) ([]Account, error)
+	QueryContacts(filters []string, order string) ([]Contact, error)
 }

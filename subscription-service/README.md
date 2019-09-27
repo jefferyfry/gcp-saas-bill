@@ -122,7 +122,7 @@ curl -X POST localhost:8081/v1/projects/[PROJECT_ID]:import \
 -d '{"input_url":"[ENTITY_EXPORT_FILES]"}'
 
 ex.
-curl -X POST localhost:8116/v1/projects/cloud-bill:import \
+curl -X POST localhost:8116/v1/projects/cloud-bill-dev:import \
 -H 'Content-Type: application/json' \
 -d '{"input_url":"/Users/jefferyfry/tmp/emulator_db/cloud-bill-dev.appspot.com/2019-09-26T15:54:16_87320/2019-09-26T15:54:16_87320.overall_export_metadata"}'
 ```

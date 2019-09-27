@@ -16,24 +16,25 @@ func SetUpService(dbHandler persistence.DatabaseHandler,serviceEndpoint string) 
 
 	//accounts
 	subscriptionRouter.Methods(http.MethodPost).Path("/accounts").HandlerFunc(handler.UpsertAccount)
-	subscriptionRouter.Methods(http.MethodGet).Path("/accounts/{accountName}").HandlerFunc(handler.GetAccount)
+	subscriptionRouter.Methods(http.MethodGet).Path("/accounts/{accountId}").HandlerFunc(handler.GetAccount)
 	subscriptionRouter.Methods(http.MethodPut).Path("/accounts").HandlerFunc(handler.UpsertAccount)
-	subscriptionRouter.Methods(http.MethodDelete).Path("/accounts/{accountName}").HandlerFunc(handler.DeleteAccount)
+	subscriptionRouter.Methods(http.MethodDelete).Path("/accounts/{accountId}").HandlerFunc(handler.DeleteAccount)
 	subscriptionRouter.Methods(http.MethodGet).Path("/accounts").HandlerFunc(handler.GetAccounts)
 
 	//contacts
 	subscriptionRouter.Methods(http.MethodPost).Path("/contacts").HandlerFunc(handler.UpsertContact)
-	subscriptionRouter.Methods(http.MethodGet).Path("/contacts/{accountName}").HandlerFunc(handler.GetContact)
+	subscriptionRouter.Methods(http.MethodGet).Path("/contacts/{accountId}").HandlerFunc(handler.GetContact)
 	subscriptionRouter.Methods(http.MethodPut).Path("/contacts").HandlerFunc(handler.UpsertContact)
-	subscriptionRouter.Methods(http.MethodDelete).Path("/contacts/{accountName}").HandlerFunc(handler.DeleteContact)
+	subscriptionRouter.Methods(http.MethodDelete).Path("/contacts/{accountId}").HandlerFunc(handler.DeleteContact)
+	subscriptionRouter.Methods(http.MethodGet).Path("/contacts").HandlerFunc(handler.GetContacts)
 
 	//entitlements
 	subscriptionRouter.Methods(http.MethodPost).Path("/entitlements").HandlerFunc(handler.UpsertEntitlement)
-	subscriptionRouter.Methods(http.MethodGet).Path("/entitlements/{entitlementName}").HandlerFunc(handler.GetEntitlement)
+	subscriptionRouter.Methods(http.MethodGet).Path("/entitlements/{entitlementId}").HandlerFunc(handler.GetEntitlement)
 	subscriptionRouter.Methods(http.MethodPut).Path("/entitlements").HandlerFunc(handler.UpsertEntitlement)
-	subscriptionRouter.Methods(http.MethodDelete).Path("/entitlements/{entitlementName}").HandlerFunc(handler.DeleteEntitlement)
+	subscriptionRouter.Methods(http.MethodDelete).Path("/entitlements/{entitlementId}").HandlerFunc(handler.DeleteEntitlement)
 	subscriptionRouter.Methods(http.MethodGet).Path("/entitlements").HandlerFunc(handler.GetEntitlements)
-	subscriptionRouter.Methods(http.MethodGet).Path("/accounts/{accountName}/entitlements").HandlerFunc(handler.GetAccountEntitlements)
+	subscriptionRouter.Methods(http.MethodGet).Path("/accounts/{accountId}/entitlements").HandlerFunc(handler.GetAccountEntitlements)
 
 	//swagger
 	r.PathPrefix("/swagger/").Handler(httpSwagger.Handler(

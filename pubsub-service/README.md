@@ -40,7 +40,6 @@ command-line options > environment variables
 The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
-  "pubSubTopicPrefix": "DEMO-",
   "pubSubSubscription": "codelab",
   "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
   "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/v1/",
@@ -66,8 +65,6 @@ Then mount the file and set it as an environment variable.
           env:
             #            - name: CLOUD_BILL_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
-            #            - name: CLOUD_BILL_PUBSUB_TOPIC_PREFIX
-            #              value: "DEMO-"
             #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
             #              value: "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
             #            - name: CLOUD_BILL_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
