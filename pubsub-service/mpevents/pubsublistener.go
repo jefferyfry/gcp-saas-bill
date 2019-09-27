@@ -138,7 +138,7 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 				return false
 			} else if entitlements!=nil && len(entitlements) > 0 {
 				for _, ent := range entitlements {
-					postEntitlementApprovalToCommerceApi(ent.Id,false)
+					postEntitlementApprovalToCommerceApi(ent.Id)
 				}
 			} else {
 				log.Printf("No unapproved entitlments were found for account %s",pubSubMsg.Account.Id)
@@ -150,7 +150,7 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 				log.Printf("Unable to determine if account %#v exists due to error %#v \n", entitlement.Account, acctErr)
 				return false
 			} else if accountExists {
-				if postErr := postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id,false); postErr != nil {
+				if postErr := postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id); postErr != nil {
 					log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, postErr)
 					return false
 				}
@@ -162,7 +162,7 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGE_REQUESTED":
-		if err := postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id, true); err == nil {
+		if err := postEntitlementChangeApprovalToCommerceApi(pubSubMsg.Entitlement.Id); err == nil {
 			if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 				log.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 				return false
@@ -201,11 +201,8 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 	return true
 }
 
-func postEntitlementApprovalToCommerceApi(entitlementId string, planChange bool) error {
+func postEntitlementApprovalToCommerceApi(entitlementId string) error {
 	procurementUrl := cloudCommerceProcurementBaseUrl + "/entitlements/" + entitlementId + ":approve"
-	if planChange {
-		procurementUrl = cloudCommerceProcurementBaseUrl + "/entitlements/" + entitlementId + ":approveChange"
-	}
 
 	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
 
@@ -216,6 +213,41 @@ func postEntitlementApprovalToCommerceApi(entitlementId string, planChange bool)
 
 	log.Printf("Sending entitlement approval: %s \n", procurementUrl)
 	procResp, err := client.Post(procurementUrl,"",nil)
+	if nil != err {
+		log.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
+		return err
+	}
+	defer procResp.Body.Close()
+	if procResp.StatusCode != 200 {
+		log.Println("Entitlement approval received error response: ",procResp.StatusCode)
+		responseDump, _ := httputil.DumpResponse(procResp, true)
+		log.Println(string(responseDump))
+		return errors.New("Entitlement approval received error response: "+procResp.Status)
+	} else {
+		log.Printf("%s %s",procurementUrl,procResp.Status)
+	}
+	return nil
+}
+
+func postEntitlementChangeApprovalToCommerceApi(entitlementId string) error {
+	entitlement := Entitlement{}
+	if err := getEntitlementFromCommerceApi(entitlementId,&entitlement); err != nil {
+		log.Printf("Unable to determine entitlement to approve from procurement API %#v \n", err)
+	}
+	jsonApproval := []byte(`{
+				"pendingPlanName": "`+entitlement.NewPendingPlan+`"
+			}`)
+	procurementUrl := cloudCommerceProcurementBaseUrl + "/entitlements/" + entitlementId + ":approvePlanChange"
+
+	client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform")
+
+	if clientErr != nil {
+		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return clientErr
+	}
+
+	log.Printf("Sending entitlement change approval: %s %s \n", procurementUrl, jsonApproval)
+	procResp, err := client.Post(procurementUrl,"",bytes.NewBuffer(jsonApproval))
 	if nil != err {
 		log.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
 		return err
