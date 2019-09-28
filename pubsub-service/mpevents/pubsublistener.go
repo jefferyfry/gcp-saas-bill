@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"golang.org/x/oauth2/google"
+	"path/filepath"
 )
 
 type PubSubMsg struct {
@@ -267,6 +268,7 @@ func postEntitlementChangeApprovalToCommerceApi(entitlementId string) error {
 func syncEntitlement(entitlementId string) (*Entitlement,error) {
 	entitlement := Entitlement{}
 	if err := getEntitlementFromCommerceApi(entitlementId, &entitlement); err == nil {
+		entitlement.Account = filepath.Base(entitlement.Account)
 		if err := saveEntitlementToDb(&entitlement); err != nil {
 			log.Printf("Unable to update entitlement %#v due to error %#v \n", entitlement, err)
 		}
