@@ -146,16 +146,16 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			}
 		}
 	case "ENTITLEMENT_CREATION_REQUESTED":
-		if entitlement,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
+		if entitlement,err := syncEntitlement(pubSubMsg.Entitlement.Id); err == nil {
 			if accountExists, acctErr := accountExistsInDb(entitlement.Account); acctErr != nil {
 				log.Printf("Unable to determine if account %#v exists due to error %#v \n", entitlement.Account, acctErr)
 				return false
 			} else if accountExists {
-				if postErr := postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id); postErr != nil {
-					log.Printf("Unable to approve entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, postErr)
-					return false
-				}
+				postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id);
 			}
+		} else {
+			log.Printf("Unable to sync entitlement and approve entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
+			return false
 		}
 	case "ENTITLEMENT_ACTIVE":
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
