@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend-service
-          image: gcr.io/cloud-bill-dev/frontend-service:latest
+          image: gcr.io/cloud-bill-dev/frontend-service:1.0.0
           env:
             #            - name: CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT
             #              value: "8086"
@@ -71,7 +71,7 @@ spec:
     spec:
       containers:
         - name: subscription-service
-          image: gcr.io/cloud-bill-dev/subscription-service:latest
+          image: gcr.io/cloud-bill-dev/subscription-service:1.0.0
           env:
             #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT
             #              value: "8085"
@@ -120,7 +120,7 @@ spec:
     spec:
       containers:
         - name: pubsub-service
-          image: gcr.io/cloud-bill-dev/pubsub-service:latest
+          image: gcr.io/cloud-bill-dev/pubsub-service:1.0.0
           env:
             #            - name: CLOUD_BILL_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
