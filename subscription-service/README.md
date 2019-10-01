@@ -128,6 +128,9 @@ curl -X POST localhost:8116/v1/projects/cloud-bill-dev:import \
 ```
 Modify localhost:8081 if the emulator uses a different port.
 
+### Google Sheets to View the Cloud Datastore DB
+The [google-sheets directory](google-sheets/datastore-read-only.gs) contains a Google Apps Script that you can use to pull data from the Datastore DB and into a Google Sheet. Follow these [instructions](https://developers.google.com/apps-script/guides/sheets) to execute the script for a Google Sheet. [Time-driven triggers](https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers) can be used to automatically update the Google Sheet on a schedule. Running the script requires having a service account that has the Datastore Viewer IAM permission. Then place the Service Account json file in the same directory as the Google Sheet and name it _datastore-viewer-service-account.json_. 
+
 ## Running Locally
 The following will run the service locally.
 ```
@@ -175,5 +178,3 @@ swag init
 
 in the subscription-service directory.
 
-## Testing
-TBD

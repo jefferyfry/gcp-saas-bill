@@ -24,8 +24,7 @@ command-line options > environment variables
 * CLOUD_BILL_PUBSUB_PARTNER_ID
 * CLOUD_BILL_PUBSUB_GCP_PROJECT_ID - _GCP Project ID_ from above.
 
-* **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP PubSub. This is a required environment variable for production.
-* **GOOGLE_PROCUREMENT_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP Procurement API. This is a required environment variable for production.
+* **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP PubSub and Cloud Commerce Procurement API. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).

@@ -125,14 +125,21 @@ function main(){
         + currentdate.getMinutes() + ":"
         + currentdate.getSeconds();
 
-    var dateTime = [[datetime]];
-    SpreadsheetApp.getActiveSpreadsheet().getRange("A1:A1").setValues(dateTime);
+    //clear contents
+    SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().clear();
 
+    //set last sync date/time
+    var dateTime = [[datetime]];
+    SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A1:A1").setValues(dateTime);
+
+    //set header
     var header = [["Account Id","Account Status","First Name","Last Name","Email","Phone","Timezone","Entitlement ID","Product","Plan","Entitlement Status"]];
-    SpreadsheetApp.getActiveSpreadsheet().getRange("A2:K2").setValues(header);
+    SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A2:K2").setValues(header);
 
     //query accounts
     var accounts = datastore.getInstance().runGql("select * from Account");
+    if (accounts === undefined || accounts.length == 0)
+        return;
     for(i=0; i < accounts.length; i++) {
         var account = accounts[i];
         var accountId = account['entity']['properties']['id']['stringValue'];
@@ -163,7 +170,7 @@ function main(){
             var plan = entitlement['entity']['properties']['plan']['stringValue'];
             var state = entitlement['entity']['properties']['state']['stringValue'];
             var rowValues = [[accountId,accountStatus,firstName,lastName,emailAddress,phone,timezone,entitlementId,product,plan,state]];
-            SpreadsheetApp.getActiveSpreadsheet().getRange("A"+row+":K"+row).setValues(rowValues);
+            SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A"+row+":K"+row).setValues(rowValues);
         }
         SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().autoResizeColumns(1, 11);
     }

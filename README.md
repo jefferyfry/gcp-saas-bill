@@ -61,9 +61,11 @@ The service will manage the subscriptions through a centrally stored customer su
 
 8 - Subscription Service sends final approval for account and/or entitlement to GCP Procurement API.
 
-## Deploying
+## Operations
 
-### Istio with GKE
+### Deploying 
+
+#### Istio with GKE
 This application was deployed and tested on GKE clusters version 1.13.7-gke.24 with Istio 1.1.13-gke.0. Kubernetes manifest files are includes for deployment on a GKE cluster with Istio-enabled. For simplicity, set up Istio sidecar auto-injection. Additionally, Istio strict mTLS should be configured.
 
 ```
@@ -72,7 +74,7 @@ kubectl label namespace NAMESPACE istio-injection=enabled
 
 The manifest for the Istio ingress gateway is configured for HTTPS and references certificates. Before applying the manifests, create the cert, key and add the secret.
 
-#### Creating the Cert, Key for the Istio Ingress Gateway HTTPS
+##### Creating the Cert, Key for the Istio Ingress Gateway HTTPS
 
 ```
 1. openssl genrsa -des3 -passout pass:x -out server.pass.key 2048
@@ -90,22 +92,32 @@ The manifest for the Istio ingress gateway is configured for HTTPS and reference
 
 ```
 
-#### Applying the Istio Manifest
+##### Applying the Istio Manifest
 Before applying the manifest update the hosts value to your domain.
 ```
 kubectl apply -f manifests/istio-gateway.yaml
 ```
 
-#### Applying the Application Manfiest
+##### Applying the Application Manfiest
 Before applying the manifest update the environment variables or providing configuration files.
 ```
 kubectl apply -f manifests/cloud-bill-saas.yaml
 ```
 
-#### GCP Service Accounts
+##### GCP Service Accounts
 The following roles are required:
 * PubSub Editor - Used to access marketplace PubSub events.
 * Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
 * Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
 * Billing Account Administrator (NOT FOR PRODUCTION) - Allows the reset of test accounts.
 It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
+
+### Monitoring
+
+#### Datadog
+
+### Upgrades
+
+### Security
+
+### Troubleshooting
