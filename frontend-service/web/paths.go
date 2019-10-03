@@ -11,7 +11,7 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId)
 	r := mux.NewRouter()
 
-	if testModeBool,err := strconv.ParseBool(testMode); err!=nil && testModeBool {
+	if testModeBool,err := strconv.ParseBool(testMode); err==nil && testModeBool {
 		r.Methods(http.MethodGet).Path("/resetsaas").HandlerFunc(handler.ResetSaas)
 		r.Methods(http.MethodGet).Path("/signupsaastest").HandlerFunc(handler.SignupSaasTest)
 	}
