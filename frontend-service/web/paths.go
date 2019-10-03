@@ -3,14 +3,15 @@ package web
 import (
 	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
 
 //SetUpService sets up the subscription service.
-func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, testMode bool) error {
+func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, testMode string) error {
 	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId)
 	r := mux.NewRouter()
 
-	if testMode {
+	if testModeBool,err := strconv.ParseBool(testMode); err!=nil && testModeBool {
 		r.Methods(http.MethodGet).Path("/resetsaas").HandlerFunc(handler.ResetSaas)
 		r.Methods(http.MethodGet).Path("/signupsaastest").HandlerFunc(handler.SignupSaasTest)
 	}
