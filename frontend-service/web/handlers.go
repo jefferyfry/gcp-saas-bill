@@ -385,8 +385,6 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 	} else {
-		//TODO query subscription API
-
 		createProduct(prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w)
 
 		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {

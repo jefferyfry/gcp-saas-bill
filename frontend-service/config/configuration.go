@@ -19,6 +19,7 @@ var (
 	SessionKey		= "cloudbeesjenkinssupportsessionkey1cl0udb33s1"
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
 	PartnerId							= "000"
+	TestMode							= "false"
 )
 
 type ServiceConfig struct {
@@ -31,6 +32,7 @@ type ServiceConfig struct {
 	SessionKey    			string	`json:"sessionKey"`
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
 	PartnerId    					string	`json:"partnerId"`
+	TestMode    					string	`json:"testMode"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -44,6 +46,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		SessionKey,
 		CloudCommerceProcurementUrl,
 		PartnerId,
+		TestMode,
 	}
 
 	if dir, err := os.Getwd(); err != nil {
@@ -64,6 +67,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	sessionKey := flag.String("sessionKey", "", "set the value of http session key")
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
 	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
+	testMode := flag.String("testMode", "", "set whether this runs in test mode")
 
 	flag.Parse()
 
@@ -99,6 +103,10 @@ func GetConfiguration() (ServiceConfig, error) {
 		*partnerId = os.Getenv("CLOUD_BILL_FRONTEND_PARTNER_ID")
 	}
 
+	if *testMode == "" {
+		*testMode = os.Getenv("CLOUD_BILL_FRONTEND_TEST_MODE")
+	}
+
 
 	if *configFile == "" {
 		//try other flags
@@ -111,6 +119,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.SessionKey = *sessionKey
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
 		conf.PartnerId = *partnerId
+		conf.TestMode = *testMode
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
