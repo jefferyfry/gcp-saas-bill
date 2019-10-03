@@ -47,7 +47,8 @@ func (hdlr *DatastoreBackupHandler) Run() error {
 		log.Println(string(responseDump))
 		return errors.New("Datastore backup request received error response: "+resp.Status)
 	} else {
-		log.Printf("Completed datastore backup %s %s %s",datastoreUrl,resp.Status,reqBody)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		log.Printf("Completed datastore backup %s %s %s",datastoreUrl,resp.Status,responseDump)
 	}
 	return nil
 }
