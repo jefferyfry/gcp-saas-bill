@@ -137,6 +137,3 @@ docker push gcr.io/cloud-bill-dev/pubsub-service:1
 docker run -it --rm -p 8085:8085 -e CLOUD_BILL_SAAS_PUBSUB_SERVICE_ENDPOINT=8085 -e CLOUD_BILL_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILL_SAAS_PARTNER_ID='123456' -e CLOUD_BILL_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-pubsub-service pubsub-service-1:<tag>
 
 ```
-
-## Testing
-TBD

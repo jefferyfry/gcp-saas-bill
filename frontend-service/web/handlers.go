@@ -38,6 +38,8 @@ type SubscriptionFrontendHandler struct {
 	Issuer string
 	CloudCommerceProcurementUrl string
 	PartnerId string
+	FinishUrl string
+	FinishUrlTitle string
 }
 
 type Product struct {
@@ -59,7 +61,7 @@ type Contact struct {
 	Timezone		string     	`json:"timezone,omitempty"`
 }
 
-func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string) *SubscriptionFrontendHandler {
+func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string) *SubscriptionFrontendHandler {
 	Store = sessions.NewCookieStore([]byte(sessionKey))
 
 	Store.Options = &sessions.Options{
@@ -74,6 +76,8 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 		issuer,
 		cloudCommerceProcurementUrl,
 		partnerId,
+		finishUrl,
+		finishUrlTitle,
 	}
 }
 
@@ -226,21 +230,6 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 	}
 }
 
-func (hdlr *SubscriptionFrontendHandler) EmailConfirm(w http.ResponseWriter, r *http.Request) {
-	email, ok := r.URL.Query()["email"]
-
-	if !ok || len(email) < 1 {
-		http.Error(w, "Missing email parameter.", http.StatusBadRequest)
-		return
-	}
-
-	if tmpl, err := template.ParseFiles("templates/emailConfirm.html"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		tmpl.Execute(w, email)
-	}
-}
-
 //redirects to Auth0 for authentication, this should not be called unless istio fails
 func (hdlr *SubscriptionFrontendHandler) Auth0Login(w http.ResponseWriter, r *http.Request) {
 	// Generate random state
@@ -365,7 +354,14 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 		if tmpl, err := template.ParseFiles("templates/finish.html"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			tmpl.Execute(w, contact)
+			data := struct {
+				finishUrl string
+				finishUrlTitle string
+			}{
+				hdlr.FinishUrl,
+				hdlr.FinishUrlTitle,
+			}
+			tmpl.Execute(w, data)
 		}
 	}
 }
@@ -390,7 +386,14 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			tmpl.Execute(w, contact)
+			data := struct {
+				finishUrl string
+				finishUrlTitle string
+			}{
+				hdlr.FinishUrl,
+				hdlr.FinishUrlTitle,
+			}
+			tmpl.Execute(w, data)
 		}
 	}
 }

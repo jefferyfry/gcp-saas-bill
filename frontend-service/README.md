@@ -28,6 +28,9 @@ To successfully run the subscription service, configuration must be set through 
 * Session Key - A random character sequence for session encoding.
 * Cloud Commerce Procurement URL - This is the marketplace API url for querying and approving subscriptions. See [here](https://cloud.google.com/marketplace/docs/partners/commerce-procurement-api/reference/rest/).
 * Partner ID - This is the unique partner ID to include in posts.
+* FinishUrl - This is the url that the customer can go to after completing the signup.
+* FinishUrlTitle - This is the button title of the FinishUrl.
+* Test Mode - Runs the service in test mode and provides handlers /signupsaastest?acct=<acct> and /resetsaas?acct=<acct>.
 
 ### Configuration Precedence
 command-line options > environment variables
@@ -41,8 +44,11 @@ command-line options > environment variables
 * CLOUD_BILL_FRONTEND_CALLBACK_URL
 * CLOUD_BILL_FRONTEND_ISSUER
 * CLOUD_BILL_FRONTEND_SESSION_KEY
-* CLOUD_BILL_CLOUD_COMMERCE_PROCUREMENT_URL
-* CLOUD_BILL_PARTNER_ID
+* CLOUD_BILL_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL
+* CLOUD_BILL_FRONTEND_PARTNER_ID
+* CLOUD_BILL_FRONTEND_FINISH_URL
+* CLOUD_BILL_FRONTEND_FINISH_URL_TITLE
+* CLOUD_BILL_FRONTEND_TEST_MODE
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
@@ -52,21 +58,28 @@ command-line options > environment variables
 * clientSecret 
 * callbackUrl 
 * issuer 
-* sessionKey 
+* sessionKey
+* cloudCommerceProcurementUrl
+* partnerId
+* finishUrl
+* finishUrlTitle 
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "frontendServiceEndpoint": "8086",
-  "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1",
-  "clientId": "1234556",
-  "clientSecret": "abcdefg",
-  "callbackUrl": "https://cloud-bill.35.231.106.233.xip.io/callback",
-  "issuer": "https://cloudbees-dev1.auth0.com/",
-  "sessionKey": "somekeycloudbeesjen0udb33s1",
-  "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/",
-  "partnerId": "DEMO-codelab-project"
+  "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
+  "clientId": "clientId",
+  "clientSecret": "clientSecret",
+  "callbackUrl": "https://cloud-bill.35.237.116.107.beesdns.com/callback",
+  "issuer": "https://cloudbees-development.auth0.com/",
+  "sessionKey": "somesessionkey",
+  "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/v1/",
+  "partnerId": "DEMO-cloud-bill-dev",
+  "finishUrl": "https://grandcentral.beescloud.com/login/login?login_redirect=https://go.beescloud.com"
+  "finishUrlTitle": "Login"
+  "testMode": "true"
 }
 ```
 
@@ -99,6 +112,16 @@ Then mount the file and set it as an environment variable.
     #              value: "https://<yourdomain/>"
     #            - name: CLOUD_BILL_FRONTEND_SESSION_KEY
     #              value: "<yoursessionkey>"
+    #            - name: CLOUD_BILL_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL
+    #              value: "https://cloudcommerceprocurement.googleapis.com/v1/"
+    #            - name: CLOUD_BILL_FRONTEND_PARTNER_ID
+    #              value: "000"
+    #            - name: CLOUD_BILL_FRONTEND_FINISH_URL
+    #              value: "https://grandcentral.cloudbees.com/login/login?login_redirect=https://go.cloudbees.com"
+    #            - name: CLOUD_BILL_FRONTEND_FINISH_URL_TITLE
+    #              value: "Login"
+    #            - name: CLOUD_BILL_FRONTEND_TEST_MODE
+    #              value: "false"
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   value: /auth/gcp-service-account/gcp-service-account.json
                 - name: CLOUD_BILL_FRONTEND_CONFIG_FILE

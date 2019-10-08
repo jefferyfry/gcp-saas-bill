@@ -76,7 +76,7 @@ Then mount the file and set it as an environment variable.
 The pubsub service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials.
 
 The following roles are required:
-* Cloud Datastore Owner - Used to export from Cloud Datastore.
+* Cloud Import Export Admin - Used to export from Cloud Datastore.
 It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
 
 Then create the kubernetes secret.

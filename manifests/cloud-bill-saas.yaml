@@ -4,6 +4,7 @@ metadata:
   name: frontend-service
   labels:
     app: frontend-service
+    partition: cloud-bill-saas-app
 spec:
   replicas: 1
   selector:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend-service
-          image: gcr.io/cloud-bill-dev/frontend-service:1.0.0
+          image: gcr.io/cloud-bill-dev/frontend-service:latest
           env:
             #            - name: CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT
             #              value: "8086"
@@ -32,6 +33,16 @@ spec:
             #              value: "https://<yourdomain/>"
             #            - name: CLOUD_BILL_FRONTEND_SESSION_KEY
             #              value: "<yoursessionkey>"
+            #            - name: CLOUD_BILL_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL
+            #              value: "https://cloudcommerceprocurement.googleapis.com/v1/"
+            #            - name: CLOUD_BILL_FRONTEND_PARTNER_ID
+            #              value: "000"
+            #            - name: CLOUD_BILL_FRONTEND_FINISH_URL
+            #              value: "https://grandcentral.cloudbees.com/login/login?login_redirect=https://go.cloudbees.com"
+            #            - name: CLOUD_BILL_FRONTEND_FINISH_URL_TITLE
+            #              value: "Login"
+            #            - name: CLOUD_BILL_FRONTEND_TEST_MODE
+            #              value: "false"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/gcp-service-account/gcp-service-account.json
             - name: CLOUD_BILL_FRONTEND_CONFIG_FILE
@@ -59,6 +70,7 @@ metadata:
   name: subscription-service
   labels:
     app: subscription-service
+    partition: cloud-bill-saas-app
 spec:
   replicas: 1
   selector:
@@ -71,7 +83,7 @@ spec:
     spec:
       containers:
         - name: subscription-service
-          image: gcr.io/cloud-bill-dev/subscription-service:1.0.0
+          image: gcr.io/cloud-bill-dev/subscription-service:latest
           env:
             #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT
             #              value: "8085"
@@ -108,6 +120,7 @@ metadata:
   name: pubsub-service
   labels:
     app: pubsub-service
+    partition: cloud-bill-saas-app
 spec:
   replicas: 1
   selector:
@@ -120,7 +133,7 @@ spec:
     spec:
       containers:
         - name: pubsub-service
-          image: gcr.io/cloud-bill-dev/pubsub-service:1.0.0
+          image: gcr.io/cloud-bill-dev/pubsub-service:latest
           env:
             #            - name: CLOUD_BILL_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
@@ -179,6 +192,9 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: datastore-backup
+  labels:
+    app: datastore-backup
+    partition: cloud-bill-cron-job
 spec:
   schedule: "0 1 * * *"
   jobTemplate:
@@ -187,7 +203,7 @@ spec:
         spec:
           containers:
             - name: datastore-backup
-              image: gcr.io/cloud-bill-dev/datastore-backup:1.0.0
+              image: gcr.io/cloud-bill-dev/datastore-backup:latest
               env:
                 #            - name: CLOUD_BILL_DATASTORE_BACKUP_GCS_BUCKET
                 #              value: "gs://bucket"

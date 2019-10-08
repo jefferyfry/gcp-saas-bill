@@ -7,8 +7,8 @@ import (
 )
 
 //SetUpService sets up the subscription service.
-func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, testMode string) error {
-	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId)
+func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string, testMode string) error {
+	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, finishUrl, finishUrlTitle, partnerId)
 	r := mux.NewRouter()
 
 	if testModeBool,err := strconv.ParseBool(testMode); err==nil && testModeBool {
@@ -18,7 +18,6 @@ func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId 
 	r.Methods(http.MethodGet).Path("/signupprod/{accountId}").HandlerFunc(handler.SignupProd)
 	r.Methods(http.MethodPost).Path("/signupsaas").HandlerFunc(handler.SignupSaas)
 	r.Methods(http.MethodGet).Path("/login").HandlerFunc(handler.Auth0Login)
-	r.Methods(http.MethodGet).Path("/").HandlerFunc(handler.EmailConfirm)
 	r.Methods(http.MethodGet).Path("/callback").HandlerFunc(handler.Auth0Callback)
 	r.Methods(http.MethodPost).Path("/finishSaas").HandlerFunc(handler.FinishSaas)
 	r.Methods(http.MethodPost).Path("/finishProd").HandlerFunc(handler.FinishProd)

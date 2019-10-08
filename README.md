@@ -99,7 +99,7 @@ kubectl apply -f manifests/istio-gateway.yaml
 ```
 
 ##### Applying the Application Manfiest
-Before applying the manifest update the environment variables or providing configuration files.
+Before applying the manifest update the environment variables or provide configuration files.
 ```
 kubectl apply -f manifests/cloud-bill-saas.yaml
 ```
@@ -108,6 +108,7 @@ kubectl apply -f manifests/cloud-bill-saas.yaml
 The following roles are required:
 * PubSub Editor - Used to access marketplace PubSub events.
 * Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
+* Cloud Import Export Admin - Used to export from Cloud Datastore.
 * Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
 * Billing Account Administrator (NOT FOR PRODUCTION) - Allows the reset of test accounts.
 It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
@@ -115,6 +116,27 @@ It is recommended that the roles be used assigned to a common service account. T
 ### Monitoring
 
 #### Datadog
+DataDog can be configured using the Kubernetes agent. First configure RBAC permissions for DataDog.
+
+```
+kubectl create -f "https://raw.githubusercontent.com/DataDog/datadog-agent/master/Dockerfiles/manifests/rbac/clusterrole.yaml"
+kubectl create -f "https://raw.githubusercontent.com/DataDog/datadog-agent/master/Dockerfiles/manifests/rbac/serviceaccount.yaml"
+kubectl create -f "https://raw.githubusercontent.com/DataDog/datadog-agent/master/Dockerfiles/manifests/rbac/clusterrolebinding.yaml"
+```
+Then create the Kubernetes secret for your API key.
+
+```
+kubectl create secret generic datadog-secret --from-literal api-key="<api-key>"
+```
+
+Then deploy the datadog-agent using the manifest.
+
+```
+kubectl apply -f manifest/datadog-agent.yaml
+```
+
+#### Sentry
+Sentry is configured for all services. 
 
 ### Upgrades
 

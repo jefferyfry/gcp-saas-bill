@@ -18,7 +18,9 @@ var (
 	Issuer			= "http://localhost"
 	SessionKey		= "cloudbeesjenkinssupportsessionkey1cl0udb33s1"
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
-	PartnerId							= "000"
+	PartnerId							= ""
+	FinishUrl							= ""
+	FinishUrlTitle						= ""
 	TestMode							= "false"
 )
 
@@ -32,6 +34,8 @@ type ServiceConfig struct {
 	SessionKey    			string	`json:"sessionKey"`
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
 	PartnerId    					string	`json:"partnerId"`
+	FinishUrl    					string	`json:"finishUrl"`
+	FinishUrlTitle    				string	`json:"finishUrlTitle"`
 	TestMode    					string	`json:"testMode"`
 }
 
@@ -46,6 +50,8 @@ func GetConfiguration() (ServiceConfig, error) {
 		SessionKey,
 		CloudCommerceProcurementUrl,
 		PartnerId,
+		FinishUrl,
+		FinishUrlTitle,
 		TestMode,
 	}
 
@@ -67,6 +73,8 @@ func GetConfiguration() (ServiceConfig, error) {
 	sessionKey := flag.String("sessionKey", "", "set the value of http session key")
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
 	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
+	finishUrl := flag.String("finishUrl", "", "set the finish url")
+	finishUrlTitle := flag.String("finishUrlTitle", "", "set the finish url title")
 	testMode := flag.String("testMode", "", "set whether this runs in test mode")
 
 	flag.Parse()
@@ -102,7 +110,12 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *partnerId == "" {
 		*partnerId = os.Getenv("CLOUD_BILL_FRONTEND_PARTNER_ID")
 	}
-
+	if *finishUrl == "" {
+		*finishUrl = os.Getenv("CLOUD_BILL_FRONTEND_FINISH_URL")
+	}
+	if *finishUrlTitle == "" {
+		*finishUrlTitle = os.Getenv("CLOUD_BILL_FRONTEND_FINISH_URL_TITLE")
+	}
 	if *testMode == "" {
 		*testMode = os.Getenv("CLOUD_BILL_FRONTEND_TEST_MODE")
 	}
@@ -119,6 +132,8 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.SessionKey = *sessionKey
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
 		conf.PartnerId = *partnerId
+		conf.FinishUrl = *finishUrl
+		conf.FinishUrlTitle = *finishUrlTitle
 		conf.TestMode = *testMode
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
@@ -180,6 +195,16 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.PartnerId == "" {
 		log.Println("PartnerId was not set.")
+		valid = false
+	}
+
+	if conf.FinishUrl == "" {
+		log.Println("FinishUrl was not set.")
+		valid = false
+	}
+
+	if conf.FinishUrlTitle == "" {
+		log.Println("FinishUrlTitle was not set.")
 		valid = false
 	}
 

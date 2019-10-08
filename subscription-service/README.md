@@ -49,10 +49,6 @@ Then mount the file and set it as an environment variable.
           env:
 #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT
 #              value: "8085"
-#            - name: CLOUD_BILL_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL
-#              value: "https://cloudcommerceprocurement.googleapis.com/"
-#            - name: CLOUD_BILL_SUBSCRIPTION_PARTNER_ID
-#              value: "<yourpartnerid>"
 #            - name: CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID
 #              value: "<yourprojectid>"
             - name: GOOGLE_APPLICATION_CREDENTIALS
