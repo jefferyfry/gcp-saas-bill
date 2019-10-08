@@ -31,6 +31,7 @@ To successfully run the subscription service, configuration must be set through 
 * FinishUrl - This is the url that the customer can go to after completing the signup.
 * FinishUrlTitle - This is the button title of the FinishUrl.
 * Test Mode - Runs the service in test mode and provides handlers /signupsaastest?acct=<acct> and /resetsaas?acct=<acct>.
+* Sentry DSN - This is the key for Sentry logging.
 
 ### Configuration Precedence
 command-line options > environment variables
@@ -63,6 +64,7 @@ command-line options > environment variables
 * partnerId
 * finishUrl
 * finishUrlTitle 
+* sentryDsn
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
@@ -79,7 +81,8 @@ The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environmen
   "partnerId": "DEMO-cloud-bill-dev",
   "finishUrl": "https://grandcentral.beescloud.com/login/login?login_redirect=https://go.beescloud.com"
   "finishUrlTitle": "Login"
-  "testMode": "true"
+  "testMode": "true",
+  "sentryDsn": "https://xxx"
 }
 ```
 
@@ -122,6 +125,8 @@ Then mount the file and set it as an environment variable.
     #              value: "Login"
     #            - name: CLOUD_BILL_FRONTEND_TEST_MODE
     #              value: "false"
+    #            - name: CLOUD_BILL_FRONTEND_SENTRY_DSN
+    #              value: "dsn"               
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   value: /auth/gcp-service-account/gcp-service-account.json
                 - name: CLOUD_BILL_FRONTEND_CONFIG_FILE
@@ -187,4 +192,21 @@ docker push gcr.io/cloud-bill-dev/frontend-service:1
 ```
 docker run -it --rm -p 8086:8086 -e CLOUD_BILL_SUB_FRONTEND_SERVICE_ENDPOINT=8086 -e CLOUD_BILL_SUB_SERVICE_URL='http://localhost:8085' -e CLOUD_BILL_SUB_FRONTEND_CLIENT_ID='abcdef' -e CLOUD_BILL_SUB_FRONTEND_CLIENT_SECRET='123456' -e CLOUD_BILL_SUB_FRONTEND_CALLBACK_URL='http://localhost:8085/callback' -e CLOUD_BILL_SUB_FRONTEND_ISSUER='issuer' -e CLOUD_BILL_SUB_FRONTEND_SESSION_KEY='somekeycloudbeesjenkinssupportsessionkey1cl0udb33s1' --name my-frontend-service frontend-service-1:<tag>
 
+```
+
+### Upgrades
+It is recommended that you use K8s rolling update for service images. This can be executed in a single command:
+
+```
+kubectl set image deployments/<deployment-name> <container>=image
+
+eg.
+kubectl set image deployments/frontend-service frontend-service=gcr.io/cloud-bill-dev/frontend-service:2
+```
+If the upgrade includes configuration changes, apply those configuration changes first.
+
+You can monitor the rolling update using:
+
+```
+kubectl rollout status deployments/<deployment-name>
 ```

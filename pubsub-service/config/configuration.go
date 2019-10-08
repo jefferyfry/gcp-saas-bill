@@ -15,6 +15,7 @@ var (
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
 	PartnerId							= "000"
 	GcpProjectId				        = "cloud-billing-saas"
+	SentryDsn		= ""
 )
 
 type ServiceConfig struct {
@@ -23,6 +24,7 @@ type ServiceConfig struct {
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
 	PartnerId    					string	`json:"partnerId"`
 	GcpProjectId    				string	`json:"gcpProjectId"`
+	SentryDsn						string	`json:"sentryDsn"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -32,6 +34,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		CloudCommerceProcurementUrl,
 		PartnerId,
 		GcpProjectId,
+		SentryDsn,
 	}
 
 	if dir, err := os.Getwd(); err != nil {
@@ -48,6 +51,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
 	partnerId := flag.String("partnerId", "", "set the CloudBees Partner Id")
 	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
+	sentryDsn := flag.String("sentryDsn", "", "set the Sentry DSN")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -69,6 +73,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *gcpProjectId == "" {
 		*gcpProjectId = os.Getenv("CLOUD_BILL_PUBSUB_GCP_PROJECT_ID")
 	}
+	if *sentryDsn == "" {
+		*sentryDsn = os.Getenv("CLOUD_BILL_PUBSUB_SENTRY_DSN")
+	}
 
 	if *configFile == "" {
 		//try other flags
@@ -77,6 +84,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
 		conf.PartnerId = *partnerId
 		conf.GcpProjectId = *gcpProjectId
+		conf.SentryDsn = *sentryDsn
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
@@ -118,6 +126,10 @@ func GetConfiguration() (ServiceConfig, error) {
 	if conf.GcpProjectId == "" {
 		log.Println("GcpProjectId was not set.")
 		valid = false
+	}
+
+	if conf.SentryDsn == "" {
+		log.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {

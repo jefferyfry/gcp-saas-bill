@@ -139,6 +139,21 @@ kubectl apply -f manifest/datadog-agent.yaml
 Sentry is configured for all services. 
 
 ### Upgrades
+It is recommended that you use K8s rolling update for service images. This can be executed in a single command:
+
+```
+kubectl set image deployments/<deployment-name> <container>=image
+
+eg.
+kubectl set image deployments/frontend-service frontend-service=gcr.io/cloud-bill-dev/frontend-service:2
+```
+If the upgrade includes configuration changes, apply those configuration changes first.
+
+You can monitor the rolling update using:
+
+```
+kubectl rollout status deployments/<deployment-name>
+```
 
 ### Security
 

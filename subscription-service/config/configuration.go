@@ -11,17 +11,20 @@ import (
 var (
 	SubscriptionServiceEndpoint 		= ":8085"
 	GcpProjectId				        = "cloud-bill-saas"
+	SentryDsn		= ""
 )
 
 type ServiceConfig struct {
 	SubscriptionServiceEndpoint    	string	`json:"subscriptionServiceEndpoint"`
 	GcpProjectId    				string	`json:"gcpProjectId"`
+	SentryDsn						string	`json:"sentryDsn"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		SubscriptionServiceEndpoint,
 		GcpProjectId,
+		SentryDsn,
 	}
 
 	if dir, err := os.Getwd(); err != nil {
@@ -35,6 +38,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
 	subscriptionServiceEndpoint := flag.String("subscriptionServiceEndpoint", "", "set the value of this service endpoint")
 	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
+	sentryDsn := flag.String("sentryDsn", "", "set the Sentry DSN")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -48,11 +52,16 @@ func GetConfiguration() (ServiceConfig, error) {
 		*gcpProjectId = os.Getenv("CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID")
 	}
 
+	if *sentryDsn == "" {
+		*sentryDsn = os.Getenv("CLOUD_BILL_SUBSCRIPTION_SENTRY_DSN")
+	}
+
 
 	if *configFile == "" {
 		//try other flags
 		conf.SubscriptionServiceEndpoint = *subscriptionServiceEndpoint
 		conf.GcpProjectId = *gcpProjectId
+		conf.SentryDsn = *sentryDsn
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
@@ -75,6 +84,10 @@ func GetConfiguration() (ServiceConfig, error) {
 	if conf.GcpProjectId == "" {
 		log.Println("GcpProjectId was not set.")
 		valid = false
+	}
+
+	if conf.SentryDsn == "" {
+		log.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if credPath,envExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !envExists {

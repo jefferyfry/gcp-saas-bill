@@ -11,17 +11,20 @@ import (
 var (
 	GcpProjectId	= "cloud-billing-saas"
 	GcsBucket		= "gs://bucket"
+	SentryDsn		= ""
 )
 
 type ServiceConfig struct {
 	GcpProjectId    string	`json:"gcpProjectId"`
 	GcsBucket    	string	`json:"gcsBucket"`
+	SentryDsn		string	`json:"sentryDsn"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		GcpProjectId,
 		GcsBucket,
+		SentryDsn,
 	}
 
 	if dir, err := os.Getwd(); err != nil {
@@ -35,6 +38,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
 	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
 	gcsBucket := flag.String("gcsBucket", "", "set the GCS bucket")
+	sentryDsn := flag.String("sentryDsn", "", "set the Sentry DSN")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -49,10 +53,15 @@ func GetConfiguration() (ServiceConfig, error) {
 		*gcsBucket = os.Getenv("CLOUD_BILL_DATASTORE_BACKUP_GCS_BUCKET")
 	}
 
+	if *sentryDsn == "" {
+		*sentryDsn = os.Getenv("CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN")
+	}
+
 	if *configFile == "" {
 		//try other flags
 		conf.GcpProjectId = *gcpProjectId
 		conf.GcsBucket = *gcsBucket
+		conf.SentryDsn = *sentryDsn
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
@@ -75,6 +84,10 @@ func GetConfiguration() (ServiceConfig, error) {
 	if conf.GcsBucket == "" {
 		log.Println("GcsBucket was not set.")
 		valid = false
+	}
+
+	if conf.SentryDsn == "" {
+		log.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {

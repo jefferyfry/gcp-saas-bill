@@ -7,6 +7,7 @@ To successfully run the subscription service, configuration must be set through 
 
 * Subscription Service Endpoint - This is the listening port for the service.
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
+* Sentry DSN - This is the key for Sentry logging.
 
 ### Configuration Precedence
 command-line options > environment variables
@@ -15,6 +16,7 @@ command-line options > environment variables
 * CLOUD_BILL_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
 * CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
 * CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable for production.
 
@@ -22,13 +24,15 @@ command-line options > environment variables
 * configFile - Path to a configuration file (see below).
 * subscriptionServiceEndpoint - _Subscription Service Endpoint_ from above.
 * gcpProjectId - _GCP Project ID_ from above.
+* sentryDsn
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "subscriptionServiceEndpoint": ":8085",
-  "gcpProjectId": "cloud-billing"
+  "gcpProjectId": "cloud-billing",
+  "sentryDsn": "https://xxx"
 }
 ```
 
@@ -51,6 +55,8 @@ Then mount the file and set it as an environment variable.
 #              value: "8085"
 #            - name: CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID
 #              value: "<yourprojectid>"
+#            - name: CLOUD_BILL_SUBSCRIPTION_SENTRY_DSN
+#              value: "dsn"               
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/gcp-service-account/gcp-service-account.json
             - name: CLOUD_BILL_SUBSCRIPTION_CONFIG_FILE
@@ -125,7 +131,7 @@ curl -X POST localhost:8116/v1/projects/cloud-bill-dev:import \
 Modify localhost:8081 if the emulator uses a different port.
 
 ### Google Sheets to View the Cloud Datastore DB
-The [google-sheets directory](google-sheets/datastore-read-only.gs) contains a Google Apps Script that you can use to pull data from the Datastore DB and into a Google Sheet. Follow these [instructions](https://developers.google.com/apps-script/guides/sheets) to execute the script for a Google Sheet. [Time-driven triggers](https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers) can be used to automatically update the Google Sheet on a schedule. Running the script requires having a service account that has the Datastore Viewer IAM permission. Then place the Service Account json file in the same directory as the Google Sheet and name it _datastore-viewer-service-account.json_. 
+The [google-sheets directory](google-sheets/datastore-read-only.gs) contains a Google Apps Script that you can use to pull data from the Datastore DB and into a Google Sheet. Follow these [instructions](https://developers.google.com/apps-script/guides/sheets) to execute the script for a Google Sheet. [Time-driven triggers](https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers) can be used to automatically update the Google Sheet on a schedule. [Spreadsheet actions](https://developers.google.com/apps-script/guides/triggers/installable#g_suite_application_triggers) can also trigger updates. Running the script requires having a service account that has the Datastore Viewer IAM permission. Then place the Service Account json file in the same directory as the Google Sheet and name it _datastore-viewer-service-account.json_. 
 
 ## Running Locally
 The following will run the service locally.
@@ -158,6 +164,23 @@ docker push gcr.io/cloud-bill-dev/subscription-service:1
 ```
 docker run -it --rm -p 8085:8085 -e CLOUD_BILL_SAAS_SUBSCRIPTION_SERVICE_ENDPOINT=8085 -e CLOUD_BILL_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILL_SAAS_PARTNER_ID='123456' -e CLOUD_BILL_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-subscription-service subscription-service-1:<tag>
 
+```
+
+## Upgrades
+It is recommended that you use K8s rolling update for service images. This can be executed in a single command:
+
+```
+kubectl set image deployments/<deployment-name> <container>=image
+
+eg.
+kubectl set image deployments/subscription-service subscription-service=gcr.io/cloud-bill-dev/subscription-service:2
+```
+If the upgrade includes configuration changes, apply those configuration changes first.
+
+You can monitor the rolling update using:
+
+```
+kubectl rollout status deployments/<deployment-name>
 ```
 
 ## Swagger

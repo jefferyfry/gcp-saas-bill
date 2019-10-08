@@ -22,6 +22,7 @@ var (
 	FinishUrl							= ""
 	FinishUrlTitle						= ""
 	TestMode							= "false"
+	SentryDsn							= ""
 )
 
 type ServiceConfig struct {
@@ -37,6 +38,7 @@ type ServiceConfig struct {
 	FinishUrl    					string	`json:"finishUrl"`
 	FinishUrlTitle    				string	`json:"finishUrlTitle"`
 	TestMode    					string	`json:"testMode"`
+	SentryDsn						string	`json:"sentryDsn"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -53,6 +55,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		FinishUrl,
 		FinishUrlTitle,
 		TestMode,
+		SentryDsn,
 	}
 
 	if dir, err := os.Getwd(); err != nil {
@@ -76,7 +79,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	finishUrl := flag.String("finishUrl", "", "set the finish url")
 	finishUrlTitle := flag.String("finishUrlTitle", "", "set the finish url title")
 	testMode := flag.String("testMode", "", "set whether this runs in test mode")
-
+	sentryDsn := flag.String("sentryDsn", "", "set the Sentry DSN")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -119,7 +122,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *testMode == "" {
 		*testMode = os.Getenv("CLOUD_BILL_FRONTEND_TEST_MODE")
 	}
-
+	if *sentryDsn == "" {
+		*sentryDsn = os.Getenv("CLOUD_BILL_FRONTEND_SENTRY_DSN")
+	}
 
 	if *configFile == "" {
 		//try other flags
@@ -135,6 +140,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.FinishUrl = *finishUrl
 		conf.FinishUrlTitle = *finishUrlTitle
 		conf.TestMode = *testMode
+		conf.SentryDsn = *sentryDsn
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
@@ -206,6 +212,15 @@ func GetConfiguration() (ServiceConfig, error) {
 	if conf.FinishUrlTitle == "" {
 		log.Println("FinishUrlTitle was not set.")
 		valid = false
+	}
+
+	if conf.TestMode == "" {
+		log.Println("TestMode was not set. Setting to false.")
+		conf.TestMode = "false"
+	}
+
+	if conf.SentryDsn == "" {
+		log.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {

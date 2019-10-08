@@ -7,6 +7,7 @@ To successfully run the , configuration must be set through either environment v
 
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
 * GCS Bucket - This is the Google Cloud Storage bucket where you want the backup files.
+* Sentry DSN - This is the key for Sentry logging.
 
 ### Configuration Precedence
 command-line options > environment variables
@@ -15,6 +16,7 @@ command-line options > environment variables
 * CLOUD_BILL_DATASTORE_BACKUP_CONFIG_FILE - Path to a configuration file (see below).
 * CLOUD_BILL_DATASTORE_BACKUP_GCP_PROJECT_ID 
 * CLOUD_BILL_DATASTORE_BACKUP_GCS_BUCKET
+* CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access Cloud Datastore and your GCS Bucket. This is a required environment variable for production.
 
@@ -22,13 +24,15 @@ command-line options > environment variables
 * configFile - Path to a configuration file (see below).
 * gcpProjectId 
 * gcsBucket
+* sentryDsn
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
   "gcpProjectId": "cloud-bill-dev",
-  "gcsBucket": "gs://cloud-bill-dev.appspot.com"
+  "gcsBucket": "gs://cloud-bill-dev.appspot.com",
+  "sentryDsn": "https://xxx"
 }
 ```
 
@@ -51,6 +55,8 @@ Then mount the file and set it as an environment variable.
                 #              value: "gs://bucket"
                 #            - name: CLOUD_BILL_DATASTORE_BACKUP_GCP_PROJECT_ID
                 #              value: "<yourprojectid>"
+                #            - name: CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
+                #              value: "dsn"               
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   value: /auth/gcp-service-account/gcp-service-account.json
                 - name: CLOUD_BILL_DATASTORE_BACKUP_CONFIG_FILE
@@ -116,3 +122,15 @@ docker push gcr.io/cloud-bill-dev/datastore-backup:1
 docker run -it --rm -e CLOUD_BILL_DATASTORE_BACKUP_GCS_BUCKET=gs://bucket -e CLOUD_BILL_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-datastore-backup datastore-backup:<tag>
 
 ```
+
+### Upgrades
+This can be executed in a single command:
+
+```
+kubectl set image cronjob/<cronjob-name> <container>=image
+
+eg.
+kubectl set image cronjob/datastore-backup datastore-backup=gcr.io/cloud-bill-dev/datastore-backup:2
+```
+If the upgrade includes configuration changes, apply those configuration changes first.
+

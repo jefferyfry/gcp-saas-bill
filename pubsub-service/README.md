@@ -11,6 +11,7 @@ To successfully run the pubsub service, configuration must be set through either
 * Cloud Commerce Procurement URL
 * Partner ID -
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
+* Sentry DSN - This is the key for Sentry logging.
 
 ### Configuration Precedence
 command-line options > environment variables
@@ -18,22 +19,22 @@ command-line options > environment variables
 ### Environment Variables
 * CLOUD_BILL_PUBSUB_CONFIG_FILE - Path to a configuration file (see below).
 * CLOUD_BILL_PUBSUB_SUBSCRIPTION - _Subscription Service Endpoint_ from above.
-* CLOUD_BILL_PUBSUB_TOPIC_PREFIX
 * CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
 * CLOUD_BILL_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
 * CLOUD_BILL_PUBSUB_PARTNER_ID
 * CLOUD_BILL_PUBSUB_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP PubSub and Cloud Commerce Procurement API. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
 * pubSubSubscription - _Subscription Service Endpoint_ from above.
-* pubSubTopicPrefix
 * subscriptionServiceUrl
 * cloudCommerceProcurementUrl
 * partnerId
 * gcpProjectId - _GCP Project ID_ from above.
+* sentryDsn
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
@@ -43,7 +44,8 @@ The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment va
   "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
   "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/v1/",
   "partnerId": "DEMO-codelab-project",
-  "gcpProjectId": "cloud-bill-dev"
+  "gcpProjectId": "cloud-bill-dev",
+  "sentryDsn": "https://xxx"
 }
 ```
 
@@ -72,6 +74,8 @@ Then mount the file and set it as an environment variable.
             #              value: "<yourpartnerid>"
             #            - name: CLOUD_BILL_PUBSUB_GCP_PROJECT_ID
             #              value: "<yourprojectid>"
+            #            - name: CLOUD_BILL_PUBSUB_SENTRY_DSN
+            #              value: "dsn"               
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/gcp-service-account/gcp-service-account.json
             - name: CLOUD_BILL_PUBSUB_CONFIG_FILE
@@ -136,4 +140,21 @@ docker push gcr.io/cloud-bill-dev/pubsub-service:1
 ```
 docker run -it --rm -p 8085:8085 -e CLOUD_BILL_SAAS_PUBSUB_SERVICE_ENDPOINT=8085 -e CLOUD_BILL_SAAS_CLOUD_COMMERCE_PROCUREMENT_URL='https://cloudcommerceprocurement.googleapis.com/' -e CLOUD_BILL_SAAS_PARTNER_ID='123456' -e CLOUD_BILL_SAAS_GCP_PROJECT_ID='gcp-project-1' --name my-pubsub-service pubsub-service-1:<tag>
 
+```
+
+### Upgrades
+It is recommended that you use K8s rolling update for service images. This can be executed in a single command:
+
+```
+kubectl set image deployments/<deployment-name> <container>=image
+
+eg.
+kubectl set image deployments/pubsub-service pubsub-service=gcr.io/cloud-bill-dev/pubsub-service:2
+```
+If the upgrade includes configuration changes, apply those configuration changes first.
+
+You can monitor the rolling update using:
+
+```
+kubectl rollout status deployments/<deployment-name>
 ```
