@@ -23,6 +23,7 @@ var (
 	FinishUrlTitle						= ""
 	TestMode							= "false"
 	SentryDsn							= ""
+	GcpProjectId				        = "cloud-billing-saas"
 )
 
 type ServiceConfig struct {
@@ -39,6 +40,7 @@ type ServiceConfig struct {
 	FinishUrlTitle    				string	`json:"finishUrlTitle"`
 	TestMode    					string	`json:"testMode"`
 	SentryDsn						string	`json:"sentryDsn"`
+	GcpProjectId    				string	`json:"gcpProjectId"`
 }
 
 func GetConfiguration() (ServiceConfig, error) {
@@ -56,6 +58,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		FinishUrlTitle,
 		TestMode,
 		SentryDsn,
+		GcpProjectId,
 	}
 
 	if dir, err := os.Getwd(); err != nil {
@@ -80,6 +83,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	finishUrlTitle := flag.String("finishUrlTitle", "", "set the finish url title")
 	testMode := flag.String("testMode", "", "set whether this runs in test mode")
 	sentryDsn := flag.String("sentryDsn", "", "set the Sentry DSN")
+	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
 	flag.Parse()
 
 	//try environment variables if necessary
@@ -113,6 +117,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *partnerId == "" {
 		*partnerId = os.Getenv("CLOUD_BILL_FRONTEND_PARTNER_ID")
 	}
+	if *gcpProjectId == "" {
+		*gcpProjectId = os.Getenv("CLOUD_BILL_FRONTEND_GCP_PROJECT_ID")
+	}
 	if *finishUrl == "" {
 		*finishUrl = os.Getenv("CLOUD_BILL_FRONTEND_FINISH_URL")
 	}
@@ -141,6 +148,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.FinishUrlTitle = *finishUrlTitle
 		conf.TestMode = *testMode
 		conf.SentryDsn = *sentryDsn
+		conf.GcpProjectId = *gcpProjectId
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
 			log.Printf("Error reading confile file %s %s", *configFile, err)
@@ -221,6 +229,11 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.SentryDsn == "" {
 		log.Println("SentryDsn was not set. Will run without Sentry.")
+	}
+
+	if conf.GcpProjectId == "" {
+		log.Println("GcpProjectId was not set.")
+		valid = false
 	}
 
 	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {

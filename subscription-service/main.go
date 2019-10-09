@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/config"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/dbinterface"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/web"
@@ -16,19 +15,25 @@ import (
 // @BasePath /api/v1
 // @termsOfService https://www.cloudbees.com/products/terms-service
 func main() {
-	sentry.Init(sentry.ClientOptions{
-		Dsn: "https://1ae3b5e486aa45e6b23689a42bada322@sentry.io/1770543",
-	})
-	sentry.CaptureException(errors.New("Sentry initialized for Cloud Bill SaaS Subscription Service."))
-	// Since sentry emits events in the background we need to make sure
-	// they are sent before we shut down
-	sentry.Flush(time.Second * 5)
-
 	log.Println("Starting Cloud Bill SaaS Subscription Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {
 		log.Fatalf("Invalid configuration: %v", err)
+	}
+
+	if config.SentryDsn != "" {
+		sentry.Init(sentry.ClientOptions{
+			Dsn: config.SentryDsn,
+			Environment: config.GcpProjectId,
+			ServerName: "subscription-service",
+		})
+
+		//wait for istio
+		time.Sleep(10 * time.Second)
+
+		sentry.CaptureMessage("Sentry initialized for Cloud Bill Subscription Service.")
+		sentry.Flush(time.Second * 5)
 	}
 
 	datastoreClient := dbinterface.NewPersistenceLayer(dbinterface.DATASTOREDB,config.GcpProjectId)

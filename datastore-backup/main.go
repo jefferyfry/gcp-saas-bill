@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"github.com/cloudbees/cloud-bill-saas/datastore-backup/backup"
 	"github.com/cloudbees/cloud-bill-saas/datastore-backup/config"
 	"github.com/getsentry/sentry-go"
@@ -18,12 +16,17 @@ func main() {
 		log.Fatalf("Invalid configuration: %#v", err)
 	}
 
+	//wait for istio
+	time.Sleep(10 * time.Second)
+
 	if config.SentryDsn != "" {
 		sentry.Init(sentry.ClientOptions{
 			Dsn: config.SentryDsn,
+			Environment: config.GcpProjectId,
+			ServerName: "datastore-backup",
 		})
 
-		sentry.CaptureException(errors.New("Sentry initialized for Cloud Bill SaaS Datastore Backup Job."))
+		sentry.CaptureMessage("Sentry initialized for Cloud Bill SaaS Datastore Backup Job.")
 		// Since sentry emits events in the background we need to make sure
 		// they are sent before we shut down
 		sentry.Flush(time.Second * 5)
@@ -31,12 +34,6 @@ func main() {
 
 	//start service
 	datastoreBackup := backup.GetDatastoreBackupHandler(config.GcpProjectId,config.GcsBucket)
-
-	fmt.Printf("Current Unix Time: %v waiting to start backup...\n", time.Now().Unix())
-
-	time.Sleep(60 * time.Second)
-
-	fmt.Printf("Current Unix Time: %v starting backup now\n", time.Now().Unix())
 
 	if err := datastoreBackup.Run(); err != nil {
 		log.Printf("Datastore Backup Job encountered err %s",err)

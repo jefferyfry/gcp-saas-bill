@@ -82,6 +82,7 @@ The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environmen
   "finishUrl": "https://grandcentral.beescloud.com/login/login?login_redirect=https://go.beescloud.com"
   "finishUrlTitle": "Login"
   "testMode": "true",
+  "gcpProjectId": "cloud-bill-dev",
   "sentryDsn": "https://xxx"
 }
 ```

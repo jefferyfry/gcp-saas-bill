@@ -8,7 +8,7 @@ import (
 
 //SetUpService sets up the subscription service.
 func SetUpService(serviceEndpoint string,subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string, testMode string) error {
-	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, finishUrl, finishUrlTitle, partnerId)
+	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId, finishUrl, finishUrlTitle)
 	r := mux.NewRouter()
 
 	if testModeBool,err := strconv.ParseBool(testMode); err==nil && testModeBool {

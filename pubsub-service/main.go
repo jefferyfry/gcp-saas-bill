@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/config"
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/mpevents"
 	"github.com/getsentry/sentry-go"
@@ -20,11 +19,14 @@ func main() {
 	if config.SentryDsn != "" {
 		sentry.Init(sentry.ClientOptions{
 			Dsn: config.SentryDsn,
+			Environment: config.GcpProjectId,
+			ServerName: "pubsub-service",
 		})
 
-		sentry.CaptureException(errors.New("Sentry initialized for Cloud Bill SaaS Datastore Backup Job."))
-		// Since sentry emits events in the background we need to make sure
-		// they are sent before we shut down
+		//wait for istio
+		time.Sleep(10 * time.Second)
+
+		sentry.CaptureMessage("Sentry initialized for Cloud Bill PubSub Service.")
 		sentry.Flush(time.Second * 5)
 	}
 
