@@ -527,6 +527,33 @@
                     }
                 }
             }
+        },
+        "/healthz": {
+            "get": {
+                "description": "Check the health of the subscription service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Check the health of the subscription service",
+                "operationId": "cloud-bill-saas-subscription-service-healthz",
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

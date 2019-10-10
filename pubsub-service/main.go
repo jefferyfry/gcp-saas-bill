@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/config"
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/mpevents"
+	"github.com/cloudbees/cloud-bill-saas/pubsub-service/web"
 	"github.com/getsentry/sentry-go"
 	"log"
 	"time"
@@ -30,7 +31,10 @@ func main() {
 		sentry.Flush(time.Second * 5)
 	}
 
-	//start service
+	//start the web service
+	go web.SetUpService(config.HealthCheckEndpoint,config.PubSubSubscription,config.SubscriptionServiceUrl,config.CloudCommerceProcurementUrl,config.PartnerId,config.GcpProjectId)
+
+	//start the pub sub listener
 	pubSubListener := mpevents.GetPubSubListener(config.PubSubSubscription,config.SubscriptionServiceUrl,config.CloudCommerceProcurementUrl,config.PartnerId,config.GcpProjectId)
 	log.Fatal(pubSubListener.Listen())
 }

@@ -5,11 +5,11 @@ pubsubs coming from the GCP marketplace.
 ## Configuration
 To successfully run the pubsub service, configuration must be set through either environment variables, command-line options or a configuration file. You may chose an option based on on your intent (development, testing, production deployment). The following configuration is required:
 
-* PubSub Subscription -
-* PubSub Topic -
-* Subscription Service URL -
-* Cloud Commerce Procurement URL
-* Partner ID -
+* PubSub Health Check Endpoint - Listening port for Kubernetes health checks (readiness and liveness).
+* PubSub Subscription - Marketplace subscription for subscription events.
+* Subscription Service URL - The url for the subscription service.
+* Cloud Commerce Procurement URL - The url for the Google Cloud Commerce API.
+* Partner ID - The CloudBees partner ID.
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
 * Sentry DSN - This is the key for Sentry logging.
 
@@ -18,28 +18,31 @@ command-line options > environment variables
 
 ### Environment Variables
 * CLOUD_BILL_PUBSUB_CONFIG_FILE - Path to a configuration file (see below).
-* CLOUD_BILL_PUBSUB_SUBSCRIPTION - _Subscription Service Endpoint_ from above.
+* CLOUD_BILL_PUBSUB_HEALTH_CHECK_ENDPOINT
+* CLOUD_BILL_PUBSUB_SUBSCRIPTION 
 * CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
 * CLOUD_BILL_PUBSUB_CLOUD_COMMERCE_PROCUREMENT_URL
 * CLOUD_BILL_PUBSUB_PARTNER_ID
-* CLOUD_BILL_PUBSUB_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILL_PUBSUB_GCP_PROJECT_ID
 * CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP PubSub and Cloud Commerce Procurement API. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
-* pubSubSubscription - _Subscription Service Endpoint_ from above.
+* healthCheckEndpoint
+* pubSubSubscription
 * subscriptionServiceUrl
 * cloudCommerceProcurementUrl
 * partnerId
-* gcpProjectId - _GCP Project ID_ from above.
+* gcpProjectId
 * sentryDsn
 
 ### Configuration File
 The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment variable requires a path to a JSON file with the configuration. Example:
 ```
 {
+  "healthCheckEndpoint": "8097",
   "pubSubSubscription": "codelab",
   "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
   "cloudCommerceProcurementUrl": "https://cloudcommerceprocurement.googleapis.com/v1/",
@@ -64,6 +67,8 @@ Then mount the file and set it as an environment variable.
         - name: pubsub-service
           image: gcr.io/cloud-bill-dev/pubsub-service:latest
           env:
+            #            - name: CLOUD_BILL_PUBSUB_HEALTH_CHECK_ENDPOINT
+            #              value: "8097"
             #            - name: CLOUD_BILL_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
             #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL

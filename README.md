@@ -18,9 +18,10 @@ The service will manage the subscriptions through a centrally stored customer su
 * front-end service [README](/frontend-service/README.md)
 * subscription service [README](/subscription-service/README.md)
 * pubsub service [README](/pubsub-service/README.md)
+* datastore backup cron job [README](/datastore-backup/README.md)
 
 ## Architecture
-![Architecture](https://user-images.githubusercontent.com/6440106/64708575-ae27a880-d469-11e9-8006-e947c950cc91.png)
+![Architecture](https://user-images.githubusercontent.com/6440106/66532740-5a8a9800-eac5-11e9-8501-7a008e8d6f9c.png)
 
 ### Components
 #### Google/Auth0 Components
@@ -31,35 +32,34 @@ The service will manage the subscriptions through a centrally stored customer su
 * Auth0 Application/API - Auth0 is used to authenticate and gather user profile data.
 
 #### CloudBees Components
-* Agent Cloud Function (CloudBees Developed) - The Agent Cloud Function is triggered by the GCP Marketplace Pub/Sub topics to process new accounts, subscriptions, updates, cancellations and renewals. 
+* PubSub Service (CloudBees Developed) - The PubSub Service is triggered by the GCP Marketplace Pub/Sub topics to process new accounts, subscriptions, updates, cancellations and renewals. 
 * Subscription Service (CloudBees Developed) - This web app serves the signup page and then approves new accounts and entitlements after receiving account information.
-* Subscription Front-end (CloudBees Developed) - Lightweight web interface that provides the signup page.
+* Frontend Service(CloudBees Developed) - Lightweight web interface that provides the signup page.
 * Subscription DB (CloudBees Developed) - This is a backup database that stores the current account and subscription data.
 * Support Systems - Support systems are the current backend systems such as Zendesk and Salesforce that must be provisioned to enable Jenkins Support services for a customer. The provisioning of these systems is TBD.
+* Datastore Backup Cron Job - Daily executing datastore backup.
 
 ## Customer Workflow
-![Customer Workflow](https://user-images.githubusercontent.com/6440106/63820521-6435b300-c8fe-11e9-86aa-dfdef195d2e1.png)
+![Customer Workflow](https://user-images.githubusercontent.com/6440106/66532891-e00e4800-eac5-11e9-8db3-4a2656066d51.png)
 
 ## Data Workflow
-![Data Workflow](https://user-images.githubusercontent.com/6440106/64708366-5d17b480-d469-11e9-8137-2977472a1515.png)
+![Data Workflow](https://user-images.githubusercontent.com/6440106/66532860-c1a84c80-eac5-11e9-8559-f055a89e66c8.png)
 
-1 - Customer subscribes (or makes changes) to the listing in the marketplace.
+1 - Customer subscribes (or makes changes) to Jenkins Support in the marketplace.
 
-2a - Agent Cloud Function receives a notification of a change to a subscription. This can be a new subscription, cancellation, update or renewal. 
+2a - PubSub Service receives a notification of a change to a Jenkins Support subscription. This can be a new subscription, cancellation, update or renewal. 
 
-2b - For new accounts, the marketplace directs the customer to a signup page served by the Subscription Service. 
+2b - For new accounts, the marketplace directs the customer to a signup page served by the Frontend Service. Auth0 is used to authenticate and gather account information. This information is stored via the Subscription Service.
 
-3 - The Agent Cloud Function queries the procurement API for the entitlement.
+3 - The PubSub Service queries the procurement API for the entitlement or account.
 
-4 - The Agent Cloud Function provisions/makes updates via the Subscription Service via REST API.
+4 - The PubSub Service provisions/makes updates via the Subscription Service via REST API.
 
 5 - Subscription Service stores account, subscription to subscription database.
 
 6 - Subscription Service triggers provisioning of backend systems (TBD).
 
-7 - Subscription Service sends successful web page response to customer.
-
-8 - Subscription Service sends final approval for account and/or entitlement to GCP Procurement API.
+7 - Frontend Service and PubSub Service sends final approval for account and/or entitlement to GCP Procurement API.
 
 ## Operations
 

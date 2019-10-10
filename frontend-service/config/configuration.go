@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	FrontendServiceEndpoint = ":8086"
+	FrontendServiceEndpoint = "8086"
+	HealthCheckEndpoint = "8096"
 	SubscriptionServiceUrl = "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
 	ClientId 		= "123456"
 	ClientSecret    = "abcdef"
@@ -28,6 +29,7 @@ var (
 
 type ServiceConfig struct {
 	FrontendServiceEndpoint string `json:"frontendServiceEndpoint"`
+	HealthCheckEndpoint string `json:"healthCheckEndpoint"`
 	SubscriptionServiceUrl 	string `json:"subscriptionServiceUrl"`
 	ClientId    			string	`json:"clientId"`
 	ClientSecret    		string	`json:"clientSecret"`
@@ -46,6 +48,7 @@ type ServiceConfig struct {
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		FrontendServiceEndpoint,
+		HealthCheckEndpoint,
 		SubscriptionServiceUrl,
 		ClientId,
 		ClientSecret,
@@ -71,6 +74,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
 	frontendServiceEndpoint := flag.String("frontendServiceEndpoint", "", "set the value of the frontend service endpoint port")
+	healthCheckEndpoint := flag.String("healthCheckEndpoint", "", "set the value of the health check endpoint port")
 	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
 	clientId := flag.String("clientId", "", "set the value of the Auth0 client ID")
 	clientSecret := flag.String("clientSecret", "", "set the value of the Auth0 client secret")
@@ -92,6 +96,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 	if *frontendServiceEndpoint == "" {
 		*frontendServiceEndpoint = os.Getenv("CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT")
+	}
+	if *healthCheckEndpoint == "" {
+		*healthCheckEndpoint = os.Getenv("CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT")
 	}
 	if *subscriptionServiceUrl == "" {
 		*subscriptionServiceUrl = os.Getenv("CLOUD_BILL_SUBSCRIPTION_SERVICE_URL")
@@ -136,6 +143,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *configFile == "" {
 		//try other flags
 		conf.FrontendServiceEndpoint = *frontendServiceEndpoint
+		conf.HealthCheckEndpoint = *healthCheckEndpoint
 		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
 		conf.ClientId = *clientId
 		conf.ClientSecret = *clientSecret
@@ -165,6 +173,11 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.FrontendServiceEndpoint == "" {
 		log.Println("FrontendServiceEndpoint was not set.")
+		valid = false
+	}
+
+	if conf.HealthCheckEndpoint == "" {
+		log.Println("HealthCheckEndpoint was not set.")
 		valid = false
 	}
 

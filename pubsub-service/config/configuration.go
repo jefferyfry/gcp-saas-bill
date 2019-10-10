@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	HealthCheckEndpoint 				= "8097"
 	PubSubSubscription       			= "codelab"
 	SubscriptionServiceUrl 				= "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
@@ -19,6 +20,7 @@ var (
 )
 
 type ServiceConfig struct {
+	HealthCheckEndpoint 			string `json:"healthCheckEndpoint"`
 	PubSubSubscription    			string	`json:"pubSubSubscription"`
 	SubscriptionServiceUrl 			string `json:"subscriptionServiceUrl"`
 	CloudCommerceProcurementUrl    	string	`json:"cloudCommerceProcurementUrl"`
@@ -29,6 +31,7 @@ type ServiceConfig struct {
 
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
+		HealthCheckEndpoint,
 		PubSubSubscription,
 		SubscriptionServiceUrl,
 		CloudCommerceProcurementUrl,
@@ -46,6 +49,7 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
+	healthCheckEndpoint := flag.String("healthCheckEndpoint", "", "set the value of the health check endpoint port")
 	pubSubSubscription := flag.String("pubSubSubscription", "", "set the value of the pubsub subscription")
 	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
 	cloudCommerceProcurementUrl := flag.String("cloudCommerceProcurementUrl", "", "set root url for the cloud commerce procurement API")
@@ -57,6 +61,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	//try environment variables if necessary
 	if *configFile == "" {
 		*configFile = os.Getenv("CLOUD_BILL_PUBSUB_CONFIG_FILE")
+	}
+	if *healthCheckEndpoint == "" {
+		*healthCheckEndpoint = os.Getenv("CLOUD_BILL_PUBSUB_HEALTH_CHECK_ENDPOINT")
 	}
 	if *pubSubSubscription == "" {
 		*pubSubSubscription = os.Getenv("CLOUD_BILL_PUBSUB_SUBSCRIPTION")
@@ -79,6 +86,7 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if *configFile == "" {
 		//try other flags
+		conf.HealthCheckEndpoint = *healthCheckEndpoint
 		conf.PubSubSubscription = *pubSubSubscription
 		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
 		conf.CloudCommerceProcurementUrl = *cloudCommerceProcurementUrl
@@ -98,6 +106,11 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 
 	valid := true
+
+	if conf.HealthCheckEndpoint == "" {
+		log.Println("HealthCheckEndpoint was not set.")
+		valid = false
+	}
 
 	if conf.PubSubSubscription == "" {
 		log.Println("PubSubSubscription was not set.")

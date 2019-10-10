@@ -61,6 +61,11 @@ type Contact struct {
 	Timezone		string     	`json:"timezone,omitempty"`
 }
 
+type Finish struct {
+	FinishUrl 		string `json:"finishUrl"`
+	FinishUrlTitle 	string `json:"finishUrlTitle"`
+}
+
 func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string) *SubscriptionFrontendHandler {
 	Store = sessions.NewCookieStore([]byte(sessionKey))
 
@@ -354,14 +359,10 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 		if tmpl, err := template.ParseFiles("templates/finish.html"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			data := struct {
-				finishUrl string
-				finishUrlTitle string
-			}{
-				hdlr.FinishUrl,
-				hdlr.FinishUrlTitle,
-			}
-			tmpl.Execute(w, data)
+			finish := Finish{}
+			finish.FinishUrl = hdlr.FinishUrl
+			finish.FinishUrlTitle = hdlr.FinishUrlTitle
+			tmpl.Execute(w, finish)
 		}
 	}
 }
@@ -386,15 +387,35 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			data := struct {
-				finishUrl string
-				finishUrlTitle string
-			}{
-				hdlr.FinishUrl,
-				hdlr.FinishUrlTitle,
-			}
-			tmpl.Execute(w, data)
+			finish := Finish{}
+			finish.FinishUrl = hdlr.FinishUrl
+			finish.FinishUrlTitle = hdlr.FinishUrlTitle
+			tmpl.Execute(w, finish)
 		}
+	}
+}
+
+func (hdlr *SubscriptionFrontendHandler) Healthz(w http.ResponseWriter, r *http.Request) {
+	subscriptionServiceUrl := hdlr.SubscriptionServiceUrl+"/healthz"
+	if subResp, err := http.Get(subscriptionServiceUrl); err == nil {
+		if subResp.StatusCode == http.StatusOK {
+			procurementUrl := hdlr.CloudCommerceProcurementUrl +  "/providers/" +  hdlr.PartnerId + "/accounts/"
+
+			if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
+				log.Printf("Healthz failed. Failed to create oath2 client for the procurement API %#v \n", clientErr)
+				w.WriteHeader(http.StatusInternalServerError)
+			} else {
+				if procResp, err := client.Get(procurementUrl); nil != err {
+					log.Printf("Healthz failed. Cloud Commerce API check failed: %s %#v \n", procurementUrl, err)
+					http.Error(w,err.Error(),procResp.StatusCode)
+				} else {
+					w.WriteHeader(procResp.StatusCode)
+				}
+			}
+		}
+	} else {
+		log.Printf("Healthz failed. Subscription Service check failed: %s %s %#v \n", subscriptionServiceUrl,subResp.StatusCode,err)
+		http.Error(w,err.Error(),subResp.StatusCode)
 	}
 }
 

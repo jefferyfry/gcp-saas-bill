@@ -6,6 +6,7 @@ subscriptions coming from the GCP marketplace.
 To successfully run the subscription service, configuration must be set through either environment variables, command-line options or a configuration file. You may chose an option based on on your intent (development, testing, production deployment). The following configuration is required:
 
 * Subscription Service Endpoint - This is the listening port for the service.
+* Subscription Service Health Check Endpoint - Listening port for Kubernetes health checks (readiness and liveness).
 * GCP Project ID - This is your marketplace project where this service and required resources are deployed.
 * Sentry DSN - This is the key for Sentry logging.
 
@@ -14,16 +15,18 @@ command-line options > environment variables
 
 ### Environment Variables
 * CLOUD_BILL_SUBSCRIPTION_CONFIG_FILE - Path to a configuration file (see below).
-* CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT - _Subscription Service Endpoint_ from above.
-* CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID - _GCP Project ID_ from above.
+* CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT 
+* CLOUD_BILL_SUBSCRIPTION_HEALTH_CHECK_ENDPOINT
+* CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID 
 * CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
 
 * **GOOGLE_APPLICATION_CREDENTIALS** - This is the path to your GCP service account credentials required to access GCP resources like Datastore. This is a required environment variable for production.
 
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
-* subscriptionServiceEndpoint - _Subscription Service Endpoint_ from above.
-* gcpProjectId - _GCP Project ID_ from above.
+* subscriptionServiceEndpoint
+* healthCheckEndpoint
+* gcpProjectId
 * sentryDsn
 
 ### Configuration File
@@ -31,6 +34,7 @@ The configFile command-line option or CLOUD_BILL_SAAS_CONFIG_FILE environment va
 ```
 {
   "subscriptionServiceEndpoint": ":8085",
+  "healthCheckEndpoint": "8095",
   "gcpProjectId": "cloud-billing",
   "sentryDsn": "https://xxx"
 }
@@ -53,6 +57,8 @@ Then mount the file and set it as an environment variable.
           env:
 #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT
 #              value: "8085"
+#            - name: CLOUD_BILL_SUBSCRIPTION_HEALTH_CHECK_ENDPOINT
+#              value: "8095"
 #            - name: CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID
 #              value: "<yourprojectid>"
 #            - name: CLOUD_BILL_SUBSCRIPTION_SENTRY_DSN

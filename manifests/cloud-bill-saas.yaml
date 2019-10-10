@@ -21,6 +21,8 @@ spec:
           env:
             #            - name: CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT
             #              value: "8086"
+            #            - name: CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT
+            #              value: "8096"
             #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
             #              value: "http://subscription-service.default.svc.cluster.local:8085/api/v1"
             #            - name: CLOUD_BILL_FRONTEND_CLIENT_ID
@@ -33,16 +35,6 @@ spec:
             #              value: "https://<yourdomain/>"
             #            - name: CLOUD_BILL_FRONTEND_SESSION_KEY
             #              value: "<yoursessionkey>"
-            #            - name: CLOUD_BILL_FRONTEND_CLOUD_COMMERCE_PROCUREMENT_URL
-            #              value: "https://cloudcommerceprocurement.googleapis.com/v1/"
-            #            - name: CLOUD_BILL_FRONTEND_PARTNER_ID
-            #              value: "000"
-            #            - name: CLOUD_BILL_FRONTEND_FINISH_URL
-            #              value: "https://grandcentral.cloudbees.com/login/login?login_redirect=https://go.cloudbees.com"
-            #            - name: CLOUD_BILL_FRONTEND_FINISH_URL_TITLE
-            #              value: "Login"
-            #            - name: CLOUD_BILL_FRONTEND_TEST_MODE
-            #              value: "false"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /auth/gcp-service-account/gcp-service-account.json
             - name: CLOUD_BILL_FRONTEND_CONFIG_FILE
@@ -56,6 +48,18 @@ spec:
             - name: frontend-service-config
               mountPath: "/auth/frontend-service-config"
               readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8096
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8096
+            initialDelaySeconds: 10
+            periodSeconds: 10
       volumes:
         - name: gcp-service-account
           secret:
@@ -87,6 +91,8 @@ spec:
           env:
             #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT
             #              value: "8085"
+            #            - name: CLOUD_BILL_SUBSCRIPTION_HEALTH_CHECK_ENDPOINT
+            #              value: "8095"
             #            - name: CLOUD_BILL_SUBSCRIPTION_CLOUD_COMMERCE_PROCUREMENT_URL
             #              value: "https://cloudcommerceprocurement.googleapis.com/"
             #            - name: CLOUD_BILL_SUBSCRIPTION_PARTNER_ID
@@ -106,6 +112,18 @@ spec:
             - name: subscription-service-config
               mountPath: "/auth/subscription-service-config"
               readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8095
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8095
+            initialDelaySeconds: 10
+            periodSeconds: 10
       volumes:
         - name: gcp-service-account
           secret:
@@ -135,6 +153,10 @@ spec:
         - name: pubsub-service
           image: gcr.io/cloud-bill-dev/pubsub-service:latest
           env:
+            #            - name: CLOUD_BILL_PUBSUB_SERVICE_ENDPOINT
+            #              value: "8087"
+            #            - name: CLOUD_BILL_PUBSUB_HEALTH_CHECK_ENDPOINT
+            #              value: "8097"
             #            - name: CLOUD_BILL_PUBSUB_SUBSCRIPTION
             #              value: "codelab"
             #            - name: CLOUD_BILL_PUBSUB_TOPIC_PREFIX
@@ -158,6 +180,18 @@ spec:
             - name: pubsub-service-config
               mountPath: "/auth/pubsub-service-config"
               readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8097
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8097
+            initialDelaySeconds: 10
+            periodSeconds: 10
       volumes:
         - name: gcp-service-account
           secret:

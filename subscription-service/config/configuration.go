@@ -9,13 +9,15 @@ import (
 )
 
 var (
-	SubscriptionServiceEndpoint 		= ":8085"
+	SubscriptionServiceEndpoint 		= "8085"
+	HealthCheckEndpoint 				= "8095"
 	GcpProjectId				        = "cloud-bill-saas"
-	SentryDsn		= ""
+	SentryDsn							= ""
 )
 
 type ServiceConfig struct {
 	SubscriptionServiceEndpoint    	string	`json:"subscriptionServiceEndpoint"`
+	HealthCheckEndpoint string `json:"healthCheckEndpoint"`
 	GcpProjectId    				string	`json:"gcpProjectId"`
 	SentryDsn						string	`json:"sentryDsn"`
 }
@@ -23,6 +25,7 @@ type ServiceConfig struct {
 func GetConfiguration() (ServiceConfig, error) {
 	conf := ServiceConfig {
 		SubscriptionServiceEndpoint,
+		HealthCheckEndpoint,
 		GcpProjectId,
 		SentryDsn,
 	}
@@ -37,6 +40,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	//parse commandline arguments
 	configFile := flag.String("configFile", "", "set the path to the configuration json file")
 	subscriptionServiceEndpoint := flag.String("subscriptionServiceEndpoint", "", "set the value of this service endpoint")
+	healthCheckEndpoint := flag.String("healthCheckEndpoint", "", "set the value of the health check endpoint port")
 	gcpProjectId := flag.String("gcpProjectId", "", "set the GCP Project Id")
 	sentryDsn := flag.String("sentryDsn", "", "set the Sentry DSN")
 	flag.Parse()
@@ -47,6 +51,9 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 	if *subscriptionServiceEndpoint == "" {
 		*subscriptionServiceEndpoint = os.Getenv("CLOUD_BILL_SUBSCRIPTION_SERVICE_ENDPOINT")
+	}
+	if *healthCheckEndpoint == "" {
+		*healthCheckEndpoint = os.Getenv("CLOUD_BILL_SUBSCRIPTION_HEALTH_CHECK_ENDPOINT")
 	}
 	if *gcpProjectId == "" {
 		*gcpProjectId = os.Getenv("CLOUD_BILL_SUBSCRIPTION_GCP_PROJECT_ID")
@@ -60,6 +67,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	if *configFile == "" {
 		//try other flags
 		conf.SubscriptionServiceEndpoint = *subscriptionServiceEndpoint
+		conf.HealthCheckEndpoint = *healthCheckEndpoint
 		conf.GcpProjectId = *gcpProjectId
 		conf.SentryDsn = *sentryDsn
 	} else {
@@ -78,6 +86,10 @@ func GetConfiguration() (ServiceConfig, error) {
 
 	if conf.SubscriptionServiceEndpoint == "" {
 		log.Println("SubscriptionServiceEndpoint was not set.")
+		valid = false
+	}
+	if conf.HealthCheckEndpoint == "" {
+		log.Println("HealthCheckEndpoint was not set.")
 		valid = false
 	}
 

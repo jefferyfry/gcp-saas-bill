@@ -315,6 +315,30 @@ func (datastoreClient *DatastoreClient) QueryContacts(filters []string, order st
 	}
 }
 
+func (datastoreClient *DatastoreClient) Healthz() error{
+	ctx := context.Background()
+
+	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
+		log.Printf("Failed to create datastore client: %v", err)
+		return err
+	} else {
+		q := datastore.NewQuery(ACCOUNT).Limit(1)
+
+		t := client.Run(ctx, q)
+		for {
+			account := persistence.Account{}
+			_, err := t.Next(&account)
+			if err == iterator.Done {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 
 
 

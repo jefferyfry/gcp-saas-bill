@@ -428,4 +428,22 @@ paths:
           schema:
             type: string
       summary: Get an entitlement
+  /healthz:
+    get:
+      consumes:
+      - application/json
+      description: Check the health of the subscription service
+      operationId: cloud-bill-saas-subscription-service-healthz
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Check the health of the subscription service
 swagger: "2.0"

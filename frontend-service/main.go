@@ -31,6 +31,6 @@ func main() {
 		sentry.Flush(time.Second * 5)
 	}
 
-	//start service
-	log.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer,config.SessionKey,config.CloudCommerceProcurementUrl,config.PartnerId,config.FinishUrl,config.FinishUrlTitle,config.TestMode))
+	//start web service
+	log.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.HealthCheckEndpoint,config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer,config.SessionKey,config.CloudCommerceProcurementUrl,config.PartnerId,config.FinishUrl,config.FinishUrlTitle,config.TestMode))
 }

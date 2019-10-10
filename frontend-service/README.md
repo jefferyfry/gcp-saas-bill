@@ -20,6 +20,7 @@ The basic frontend flow amongst handlers and pages is the following:
 To successfully run the subscription service, configuration must be set through either environment variables, command-line options or a configuration file. You may chose an option based on on your intent (development, testing, production deployment). The following configuration is required:
 
 * Frontend Service Endpoint - This is the listening port for the frontend service.
+* Frontend Health Check Endpoint - This is the listening port for the health check service.
 * Subscription Service URL - This is the URL to the subscription service.
 * Client ID - This is the Oauth/Auth0 client ID.
 * Client Secret - This is the Oauth/Auth0 client secret.
@@ -39,6 +40,7 @@ command-line options > environment variables
 ### Environment Variables
 * CLOUD_BILL_FRONTEND_CONFIG_FILE - Path to a configuration file (see below).
 * CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT 
+* CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT
 * CLOUD_BILL_SUBSCRIPTION_SERVICE_URL 
 * CLOUD_BILL_FRONTEND_CLIENT_ID 
 * CLOUD_BILL_FRONTEND_CLIENT_SECRET 
@@ -54,6 +56,7 @@ command-line options > environment variables
 ### Command-Line Options
 * configFile - Path to a configuration file (see below).
 * frontendServiceEndpoint 
+* healthCheckEndpoint
 * subscriptionServiceUrl 
 * clientId 
 * clientSecret 
@@ -71,6 +74,7 @@ The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environmen
 ```
 {
   "frontendServiceEndpoint": "8086",
+  "healthCheckEndpoint": "8096",
   "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
   "clientId": "clientId",
   "clientSecret": "clientSecret",
@@ -104,6 +108,8 @@ Then mount the file and set it as an environment variable.
               env:
     #            - name: CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT
     #              value: "8086"
+    #            - name: CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT
+    #              value: "8096"
     #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
     #              value: "http://subscription-service.default.svc.cluster.local:8085/api/v1"
     #            - name: CLOUD_BILL_FRONTEND_CLIENT_ID

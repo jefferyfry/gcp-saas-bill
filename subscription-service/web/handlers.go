@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -429,6 +430,23 @@ func (hdlr *SubscriptionServiceHandler) DeleteEntitlement(w http.ResponseWriter,
 		fmt.Fprintf(w, "error occured while deleting entitlement %s", dbErr)
 	} else {
 		w.WriteHeader(204)
+	}
+}
+
+// @Summary Check the health of the subscription service
+// @Description Check the health of the subscription service
+// @ID cloud-bill-saas-subscription-service-healthz
+// @Accept  json
+// @Produce  json
+// @Success 200 {string} string "Ok"
+// @Failure 500 {string} string "Error"
+// @Router /healthz [get]
+func (hdlr *SubscriptionServiceHandler) Healthz(w http.ResponseWriter, r *http.Request) {
+	if dbErr := hdlr.dbHandler.Healthz(); nil != dbErr {
+		log.Printf("Healthz failed. Datastore check failed: %#v \n", dbErr)
+		http.Error(w,dbErr.Error(),http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(200)
 	}
 }
 
