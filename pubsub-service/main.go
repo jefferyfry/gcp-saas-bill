@@ -5,16 +5,21 @@ import (
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/mpevents"
 	"github.com/cloudbees/cloud-bill-saas/pubsub-service/web"
 	"github.com/getsentry/sentry-go"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"time"
 )
 
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
+)
+
 func main() {
-	log.Println("Starting Cloud Bill SaaS PubSub Service...")
+	LogI.Println("Starting Cloud Bill SaaS PubSub Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {
-		log.Fatalf("Invalid configuration: %#v", err)
+		LogE.Fatalf("Invalid configuration: %#v", err)
 	}
 
 	if config.SentryDsn != "" {
@@ -36,7 +41,7 @@ func main() {
 
 	//start the pub sub listener
 	pubSubListener := mpevents.GetPubSubListener(config.PubSubSubscription,config.SubscriptionServiceUrl,config.CloudCommerceProcurementUrl,config.PartnerId,config.GcpProjectId)
-	log.Fatal(pubSubListener.Listen())
+	LogE.Fatal(pubSubListener.Listen())
 }
 
 

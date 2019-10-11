@@ -5,9 +5,15 @@ import (
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/dbinterface"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/web"
 	"github.com/getsentry/sentry-go"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"time"
 )
+
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
+)
+
 // @contact.name CloudBees Support
 // @contact.url http://support.cloudbees.com
 // @contact.email support@cloudbees.com
@@ -15,11 +21,11 @@ import (
 // @BasePath /api/v1
 // @termsOfService https://www.cloudbees.com/products/terms-service
 func main() {
-	log.Println("Starting Cloud Bill SaaS Subscription Service...")
+	LogI.Println("Starting Cloud Bill SaaS Subscription Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {
-		log.Fatalf("Invalid configuration: %v", err)
+		LogE.Fatalf("Invalid configuration: %v", err)
 	}
 
 	if config.SentryDsn != "" {
@@ -39,5 +45,5 @@ func main() {
 	datastoreClient := dbinterface.NewPersistenceLayer(dbinterface.DATASTOREDB,config.GcpProjectId)
 
 	//start web service
-	log.Fatal(web.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint,config.HealthCheckEndpoint))
+	LogE.Fatal(web.SetUpService(datastoreClient,config.SubscriptionServiceEndpoint,config.HealthCheckEndpoint))
 }

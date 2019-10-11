@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"os"
 )
 
@@ -13,6 +13,9 @@ var (
 	HealthCheckEndpoint 				= "8095"
 	GcpProjectId				        = "cloud-bill-saas"
 	SentryDsn							= ""
+
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
 )
 
 type ServiceConfig struct {
@@ -31,10 +34,10 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 
 	if dir, err := os.Getwd(); err != nil {
-		log.Println("Unable to determine working directory.")
+		LogE.Println("Unable to determine working directory.")
 		return conf, err
 	} else {
-		log.Printf("Running service with working directory %s \n", dir)
+		LogI.Printf("Running service with working directory %s \n", dir)
 	}
 
 	//parse commandline arguments
@@ -72,44 +75,44 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.SentryDsn = *sentryDsn
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
-			log.Printf("Error reading confile file %s %s", *configFile, err)
+			LogE.Printf("Error reading confile file %s %s", *configFile, err)
 			return conf, err
 		} else {
 			if err = json.NewDecoder(file).Decode(&conf); err != nil {
 				return conf, errors.New("Configuration file not found.")
 			}
-			log.Printf("Using confile file %s \n", *configFile)
+			LogI.Printf("Using confile file %s \n", *configFile)
 		}
 	}
 
 	valid := true
 
 	if conf.SubscriptionServiceEndpoint == "" {
-		log.Println("SubscriptionServiceEndpoint was not set.")
+		LogE.Println("SubscriptionServiceEndpoint was not set.")
 		valid = false
 	}
 	if conf.HealthCheckEndpoint == "" {
-		log.Println("HealthCheckEndpoint was not set.")
+		LogE.Println("HealthCheckEndpoint was not set.")
 		valid = false
 	}
 
 	if conf.GcpProjectId == "" {
-		log.Println("GcpProjectId was not set.")
+		LogE.Println("GcpProjectId was not set.")
 		valid = false
 	}
 
 	if conf.SentryDsn == "" {
-		log.Println("SentryDsn was not set. Will run without Sentry.")
+		LogE.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if credPath,envExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !envExists {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. This is fine with an emulator but will fail in production. ")
+		LogE.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. This is fine with an emulator but will fail in production. ")
 	} else {
 		if _, errPath := os.Stat(credPath); os.IsNotExist(errPath) {
-			log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", credPath)
+			LogE.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", credPath)
 			valid = false
 		} else {
-			log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", credPath)
+			LogI.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", credPath)
 		}
 	}
 

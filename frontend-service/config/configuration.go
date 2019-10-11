@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"os"
 	"strings"
 )
@@ -25,6 +25,9 @@ var (
 	TestMode							= "false"
 	SentryDsn							= ""
 	GcpProjectId				        = "cloud-billing-saas"
+	
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
 )
 
 type ServiceConfig struct {
@@ -65,10 +68,10 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 
 	if dir, err := os.Getwd(); err != nil {
-		log.Println("Unable to determine working directory.")
+		LogE.Println("Unable to determine working directory.")
 		return conf, err
 	} else {
-		log.Printf("Running service with working directory %s \n", dir)
+		LogI.Printf("Running service with working directory %s \n", dir)
 	}
 
 	//parse commandline arguments
@@ -159,105 +162,105 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.GcpProjectId = *gcpProjectId
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
-			log.Printf("Error reading confile file %s %s", *configFile, err)
+			LogE.Printf("Error reading confile file %s %s", *configFile, err)
 			return conf, err
 		} else {
 			if err = json.NewDecoder(file).Decode(&conf); err != nil {
 				return conf, errors.New("Configuration file not found.")
 			}
-			log.Printf("Using confile file %s \n", *configFile)
+			LogI.Printf("Using confile file %s \n", *configFile)
 		}
 	}
 
 	valid := true
 
 	if conf.FrontendServiceEndpoint == "" {
-		log.Println("FrontendServiceEndpoint was not set.")
+		LogE.Println("FrontendServiceEndpoint was not set.")
 		valid = false
 	}
 
 	if conf.HealthCheckEndpoint == "" {
-		log.Println("HealthCheckEndpoint was not set.")
+		LogE.Println("HealthCheckEndpoint was not set.")
 		valid = false
 	}
 
 	if conf.SubscriptionServiceUrl == "" {
-		log.Println("Subscription Service URL was not set.")
+		LogE.Println("Subscription Service URL was not set.")
 		valid = false
 	} else {
 		conf.SubscriptionServiceUrl = strings.TrimSuffix(conf.SubscriptionServiceUrl,"/")
 	}
 
 	if conf.ClientId == "" {
-		log.Println("Client ID was not set.")
+		LogE.Println("Client ID was not set.")
 		valid = false
 	}
 
 	if conf.ClientSecret == "" {
-		log.Println("ClientSecret was not set.")
+		LogE.Println("ClientSecret was not set.")
 		valid = false
 	}
 
 	if conf.CallbackUrl == "" {
-		log.Println("Callback URL was not set.")
+		LogE.Println("Callback URL was not set.")
 		valid = false
 	}
 
 	if conf.Issuer == "" {
-		log.Println("Issuer was not set.")
+		LogE.Println("Issuer was not set.")
 		valid = false
 	}
 
 	if conf.SessionKey == "" {
-		log.Println("SessionKey was not set.")
+		LogE.Println("SessionKey was not set.")
 		valid = false
 	}
 
 	if conf.CloudCommerceProcurementUrl == "" {
-		log.Println("CloudCommerceProcurementUrl was not set.")
+		LogE.Println("CloudCommerceProcurementUrl was not set.")
 		valid = false
 	} else {
 		conf.CloudCommerceProcurementUrl = strings.TrimSuffix(conf.CloudCommerceProcurementUrl,"/")
 	}
 
 	if conf.PartnerId == "" {
-		log.Println("PartnerId was not set.")
+		LogE.Println("PartnerId was not set.")
 		valid = false
 	}
 
 	if conf.FinishUrl == "" {
-		log.Println("FinishUrl was not set.")
+		LogE.Println("FinishUrl was not set.")
 		valid = false
 	}
 
 	if conf.FinishUrlTitle == "" {
-		log.Println("FinishUrlTitle was not set.")
+		LogE.Println("FinishUrlTitle was not set.")
 		valid = false
 	}
 
 	if conf.TestMode == "" {
-		log.Println("TestMode was not set. Setting to false.")
+		LogE.Println("TestMode was not set. Setting to false.")
 		conf.TestMode = "false"
 	}
 
 	if conf.SentryDsn == "" {
-		log.Println("SentryDsn was not set. Will run without Sentry.")
+		LogE.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if conf.GcpProjectId == "" {
-		log.Println("GcpProjectId was not set.")
+		LogE.Println("GcpProjectId was not set.")
 		valid = false
 	}
 
 	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
+		LogE.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
 		valid = false
 	} else {
 		if _, gAppCredPathErr := os.Stat(gAppCredPath); os.IsNotExist(gAppCredPathErr) {
-			log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", gAppCredPath)
+			LogE.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", gAppCredPath)
 			valid = false
 		} else {
-			log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", gAppCredPath)
+			LogI.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", gAppCredPath)
 		}
 	}
 

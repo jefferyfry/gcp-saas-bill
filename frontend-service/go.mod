@@ -8,6 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.3.0
 	github.com/gorilla/mux v1.7.2
 	github.com/gorilla/sessions v1.2.0
+	github.com/jefferyfry/funclog v0.0.0-20191010235000-f6a0246169e0
 	github.com/lestrrat/go-jwx v0.0.0-20180221005942-b7d4802280ae
 	github.com/lestrrat/go-pdebug v0.0.0-20180220043741-569c97477ae8 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect

@@ -4,16 +4,21 @@ import (
 	"github.com/cloudbees/cloud-bill-saas/datastore-backup/backup"
 	"github.com/cloudbees/cloud-bill-saas/datastore-backup/config"
 	"github.com/getsentry/sentry-go"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"time"
 )
 
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
+)
+
 func main() {
-	log.Println("Starting Cloud Bill SaaS Datastore Backup Job...")
+	LogI.Println("Starting Cloud Bill SaaS Datastore Backup Job...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {
-		log.Fatalf("Invalid configuration: %#v", err)
+		LogE.Fatalf("Invalid configuration: %#v", err)
 	}
 
 	//wait for istio
@@ -36,9 +41,9 @@ func main() {
 	datastoreBackup := backup.GetDatastoreBackupHandler(config.GcpProjectId,config.GcsBucket)
 
 	if err := datastoreBackup.Run(); err != nil {
-		log.Printf("Datastore Backup Job encountered err %s",err)
+		LogE.Printf("Datastore Backup Job encountered err %s",err)
 	} else {
-		log.Println("Datastore Backup Job completed successfully.")
+		LogI.Println("Datastore Backup Job completed successfully.")
 	}
 }
 

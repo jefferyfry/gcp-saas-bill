@@ -4,16 +4,21 @@ import (
 	"github.com/cloudbees/cloud-bill-saas/frontend-service/config"
 	"github.com/cloudbees/cloud-bill-saas/frontend-service/web"
 	"github.com/getsentry/sentry-go"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"time"
 )
 
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
+)
+
 func main() {
-	log.Println("Starting Cloud Bill SaaS Frontend Service...")
+	LogI.Println("Starting Cloud Bill SaaS Frontend Service...")
 	config, err := config.GetConfiguration()
 
 	if err != nil {
-		log.Fatalf("Invalid configuration: %v", err)
+		LogE.Fatalf("Invalid configuration: %v", err)
 	}
 
 	if config.SentryDsn != "" {
@@ -32,5 +37,5 @@ func main() {
 	}
 
 	//start web service
-	log.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.HealthCheckEndpoint,config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer,config.SessionKey,config.CloudCommerceProcurementUrl,config.PartnerId,config.FinishUrl,config.FinishUrlTitle,config.TestMode))
+	LogE.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.HealthCheckEndpoint,config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer,config.SessionKey,config.CloudCommerceProcurementUrl,config.PartnerId,config.FinishUrl,config.FinishUrlTitle,config.TestMode))
 }

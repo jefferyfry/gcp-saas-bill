@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
 	"github.com/gorilla/mux"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"net/http"
 	"strings"
 )
@@ -13,6 +13,11 @@ import (
 type SubscriptionServiceHandler struct {
 	dbHandler             persistence.DatabaseHandler
 }
+
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
+)
 
 func GetSubscriptionServiceHandler(dbHandler persistence.DatabaseHandler) *SubscriptionServiceHandler {
 	return &SubscriptionServiceHandler {
@@ -443,7 +448,7 @@ func (hdlr *SubscriptionServiceHandler) DeleteEntitlement(w http.ResponseWriter,
 // @Router /healthz [get]
 func (hdlr *SubscriptionServiceHandler) Healthz(w http.ResponseWriter, r *http.Request) {
 	if dbErr := hdlr.dbHandler.Healthz(); nil != dbErr {
-		log.Printf("Healthz failed. Datastore check failed: %#v \n", dbErr)
+		LogE.Printf("Healthz failed. Datastore check failed: %#v \n", dbErr)
 		http.Error(w,dbErr.Error(),http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(200)

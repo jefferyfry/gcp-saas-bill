@@ -2,11 +2,16 @@ package auth
 
 import (
 	"context"
-	"log"
+	"github.com/jefferyfry/funclog"
 
 	"golang.org/x/oauth2"
 
 	oidc "github.com/coreos/go-oidc"
+)
+
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
 )
 
 type Authenticator struct {
@@ -20,7 +25,7 @@ func NewAuthenticator(issuer string,clientId string, clientSecret string, callba
 
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
-		log.Printf("failed to get provider: %v", err)
+		LogE.Printf("failed to get provider: %v", err)
 		return nil, err
 	}
 

@@ -5,8 +5,8 @@ import (
 	"context"
 	"errors"
 	"github.com/cloudbees/cloud-bill-saas/subscription-service/persistence"
+	"github.com/jefferyfry/funclog"
 	"google.golang.org/api/iterator"
-	"log"
 	"strings"
 )
 
@@ -20,6 +20,11 @@ type DatastoreClient struct {
 	ProjectId string
 }
 
+var (
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
+)
+
 func NewDatastore(projectId string) (persistence.DatabaseHandler) {
 	return &DatastoreClient{
 		projectId,
@@ -30,7 +35,7 @@ func (datastoreClient *DatastoreClient) UpsertAccount(account *persistence.Accou
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		kind := ACCOUNT
@@ -45,7 +50,7 @@ func (datastoreClient *DatastoreClient) DeleteAccount(accountId string) error {
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		kind := ACCOUNT
@@ -58,7 +63,7 @@ func (datastoreClient *DatastoreClient) GetAccount(accountId string) (*persisten
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		kind := ACCOUNT
@@ -73,7 +78,7 @@ func (datastoreClient *DatastoreClient) UpsertContact(contact *persistence.Conta
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		kind := CONTACT
@@ -88,7 +93,7 @@ func (datastoreClient *DatastoreClient) DeleteContact(accountId string) error {
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		kind := CONTACT
@@ -101,7 +106,7 @@ func (datastoreClient *DatastoreClient) GetContact(accountId string) (*persisten
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		kind := CONTACT
@@ -116,7 +121,7 @@ func (datastoreClient *DatastoreClient) UpsertEntitlement(entitlement *persisten
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		kind := ENTITLEMENT
@@ -131,7 +136,7 @@ func (datastoreClient *DatastoreClient) DeleteEntitlement(entitlementId string) 
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		kind := ENTITLEMENT
@@ -144,7 +149,7 @@ func (datastoreClient *DatastoreClient) GetEntitlement(entitlementId string) (*p
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		kind := ENTITLEMENT
@@ -159,7 +164,7 @@ func (datastoreClient *DatastoreClient) QueryEntitlements(filters []string, orde
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		q := datastore.NewQuery(ENTITLEMENT)
@@ -201,7 +206,7 @@ func (datastoreClient *DatastoreClient) QueryAccountEntitlements(accountId strin
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		q := datastore.NewQuery(ENTITLEMENT)
@@ -241,7 +246,7 @@ func (datastoreClient *DatastoreClient) QueryAccounts(filters []string, order st
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		q := datastore.NewQuery(ACCOUNT)
@@ -280,7 +285,7 @@ func (datastoreClient *DatastoreClient) QueryContacts(filters []string, order st
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return nil,err
 	} else {
 		q := datastore.NewQuery(CONTACT)
@@ -319,7 +324,7 @@ func (datastoreClient *DatastoreClient) Healthz() error{
 	ctx := context.Background()
 
 	if client, err := datastore.NewClient(ctx, datastoreClient.ProjectId); err != nil {
-		log.Printf("Failed to create datastore client: %v", err)
+		LogE.Printf("Failed to create datastore client: %v", err)
 		return err
 	} else {
 		q := datastore.NewQuery(ACCOUNT).Limit(1)

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"log"
+	"github.com/jefferyfry/funclog"
 	"os"
 	"strings"
 )
@@ -16,7 +16,10 @@ var (
 	CloudCommerceProcurementUrl       	= "https://cloudcommerceprocurement.googleapis.com/"
 	PartnerId							= "000"
 	GcpProjectId				        = "cloud-billing-saas"
-	SentryDsn		= ""
+	SentryDsn							= ""
+
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
 )
 
 type ServiceConfig struct {
@@ -41,10 +44,10 @@ func GetConfiguration() (ServiceConfig, error) {
 	}
 
 	if dir, err := os.Getwd(); err != nil {
-		log.Println("Unable to determine working directory.")
+		LogE.Println("Unable to determine working directory.")
 		return conf, err
 	} else {
-		log.Printf("Running service with working directory %s \n", dir)
+		LogI.Printf("Running service with working directory %s \n", dir)
 	}
 
 	//parse commandline arguments
@@ -95,65 +98,65 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.SentryDsn = *sentryDsn
 	} else {
 		if file, err := os.Open(*configFile); err != nil {
-			log.Printf("Error reading confile file %s %s", *configFile, err)
+			LogE.Printf("Error reading confile file %s %s", *configFile, err)
 			return conf, err
 		} else {
 			if err = json.NewDecoder(file).Decode(&conf); err != nil {
 				return conf, errors.New("Configuration file not found.")
 			}
-			log.Printf("Using confile file %s \n", *configFile)
+			LogI.Printf("Using confile file %s \n", *configFile)
 		}
 	}
 
 	valid := true
 
 	if conf.HealthCheckEndpoint == "" {
-		log.Println("HealthCheckEndpoint was not set.")
+		LogE.Println("HealthCheckEndpoint was not set.")
 		valid = false
 	}
 
 	if conf.PubSubSubscription == "" {
-		log.Println("PubSubSubscription was not set.")
+		LogE.Println("PubSubSubscription was not set.")
 		valid = false
 	}
 
 	if conf.SubscriptionServiceUrl == "" {
-		log.Println("Subscription Service URL was not set.")
+		LogE.Println("Subscription Service URL was not set.")
 		valid = false
 	} else {
 		conf.SubscriptionServiceUrl = strings.TrimSuffix(conf.SubscriptionServiceUrl,"/")
 	}
 
 	if conf.CloudCommerceProcurementUrl == "" {
-		log.Println("CloudCommerceProcurementUrl was not set.")
+		LogE.Println("CloudCommerceProcurementUrl was not set.")
 		valid = false
 	} else {
 		conf.CloudCommerceProcurementUrl = strings.TrimSuffix(conf.CloudCommerceProcurementUrl,"/")
 	}
 
 	if conf.PartnerId == "" {
-		log.Println("PartnerId was not set.")
+		LogE.Println("PartnerId was not set.")
 		valid = false
 	}
 
 	if conf.GcpProjectId == "" {
-		log.Println("GcpProjectId was not set.")
+		LogE.Println("GcpProjectId was not set.")
 		valid = false
 	}
 
 	if conf.SentryDsn == "" {
-		log.Println("SentryDsn was not set. Will run without Sentry.")
+		LogE.Println("SentryDsn was not set. Will run without Sentry.")
 	}
 
 	if gAppCredPath,gAppCredExists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !gAppCredExists {
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
+		LogE.Println("GOOGLE_APPLICATION_CREDENTIALS was not set. ")
 		valid = false
 	} else {
 		if _, gAppCredPathErr := os.Stat(gAppCredPath); os.IsNotExist(gAppCredPathErr) {
-			log.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", gAppCredPath)
+			LogE.Println("GOOGLE_APPLICATION_CREDENTIALS file does not exist: ", gAppCredPath)
 			valid = false
 		} else {
-			log.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", gAppCredPath)
+			LogI.Println("Using GOOGLE_APPLICATION_CREDENTIALS file: ", gAppCredPath)
 		}
 	}
 

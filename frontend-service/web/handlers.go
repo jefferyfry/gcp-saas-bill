@@ -20,7 +20,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/lestrrat/go-jwx/jwk"
 	"html/template"
-	"log"
+	"github.com/jefferyfry/funclog"
 
 	"crypto/rand"
 	"net/http"
@@ -28,6 +28,9 @@ import (
 
 var (
 	Store *sessions.CookieStore
+
+	LogI = funclog.NewInfoLogger("INFO: ")
+	LogE = funclog.NewErrorLogger("ERROR: ")
 )
 
 type SubscriptionFrontendHandler struct {
@@ -70,6 +73,7 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 	Store = sessions.NewCookieStore([]byte(sessionKey))
 
 	Store.Options = &sessions.Options{
+		Path:     "/",
 		MaxAge:   60 * 60,
 		HttpOnly: true,
 	}
@@ -151,10 +155,15 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *ht
 	}
 
 	if session, err := Store.Get(r, "auth-session"); err != nil {
+		LogE.Printf("Unable to get session %#v",err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		session.Values["acct"] = sub
-		session.Save(r, w)
+		if err := session.Save(r,w); err != nil {
+			LogE.Printf("Unable to save session %#v",err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 
@@ -174,11 +183,16 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaasTest(w http.ResponseWriter, r
 	}
 
 	if session, err := Store.Get(r, "auth-session"); err != nil {
+		LogE.Printf("Unable to get session %#v",err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
 		session.Values["acct"] = acct[0]
-		session.Save(r, w)
+		if err := session.Save(r,w); err != nil {
+			LogE.Printf("Unable to save session %#v",err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	if tmpl, err := template.ParseFiles("templates/signup.html"); err != nil {
@@ -220,12 +234,17 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 	}
 
 	if session, err := Store.Get(r, "auth-session"); err != nil {
+		LogE.Printf("Unable to get session %#v",err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
 		session.Values["acct"] = accountId
 		session.Values["prod"] = prod[0]
-		session.Save(r,w)
+		if err := session.Save(r,w); err != nil {
+			LogE.Printf("Unable to save session %#v",err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	if tmpl, err := template.ParseFiles("templates/signup.html"); err != nil {
@@ -246,10 +265,12 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Login(w http.ResponseWriter, r *ht
 	state := base64.StdEncoding.EncodeToString(b)
 
 	if session, err := Store.Get(r, "auth-session"); err != nil {
+		LogE.Printf("Unable to get session %#v",err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		session.Values["state"] = state
 		if err = session.Save(r, w); err != nil {
+			LogE.Printf("Unable to save session %#v",err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -266,6 +287,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Login(w http.ResponseWriter, r *ht
 func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r *http.Request) {
 	session, err := Store.Get(r, "auth-session")
 	if err != nil {
+		LogE.Printf("Unable to get session %#v",err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -283,7 +305,7 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 
 	token, err := authenticator.Config.Exchange(context.TODO(), r.URL.Query().Get("code"))
 	if err != nil {
-		log.Printf("no token found: %v", err)
+		LogE.Printf("no token found: %v", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -329,8 +351,9 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 	profile["prod"] = "saas"
 	prod := session.Values["prod"]
 	tmplHtml := "templates/confirmSaas.html"
+
 	if prod != nil {
-		profile["prod"] = session.Values["prod"]
+		profile["prod"] = prod
 		tmplHtml = "templates/confirmProd.html"
 	}
 
@@ -342,6 +365,18 @@ func (hdlr *SubscriptionFrontendHandler) Auth0Callback(w http.ResponseWriter, r 
 }
 
 func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *http.Request) {
+	if session, err := Store.Get(r, "auth-session"); err != nil {
+		LogE.Printf("Unable to get session %#v",err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		session.Options.MaxAge = -1
+		if err = session.Save(r, w); err != nil {
+			LogE.Printf("Unable to delete session %#v",err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	contact := Contact{}
 	contact.AccountId = r.PostFormValue("acct")
 	contact.Company = r.PostFormValue("company")
@@ -368,6 +403,18 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 }
 
 func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *http.Request) {
+	if session, err := Store.Get(r, "auth-session"); err != nil {
+		LogE.Printf("Unable to get session %#v",err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		session.Options.MaxAge = -1
+		if err = session.Save(r, w); err != nil {
+			LogE.Printf("Unable to delete session %#v",err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	contact := Contact{}
 	contact.AccountId = r.PostFormValue("acct")
 	contact.Company = r.PostFormValue("company")
@@ -402,11 +449,11 @@ func (hdlr *SubscriptionFrontendHandler) Healthz(w http.ResponseWriter, r *http.
 			procurementUrl := hdlr.CloudCommerceProcurementUrl +  "/providers/" +  hdlr.PartnerId + "/accounts/"
 
 			if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
-				log.Printf("Healthz failed. Failed to create oath2 client for the procurement API %#v \n", clientErr)
+				LogE.Printf("Healthz failed. Failed to create oath2 client for the procurement API %#v \n", clientErr)
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
 				if procResp, err := client.Get(procurementUrl); nil != err {
-					log.Printf("Healthz failed. Cloud Commerce API check failed: %s %#v \n", procurementUrl, err)
+					LogE.Printf("Healthz failed. Cloud Commerce API check failed: %s %#v \n", procurementUrl, err)
 					http.Error(w,err.Error(),procResp.StatusCode)
 				} else {
 					w.WriteHeader(procResp.StatusCode)
@@ -414,7 +461,7 @@ func (hdlr *SubscriptionFrontendHandler) Healthz(w http.ResponseWriter, r *http.
 			}
 		}
 	} else {
-		log.Printf("Healthz failed. Subscription Service check failed: %s %s %#v \n", subscriptionServiceUrl,subResp.StatusCode,err)
+		LogE.Printf("Healthz failed. Subscription Service check failed: %s %s %#v \n", subscriptionServiceUrl,subResp.StatusCode,err)
 		http.Error(w,err.Error(),subResp.StatusCode)
 	}
 }
@@ -453,7 +500,7 @@ func createProduct(prod string, accountId string, subscriptionServiceUrl string,
 func createContact(contact Contact, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	//submit to subscript service
 	if contactBytes, err := json.Marshal(contact); err != nil {
-		log.Println(err)
+		LogE.Println(err)
 		return false
 	} else {
 		if contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes)); nil != err {
@@ -480,22 +527,22 @@ func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,ac
 				"approvalName": "signup"
 			}`)
 	if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
-		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return clientErr
 	} else {
-		log.Printf("Sending account approval: %s \n", procurementUrl)
+		LogI.Printf("Sending account approval: %s \n", procurementUrl)
 		if procResp, err := client.Post(procurementUrl, "", bytes.NewBuffer(jsonApproval)); nil != err {
-			log.Printf("Failed sending entitlement approval request %s %#v \n", procurementUrl, err)
+			LogE.Printf("Failed sending entitlement approval request %s %#v \n", procurementUrl, err)
 			return err
 		} else {
 			defer procResp.Body.Close()
 			if procResp.StatusCode != 200 {
-				log.Println("Account approval received error response: ", procResp.StatusCode)
+				LogE.Println("Account approval received error response: ", procResp.StatusCode)
 				responseDump, _ := httputil.DumpResponse(procResp, true)
-				log.Println(string(responseDump))
+				LogE.Println(string(responseDump))
 				return errors.New("Account approval received error response: " + procResp.Status)
 			} else {
-				log.Printf("%s %s", procurementUrl, procResp.Status)
+				LogI.Printf("%s %s", procurementUrl, procResp.Status)
 			}
 			return nil
 		}
@@ -505,19 +552,19 @@ func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,ac
 func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accountName string,w http.ResponseWriter) error {
 	procurementUrl := cloudCommerceProcurementUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":reset"
 	if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
-		log.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return clientErr
 	} else {
-		log.Printf("Sending account reset: %s \n", procurementUrl)
+		LogI.Printf("Sending account reset: %s \n", procurementUrl)
 		if procResp, err := client.Post(procurementUrl, "", nil); nil != err {
-			log.Printf("Failed sending account reset request %s %#v \n", procurementUrl, err)
+			LogE.Printf("Failed sending account reset request %s %#v \n", procurementUrl, err)
 			return err
 		} else {
 			defer procResp.Body.Close()
 			if procResp.StatusCode != 200 {
-				log.Println("Account reset received error response: ", procResp.StatusCode)
+				LogE.Println("Account reset received error response: ", procResp.StatusCode)
 				responseDump, _ := httputil.DumpResponse(procResp, true)
-				log.Println(string(responseDump))
+				LogE.Println(string(responseDump))
 				return errors.New("Account reset received error response: " + procResp.Status)
 			}
 			return nil
