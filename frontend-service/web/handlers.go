@@ -45,6 +45,12 @@ type SubscriptionFrontendHandler struct {
 	FinishUrlTitle string
 }
 
+type Account struct {
+	Id  			string     	`json:"id"`
+	UpdateTime   	string    	`json:"updateTime,omitempty"`
+	Provider     	string		`json:"provider,omitempty"`
+}
+
 type Product struct {
 	Name     			string	`json:"name"`
 	Account   			string	`json:"account"`
@@ -429,8 +435,20 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 	} else {
-		createProduct(prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w)
-
+		loc, _ := time.LoadLocation("UTC")
+		now := time.Now().In(loc).String()
+		account := Account{}
+		account.Id = contact.AccountId
+		account.Provider = hdlr.PartnerId
+		account.UpdateTime = now
+		if !createAccount(account, hdlr.SubscriptionServiceUrl, w) {
+			http.Error(w, "Failed to store account info", http.StatusInternalServerError)
+		} else {
+			if !createProduct(prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w){
+				http.Error(w, "Failed to store product info", http.StatusInternalServerError)
+			}
+		}
+		
 		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -514,6 +532,29 @@ func createContact(contact Contact, subscriptionServiceUrl string, w http.Respon
 				return false
 			} else {
 				defer contactResp.Body.Close()
+				return true
+			}
+		}
+	}
+}
+
+func createAccount(account Account, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+	//submit to subscript service
+	if accountBytes, err := json.Marshal(account); err != nil {
+		LogE.Println(err)
+		return false
+	} else {
+		if accountReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/accounts", bytes.NewBuffer(accountBytes)); nil != err {
+			w.WriteHeader(500)
+			fmt.Fprint(w, `{"error": "error with creating account upsert request %s"}`, err)
+			return false
+		} else {
+			if accountResp, err := http.DefaultClient.Do(accountReq); nil != err {
+				w.WriteHeader(accountResp.StatusCode)
+				fmt.Fprintf(w, `{"error": "error received from subscription service %s"}`, err)
+				return false
+			} else {
+				defer accountResp.Body.Close()
 				return true
 			}
 		}
