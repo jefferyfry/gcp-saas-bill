@@ -48,13 +48,16 @@ type SubscriptionFrontendHandler struct {
 type Account struct {
 	Id  			string     	`json:"id"`
 	UpdateTime   	string    	`json:"updateTime,omitempty"`
+	State 	 		string      `json:"state,omitempty"`
 	Provider     	string		`json:"provider,omitempty"`
 }
 
 type Product struct {
+	Id     				string	`json:"id"`
 	Name     			string	`json:"name"`
 	Account   			string	`json:"account"`
 	Product  			string	`json:"product"`
+	Plan     	  		string	`json:"plan"`
 	State    	  		string	`json:"state"`
 	UpdateTime    	  	string	`json:"updateTime"`
 	CreateTime    	  	string	`json:"createTime"`
@@ -421,14 +424,15 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 		}
 	}
 
-	contact := Contact{}
-	contact.AccountId = r.PostFormValue("acct")
-	contact.Company = r.PostFormValue("company")
-	contact.EmailAddress = r.PostFormValue("emailAddress")
-	contact.FirstName = r.PostFormValue("firstName")
-	contact.LastName = r.PostFormValue("lastName")
-	contact.Phone = r.PostFormValue("phone")
-	contact.Timezone = r.PostFormValue("timezone")
+	contact := Contact{
+		AccountId : r.PostFormValue("acct"),
+		Company : r.PostFormValue("company"),
+		EmailAddress : r.PostFormValue("emailAddress"),
+		FirstName : r.PostFormValue("firstName"),
+		LastName : r.PostFormValue("lastName"),
+		Phone : r.PostFormValue("phone"),
+		Timezone : r.PostFormValue("timezone"),
+	}
 
 	prod := r.PostFormValue("prod")
 
@@ -437,10 +441,13 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 	} else {
 		loc, _ := time.LoadLocation("UTC")
 		now := time.Now().In(loc).String()
-		account := Account{}
-		account.Id = contact.AccountId
-		account.Provider = hdlr.PartnerId
-		account.UpdateTime = now
+		account := Account{
+			Id : contact.AccountId,
+			Provider : hdlr.PartnerId,
+			UpdateTime : now,
+			State : "ACCOUNT_ACTIVE",
+		}
+
 		if !createAccount(account, hdlr.SubscriptionServiceUrl, w) {
 			http.Error(w, "Failed to store account info", http.StatusInternalServerError)
 		} else {
@@ -448,7 +455,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 				http.Error(w, "Failed to store product info", http.StatusInternalServerError)
 			}
 		}
-		
+
 		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -488,9 +495,12 @@ func createProduct(prod string, accountId string, subscriptionServiceUrl string,
 	loc, _ := time.LoadLocation("UTC")
 	now := time.Now().In(loc).String()
 	product := Product {
+		Id: accountId+"-"+prod,
 		Name: accountId+"-"+prod,
 		Product: prod,
+		Plan: prod,
 		Account: accountId,
+		State: "ENTITLEMENT_ACTIVE",
 		CreateTime: now,
 		UpdateTime: now,
 	}
