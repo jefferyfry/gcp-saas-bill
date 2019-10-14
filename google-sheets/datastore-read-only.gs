@@ -140,6 +140,7 @@ function main(){
     var accounts = datastore.getInstance().runGql("select * from Account");
     if (accounts === undefined || accounts.length == 0)
         return;
+    var row = 3;
     for(i=0; i < accounts.length; i++) {
         var account = accounts[i];
         var accountId = account['entity']['properties']['id']['stringValue'];
@@ -162,15 +163,15 @@ function main(){
         var emailAddress = contact['entity']['properties']['emailAddress']['stringValue'];
         var phone = contact['entity']['properties']['phone']['stringValue'];
         var timezone = contact['entity']['properties']['timezone']['stringValue'];
-        for(i=0; i < entitlements.length; i++) {
-            var row = i + 3;
-            var entitlement = entitlements[i]
+        for(j=0; j < entitlements.length; j++) {
+            var entitlement = entitlements[j];
             var entitlementId = entitlement['entity']['properties']['id']['stringValue'];
             var product = entitlement['entity']['properties']['product']['stringValue'];
             var plan = entitlement['entity']['properties']['plan']['stringValue'];
             var state = entitlement['entity']['properties']['state']['stringValue'];
             var rowValues = [[accountId,accountStatus,firstName,lastName,emailAddress,phone,timezone,entitlementId,product,plan,state]];
             SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A"+row+":K"+row).setValues(rowValues);
+            row++;
         }
         SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().autoResizeColumns(1, 11);
     }

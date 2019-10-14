@@ -171,18 +171,11 @@ Additionally, the frontend-service redirects to the CloudBees Auth0 service for 
 The development version of this application is hosted in the GCP project cloud-bill-dev/cloud-bill-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cloud-bill-dev).
 The production version of this application is hosted in the GCP project gcp-marketplace-solutions/cje-marketplace-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cje-marketplace-dev).
 
-#### Istio Firewall Ports
-| Port  | Description |
-|-------|-------------|
-| 80    |             |
-| 443   |             |
-| 15020 |             |
-| 15029 |             |
-| 15030 |             |
-| 15031 |             |
-| 15032 |             |
-| 15443 |             |
-| 31400 |             |
+#### Firewall Rules for External Access
+| Port  | Source | Description |
+|-------|--------|-------------|
+| 80    | 0.0.0.0/0 | Redirects to 443.       |
+| 443   | 0.0.0.0/0 | HTTPS for serving pages.|
 
 #### Secrets and Service Accounts
 A common GCP service account is used across all services with the following roles:
