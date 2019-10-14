@@ -5,16 +5,11 @@ The Frontend service provides the UI for customer signup from the marketplace. T
 The basic frontend flow amongst handlers and pages is the following:
 ![Jenkins Support SaaS - Page 4](https://user-images.githubusercontent.com/6440106/64573203-54b36280-d31f-11e9-84cb-9e0ca4e5fc67.png)
 
-## Handler Functions
-* [Signup](https://github.com/cloudbees/cloud-bill-saas/blob/master/subscription-frontend/web/handlers.go#L63)
-* [Auth0Login](https://github.com/cloudbees/cloud-bill-saas/blob/master/subscription-frontend/web/handlers.go#L162)
-* [Auth0Callback](https://github.com/cloudbees/cloud-bill-saas/blob/master/subscription-frontend/web/handlers.go#L194)
-* [Finish](https://github.com/cloudbees/cloud-bill-saas/blob/master/subscription-frontend/web/handlers.go#L254)
-
 ## Pages
-* [signup.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/subscription-frontend/templates/signup.html) - Initial page to direct customer to Auth0/Google sign in. The customer is sent to this page from marketplace.
-* [confirm.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/subscription-frontend/templates/confirm.html) - Auth0/Google callback page to confirm account information.
-* [finish.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/subscription-frontend/templates/finish.html) - Final page to confirm account creation and notify customer of next steps.
+* [signup.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/signup.html) - Initial page to direct customer to Auth0/Google sign in. The customer is sent to this page from marketplace.
+* [confirmProd.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/confirmProd.html) - Auth0/Google callback page to confirm account information for VM and K8s products.
+* [confirmSaas.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/confirmSaas.html) - Auth0/Google callback page to confirm account information for Saas products.
+* [finish.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/finish.html) - Final page to confirm account creation and notify customer of next steps.
 
 ## Configuration
 To successfully run the subscription service, configuration must be set through either environment variables, command-line options or a configuration file. You may chose an option based on on your intent (development, testing, production deployment). The following configuration is required:

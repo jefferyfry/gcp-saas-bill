@@ -157,4 +157,60 @@ kubectl rollout status deployments/<deployment-name>
 
 ### Security
 
-### Troubleshooting
+#### Public Access
+Access to the application is only allowed to the Frontend-Service and is controlled by Istio. See the [Istio Gateway manifest](/manifests/istio-gateway.yaml) that is applied to configure this. Four pages are hosted by the frontend-service:
+
+* [signup.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/signup.html) - Initial page to direct customer to Auth0/Google sign in. The customer is sent to this page from marketplace.
+* [confirmProd.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/confirmProd.html) - Auth0/Google callback page to confirm account information for VM and K8s products.
+* [confirmSaas.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/confirmSaas.html) - Auth0/Google callback page to confirm account information for Saas products.
+* [finish.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/finish.html) - Final page to confirm account creation and notify customer of next steps.
+
+Additionally, the frontend-service redirects to the CloudBees Auth0 service for account creation and authentication.
+
+#### Cloud Management Access
+The development version of this application is hosted in the GCP project cloud-bill-dev/cloud-bill-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cloud-bill-dev).
+The production version of this application is hosted in the GCP project gcp-marketplace-solutions/cje-marketplace-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cje-marketplace-dev).
+
+#### Istio Firewall Ports
+| Port  | Description |
+|-------|-------------|
+| 80    |             |
+| 443   |             |
+| 15020 |             |
+| 15029 |             |
+| 15030 |             |
+| 15031 |             |
+| 15032 |             |
+| 15443 |             |
+| 31400 |             |
+
+#### Secrets and Service Accounts
+A common GCP service account is used across all services with the following roles:
+* PubSub Editor - Used to access marketplace PubSub events.
+* Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
+* Cloud Import Export Admin - Used to export from Cloud Datastore.
+* Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
+The service account JSON file is installed as a Kubernetes secret for access by all the services:
+
+```
+kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
+```
+
+Additionally, due to sensitive CloudBees partner metadata stored in the services configuration files, these are also stores as Kubernetes secrets. See each of the services' READMEs for more.
+
+#### Images and Scanning
+Four images are used in the application. Images are hosted in GCR and automatically scanned. These are the GCR locations for development and production:
+
+* pubsub-service - The PubSub Service is triggered by the GCP Marketplace Pub/Sub topics to process new accounts, subscriptions, updates, cancellations and renewals. 
+* subscription-service - This web app serves the signup page and then approves new accounts and entitlements after receiving account information.
+* frontend-service - Lightweight web interface that provides the signup page.
+* datastore-backup - Daily executing datastore backup.
+
+Development (cloud-bill-dev/cloud-bill-dev): [Dev GCR Repo](https://console.cloud.google.com/gcr/images/cloud-bill-dev?project=cloud-bill-dev)
+Production (gcp-marketplace-solutions/cje-marketplace-dev): [Prod GCR Repo](https://console.cloud.google.com/gcr/images/cloud-bill-dev?project=cje-marketplace-dev)
+
+#### Logging and Audits
+Application logging and security audits are provided by Google Stackdriver. 
+
+Development (cloud-bill-dev/cloud-bill-dev): [Dev Stackdriver](https://console.cloud.google.com/logs/viewer?project=cloud-bill-dev&organizationId=41792434410&minLogLevel=0&expandAll=false&timestamp=2019-10-14T20:33:35.889000000Z&customFacets=&limitCustomFacetWidth=true&dateRangeStart=2019-10-14T19:33:36.144Z&dateRangeEnd=2019-10-14T20:33:36.144Z&interval=PT1H&resource=audited_resource&scrollTimestamp=2019-10-14T20:33:18.273999553Z)
+Production (gcp-marketplace-solutions/cje-marketplace-dev): [Prod Stackdriver](https://console.cloud.google.com/logs/viewer?organizationId=41792434410&project=cje-marketplace-dev&minLogLevel=0&expandAll=false&timestamp=2019-10-14T20:33:02.130000000Z&customFacets=&limitCustomFacetWidth=true&dateRangeStart=2019-10-14T19:33:02.381Z&dateRangeEnd=2019-10-14T20:33:02.381Z&interval=PT1H&resource=audited_resource&scrollTimestamp=2019-10-14T20:27:52.458843159Z)
