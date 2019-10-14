@@ -157,7 +157,7 @@ kubectl rollout status deployments/<deployment-name>
 
 ### Security
 
-#### Public Access
+#### External Access
 Access to the application is only allowed to the Frontend-Service and is controlled by Istio. See the [Istio Gateway manifest](/manifests/istio-gateway.yaml) that is applied to configure this. Four pages are hosted by the frontend-service:
 
 * [signup.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/signup.html) - Initial page to direct customer to Auth0/Google sign in. The customer is sent to this page from marketplace.
@@ -167,15 +167,15 @@ Access to the application is only allowed to the Frontend-Service and is control
 
 Additionally, the frontend-service redirects to the CloudBees Auth0 service for account creation and authentication.
 
-#### Cloud Management Access
-The development version of this application is hosted in the GCP project cloud-bill-dev/cloud-bill-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cloud-bill-dev).
-The production version of this application is hosted in the GCP project gcp-marketplace-solutions/cje-marketplace-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cje-marketplace-dev).
-
 #### Firewall Rules for External Access
 | Port  | Source | Description |
 |-------|--------|-------------|
 | 80    | 0.0.0.0/0 | Redirects to 443.       |
 | 443   | 0.0.0.0/0 | HTTPS for serving pages.|
+
+#### Cloud Management Access
+The development version of this application is hosted in the GCP project cloud-bill-dev/cloud-bill-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cloud-bill-dev).
+The production version of this application is hosted in the GCP project gcp-marketplace-solutions/cje-marketplace-dev. IAM membership and management console access for this project can bee seen [here](https://console.cloud.google.com/iam-admin/iam?project=cje-marketplace-dev).
 
 #### Secrets and Service Accounts
 A common GCP service account is used across all services with the following roles:
