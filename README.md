@@ -168,6 +168,7 @@ Access to the application is only allowed to the Frontend-Service and is control
 Additionally, the frontend-service redirects to the CloudBees Auth0 service for account creation and authentication.
 
 #### Firewall Rules for External Access
+(All other ports are blocked for external access)
 | Port  | Source | Description |
 |-------|--------|-------------|
 | 80    | 0.0.0.0/0 | Redirects to 443.       |
