@@ -91,7 +91,7 @@ The manifest for the Istio ingress gateway is configured for HTTPS and reference
 
 ```
 
-##### Applying the Istio Manifest for Development and Testing
+##### Applying the Istio Ingress Gateway Manifest for Development and Testing
 Before applying the manifest update the hosts value to your domain.
 ```
 kubectl apply -f manifests/istio-gateway-devtest.yaml
@@ -186,26 +186,38 @@ kubectl apply -f manifests/cert.yaml
 kubectl -n istio-system describe certificate istio-gateway
 ```
 
-##### Applying the Istio Manifest for Production
+##### Apply the Istio Ingress Gateway Manifest for Production
 Before applying the manifest update the hosts value to your domain.
 ```
 kubectl apply -f manifests/istio-gateway-production.yaml
 ```
 
-##### Applying the Application Manfiest
-Before applying the manifest update the environment variables or provide configuration files.
+##### Apply the Services Configuration
+Apply each of the services configuration (as secrets). See the services READMEs for more details.
+
+```
+kubectl create secret generic datastore-backup-config --from-file datastore-backup-config.json
+
+kubectl create secret generic frontend-service-config --from-file frontend-service-config.json
+
+kubectl create secret generic pubsub-service-config --from-file pubsub-service-config.json
+
+kubectl create secret generic subscription-service-config --from-file subscription-service-config.json
+
+
+```
+
+##### Apply the Common GCP Service Account
+The service account JSON file is installed as a Kubernetes secret for access by all the services. See more details on the service account permissions below.
+
+```
+kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
+```
+
+##### Apply the Application Manifest
 ```
 kubectl apply -f manifests/cloud-bill-saas.yaml
 ```
-
-##### GCP Service Accounts
-The following roles are required:
-* PubSub Editor - Used to access marketplace PubSub events.
-* Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
-* Cloud Import Export Admin - Used to export from Cloud Datastore.
-* Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
-* Billing Account Administrator (NOT FOR PRODUCTION) - Allows the reset of test accounts.
-It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
 
 ### Monitoring
 
@@ -278,11 +290,8 @@ A common GCP service account is used across all services with the following role
 * Cloud Datastore Owner - Used for the Cloud Datastore subscription DB.
 * Cloud Import Export Admin - Used to export from Cloud Datastore.
 * Cloud Commerce API (assigned by GCP Marketplace team) - Allows access to the Cloud Commerce API
-The service account JSON file is installed as a Kubernetes secret for access by all the services:
-
-```
-kubectl create secret generic gcp-service-account --from-file gcp-service-account.json
-```
+* Billing Account Administrator (NOT FOR PRODUCTION) - Allows the reset of test accounts.
+It is recommended that the roles be used assigned to a common service account. Then the service account file can be shared and mounted for all the services.
 
 Additionally, due to sensitive CloudBees partner metadata stored in the services configuration files, these are also stores as Kubernetes secrets. See each of the services' READMEs for more.
 
