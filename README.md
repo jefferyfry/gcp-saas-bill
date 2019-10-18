@@ -21,7 +21,7 @@ The service will manage the subscriptions through a centrally stored customer su
 * datastore backup cron job [README](/datastore-backup/README.md)
 
 ## Architecture
-![Architecture](https://user-images.githubusercontent.com/6440106/66532740-5a8a9800-eac5-11e9-8501-7a008e8d6f9c.png)
+![Architecture](https://user-images.githubusercontent.com/6440106/67062045-090e8880-f117-11e9-921d-f57c8bc1f450.png)
 
 ### Components
 #### Google/Auth0 Components
@@ -177,7 +177,7 @@ kubectl apply -f manifests/letsencrypt-issuer-production.yaml
 10. Apply cert-production.yaml.
 
 ```
-kubectl apply -f manifests/cert.yaml 
+kubectl apply -f manifests/cert-production.yaml 
 ```
 
 11. You can monitor the issuance of the cert with the following command. The cert-manager stackdriver logs also provide detailed logging.
@@ -193,7 +193,7 @@ kubectl apply -f manifests/istio-gateway-production.yaml
 ```
 
 ##### Apply the Services Configuration
-Apply each of the services configuration (as secrets). See the services READMEs for more details.
+Apply each of the services configuration (as secrets). See the services [datastore-backup](https://github.com/cloudbees/cloud-bill-saas/blob/master/datastore-backup/README.md), [frontend-service](https://github.com/cloudbees/cloud-bill-saas/blob/master/frontend-service/README.md), [pubsub-service](https://github.com/cloudbees/cloud-bill-saas/blob/master/pubsub-service/README.md) and [subscription-service](https://github.com/cloudbees/cloud-bill-saas/blob/master/subscription-service/README.md) READMEs for more details.
 
 ```
 kubectl create secret generic datastore-backup-config --from-file datastore-backup-config.json
