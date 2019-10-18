@@ -106,7 +106,7 @@ func (lstnr *PubSubListener) Listen() error {
 		LogE.Fatalf("Error checking for subscription: %#v", errSub)
 	}
 
-	LogE.Printf("Begin receiving messages from subscription %s \n", subscription.String())
+	LogI.Printf("Begin receiving messages from subscription %s \n", subscription.String())
 	errRcv := subscription.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		pubSubMsg := PubSubMsg{}
 		if err := json.Unmarshal(msg.Data, &pubSubMsg); err != nil {
@@ -133,6 +133,7 @@ func (lstnr *PubSubListener) Listen() error {
 func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 	switch pubSubMsg.EventType {
 	case "ACCOUNT_ACTIVE":
+		LogI.Printf("Account %s is active. \n", pubSubMsg.Account.Id)
 		if _,err := syncAccount(pubSubMsg.Account.Id); err != nil {
 			LogE.Printf("Unable to update account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
@@ -141,6 +142,7 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 				LogE.Printf("Unable to check for unapproved entitlements %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 				return false
 			} else if entitlements!=nil && len(entitlements) > 0 {
+				LogI.Printf("Approving entitlements for account %s. \n", pubSubMsg.Account.Id)
 				for _, ent := range entitlements {
 					postEntitlementApprovalToCommerceApi(ent.Id)
 				}
@@ -149,23 +151,29 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			}
 		}
 	case "ENTITLEMENT_CREATION_REQUESTED":
+		LogI.Printf("Entitlement %s creation requested. \n", pubSubMsg.Entitlement.Id)
 		if entitlement,err := syncEntitlement(pubSubMsg.Entitlement.Id); err == nil {
 			if accountExists, acctErr := accountExistsInDb(entitlement.Account); acctErr != nil {
 				LogE.Printf("Unable to determine if account %#v exists due to error %#v \n", entitlement.Account, acctErr)
 				return false
 			} else if accountExists {
+				LogI.Printf("Account %s exists. \n", entitlement.Account)
 				postEntitlementApprovalToCommerceApi(pubSubMsg.Entitlement.Id);
+			} else {
+				LogI.Printf("Account %s does not exist. \n", entitlement.Account)
 			}
 		} else {
 			LogE.Printf("Unable to sync entitlement and approve entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_ACTIVE":
+		LogI.Printf("Entitlement %s is active. \n", pubSubMsg.Entitlement.Id)
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGE_REQUESTED":
+		LogI.Printf("Entitlement %s plan change requested. \n", pubSubMsg.Entitlement.Id)
 		if err := postEntitlementChangeApprovalToCommerceApi(pubSubMsg.Entitlement.Id); err == nil {
 			if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 				LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
@@ -176,6 +184,7 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGED":
+		LogI.Printf("Entitlement %s plan changed. \n", pubSubMsg.Entitlement.Id)
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
@@ -183,11 +192,13 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 	case "ENTITLEMENT_PENDING_CANCELLATION":
 		LogE.Println("ENTITLEMENT_PENDING_CANCELLATION ignored.")
 	case "ENTITLEMENT_CANCELLED":
+		LogI.Printf("Entitlement %s cancelled. \n", pubSubMsg.Entitlement.Id)
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_DELETED":
+		LogI.Printf("Entitlement %s deleted. \n", pubSubMsg.Entitlement.Id)
 		if err := deleteEntitlementFromDb(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to delete entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
@@ -215,7 +226,7 @@ func postEntitlementApprovalToCommerceApi(entitlementId string) error {
 		return clientErr
 	}
 
-	LogE.Printf("Sending entitlement approval: %s \n", procurementUrl)
+	LogI.Printf("Sending entitlement approval: %s \n", procurementUrl)
 	procResp, err := client.Post(procurementUrl,"",nil)
 	if nil != err {
 		LogE.Printf("Failed sending entitlement approval request %s %#v \n",procurementUrl, err)
@@ -250,7 +261,7 @@ func postEntitlementChangeApprovalToCommerceApi(entitlementId string) error {
 		return clientErr
 	}
 
-	LogE.Printf("Sending entitlement change approval: %s %s \n", procurementUrl, jsonApproval)
+	LogI.Printf("Sending entitlement change approval: %s %s \n", procurementUrl, jsonApproval)
 	procResp, err := client.Post(procurementUrl,"",bytes.NewBuffer(jsonApproval))
 	if nil != err {
 		LogE.Printf("Failed sending entitlement change approval request %s %#v \n",procurementUrl, err)
@@ -415,14 +426,13 @@ func syncAccount(accountId string) (*Account, error) {
 func accountExistsInDb(accountId string) (bool, error){
 	subscriptionServiceUrl := subscriptionServiceBaseUrl+"/accounts/"+accountId
 
-	LogI.Printf("Getting account: %s \n", subscriptionServiceUrl)
 	resp, err := http.Get(subscriptionServiceUrl)
 	if err != nil {
 		LogE.Printf("Failed to get account %s %#v \n",subscriptionServiceUrl, err)
 		return false, err
 	}
-
-	if resp.StatusCode != 200 {
+	LogI.Printf("Getting account: %s %s \n", subscriptionServiceUrl, resp.Status)
+	if resp.StatusCode == 200 {
 		return true, nil
 	} else {
 		return false, nil

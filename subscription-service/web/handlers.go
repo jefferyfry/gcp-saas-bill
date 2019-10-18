@@ -49,7 +49,8 @@ func (hdlr *SubscriptionServiceHandler) GetAccount(w http.ResponseWriter, r *htt
 			w.WriteHeader(404)
 		} else {
 			w.WriteHeader(500)
-			fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+			LogE.Printf("Error occured while getting account %#v \n", dbErr)
+			fmt.Fprintf(w, "Error occured while getting account %#v \n", dbErr)
 		}
 	} else {
 		if account == nil {
@@ -86,7 +87,8 @@ func (hdlr *SubscriptionServiceHandler) GetAccounts(w http.ResponseWriter, r *ht
 
 	if accounts, dbErr := hdlr.dbHandler.QueryAccounts(filters,order); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		LogE.Printf("Error occured while getting accounts %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while getting accounts %#v \n", dbErr)
 	} else {
 		if accounts == nil {
 			w.WriteHeader(404)
@@ -108,14 +110,16 @@ func (hdlr *SubscriptionServiceHandler) GetAccounts(w http.ResponseWriter, r *ht
 // @Router /accounts [put]
 func (hdlr *SubscriptionServiceHandler) UpsertAccount(w http.ResponseWriter, r *http.Request) {
 	account := persistence.Account{}
-	if err := json.NewDecoder(r.Body).Decode(&account); nil != err {
+	if dbErr := json.NewDecoder(r.Body).Decode(&account); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding account data %s", err)
+		LogE.Printf("Error occured while decoding account data %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while decoding account data %#v \n", dbErr)
 		return
 	}
 	if dbErr := hdlr.dbHandler.UpsertAccount(&account); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting account %s", dbErr)
+		LogE.Printf("Error occured while persisting account %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while persisting account %#v \n", dbErr)
 	} else {
 		w.WriteHeader(204)
 	}
@@ -142,7 +146,8 @@ func (hdlr *SubscriptionServiceHandler) DeleteAccount(w http.ResponseWriter, r *
 
 	if dbErr := hdlr.dbHandler.DeleteAccount(accountId); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while deleting account %s", dbErr)
+		LogE.Printf("Error occured while deleting account %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while deleting account %#v \n", dbErr)
 	} else {
 		w.WriteHeader(204)
 	}
@@ -172,7 +177,8 @@ func (hdlr *SubscriptionServiceHandler) GetContact(w http.ResponseWriter, r *htt
 			w.WriteHeader(404)
 		} else {
 			w.WriteHeader(500)
-			fmt.Fprintf(w, "error occured while getting contact %s", dbErr)
+			LogE.Printf("Error occured while getting contact %#v \n", dbErr)
+			fmt.Fprintf(w, "Error occured while getting contact %#v \n", dbErr)
 		}
 	} else {
 		if contact == nil {
@@ -194,15 +200,17 @@ func (hdlr *SubscriptionServiceHandler) GetContact(w http.ResponseWriter, r *htt
 // @Router /contacts [put]
 func (hdlr *SubscriptionServiceHandler) UpsertContact(w http.ResponseWriter, r *http.Request) {
 	contact := persistence.Contact{}
-	if err := json.NewDecoder(r.Body).Decode(&contact); nil != err {
+	if dbErr := json.NewDecoder(r.Body).Decode(&contact); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding contact data %s", err)
+		LogE.Printf("Error occured while decoding contact data %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while decodning contact data %#v \n", dbErr)
 		return
 	}
 
 	if dbErr := hdlr.dbHandler.UpsertContact(&contact); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting contact %s", dbErr)
+		LogE.Printf("Error occured while persisting contact %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while persisting contact %#v \n", dbErr)
 	} else {
 		w.WriteHeader(204)
 	}
@@ -229,7 +237,8 @@ func (hdlr *SubscriptionServiceHandler) DeleteContact(w http.ResponseWriter, r *
 
 	if dbErr := hdlr.dbHandler.DeleteContact(accountId); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while deleting contact %s", dbErr)
+		LogE.Printf("Error occured while deleting contact %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while deleting contact %#v \n", dbErr)
 	} else {
 		w.WriteHeader(204)
 	}
@@ -260,7 +269,8 @@ func (hdlr *SubscriptionServiceHandler) GetContacts(w http.ResponseWriter, r *ht
 
 	if contacts, dbErr := hdlr.dbHandler.QueryContacts(filters,order); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		LogE.Printf("Error occured while getting contacts %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while getting contacts %#v \n", dbErr)
 	} else {
 		if contacts == nil {
 			w.WriteHeader(404)
@@ -295,7 +305,8 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlement(w http.ResponseWriter, r 
 			w.WriteHeader(404)
 		} else {
 			w.WriteHeader(500)
-			fmt.Fprintf(w, "error occured while getting entitlement %s", dbErr)
+			LogE.Printf("Error occured while getting entitlement %#v \n", dbErr)
+			fmt.Fprintf(w, "Error occured while getting entitlement %#v \n", dbErr)
 		}
 	} else {
 		if entitlement == nil {
@@ -332,7 +343,8 @@ func (hdlr *SubscriptionServiceHandler) GetEntitlements(w http.ResponseWriter, r
 
 	if entitlements, dbErr := hdlr.dbHandler.QueryEntitlements(filters,order); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		LogE.Printf("Error occured while getting entitlements %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while getting entitlements %#v \n", dbErr)
 	} else {
 		if entitlements == nil {
 			w.WriteHeader(404)
@@ -377,7 +389,8 @@ func (hdlr *SubscriptionServiceHandler) GetAccountEntitlements(w http.ResponseWr
 
 	if entitlements, dbErr := hdlr.dbHandler.QueryAccountEntitlements(accountId,filters,order); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while getting account %s", dbErr)
+		LogE.Printf("Error occured while getting account entitlements %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while getting account entitlements %#v \n", dbErr)
 	} else {
 		if entitlements == nil {
 			w.WriteHeader(404)
@@ -398,14 +411,16 @@ func (hdlr *SubscriptionServiceHandler) GetAccountEntitlements(w http.ResponseWr
 // @Router /entitlements [put]
 func (hdlr *SubscriptionServiceHandler) UpsertEntitlement(w http.ResponseWriter, r *http.Request) {
 	entitlement := persistence.Entitlement{}
-	if err := json.NewDecoder(r.Body).Decode(&entitlement); nil != err {
+	if dbErr := json.NewDecoder(r.Body).Decode(&entitlement); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while decoding entitlement data %s", err)
+		LogE.Printf("Error occured while decoding entitlement data %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while decoding entitlement data %#v \n", dbErr)
 		return
 	}
 	if dbErr := hdlr.dbHandler.UpsertEntitlement(&entitlement); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while persisting entitlement %s", dbErr)
+		LogE.Printf("Error occured while persisting entitlement %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while persisting entitlement %#v \n", dbErr)
 	} else {
 		w.WriteHeader(204)
 	}
@@ -432,7 +447,8 @@ func (hdlr *SubscriptionServiceHandler) DeleteEntitlement(w http.ResponseWriter,
 
 	if dbErr := hdlr.dbHandler.DeleteEntitlement(entitlementId); nil != dbErr {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "error occured while deleting entitlement %s", dbErr)
+		LogE.Printf("Error occured while deleting entitlement %#v \n", dbErr)
+		fmt.Fprintf(w, "Error occured while deleting entitlement %#v \n", dbErr)
 	} else {
 		w.WriteHeader(204)
 	}

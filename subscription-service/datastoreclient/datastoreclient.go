@@ -69,7 +69,7 @@ func (datastoreClient *DatastoreClient) GetAccount(accountId string) (*persisten
 		kind := ACCOUNT
 		key := datastore.NameKey(kind, accountId, nil)
 		account := persistence.Account{}
-		gtErr := client.Get(ctx,key, account)
+		gtErr := client.Get(ctx,key, &account)
 		return &account, gtErr
 	}
 }
@@ -112,7 +112,7 @@ func (datastoreClient *DatastoreClient) GetContact(accountId string) (*persisten
 		kind := CONTACT
 		key := datastore.NameKey(kind, accountId, nil)
 		contact := persistence.Contact{}
-		gtErr := client.Get(ctx, key, contact)
+		gtErr := client.Get(ctx, key, &contact)
 		return &contact, gtErr
 	}
 }
@@ -155,7 +155,7 @@ func (datastoreClient *DatastoreClient) GetEntitlement(entitlementId string) (*p
 		kind := ENTITLEMENT
 		key := datastore.NameKey(kind, entitlementId, nil)
 		entitlement := persistence.Entitlement{}
-		gtErr := client.Get(ctx, key, entitlement)
+		gtErr := client.Get(ctx, key, &entitlement)
 		return &entitlement, gtErr
 	}
 }
