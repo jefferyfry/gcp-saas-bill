@@ -275,6 +275,7 @@ Additionally, the frontend-service redirects to the CloudBees Auth0 service for 
 
 #### Firewall Rules for External Access
 (All other ports are blocked for external access)
+
 | Port  | Source | Description |
 |-------|--------|-------------|
 | 80    | 0.0.0.0/0 | Redirects to 443.       |
