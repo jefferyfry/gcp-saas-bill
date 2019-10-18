@@ -100,41 +100,30 @@ kubectl apply -f manifests/istio-gateway-devtest.yaml
 ##### Istio Ingress Gateway HTTPS for Production
 For production, the Istio Ingress Gateway can use a certification that is automatically provided by Let's Encrypt and using our AWS Route 53 DNS. This is a but more involved to set up. This solution uses a jetstack cert-manager to request Let's Encrypt certificates.
 
-1. Install helm.
-
-```
-kubectl -n kube-system create serviceaccount tiller
-kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-2. Install cert-manager CRDs.
-
-```
-CERT_REPO=https://raw.githubusercontent.com/jetstack/cert-manager
-
-kubectl apply -f ${CERT_REPO}/release-0.7/deploy/manifests/00-crds.yaml
-```
-
-3. Create the cert-manager namespace and disable resource validation
+1. Create a namespace for the cert-manager.
 
 ```
 kubectl create namespace cert-manager
-
-kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
 ```
-
-4. Install the jetstack cert-manager.
+2. Install cert-manager and CRDs.
 
 ```
-helm repo add jetstack https://charts.jetstack.io && \
-helm repo update && \
-helm upgrade -i cert-manager \
---namespace cert-manager \
---version v0.7.0 \
-jetstack/cert-manager
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v0.11.0/cert-manager.yaml --validate=false
 ```
 
-5. Create an IAM user and role with the following permissions. Get an aws-access-key-id and aws-secret-access-key for the user.
+3. Verify the installation.
+
+```
+kubectl get pods --namespace cert-manager
+
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-6b5d76bf77-hgb9f              1/1     Running   0          101m
+cert-manager-cainjector-7c5667645b-qhjvv   1/1     Running   0          101m
+cert-manager-webhook-59846cdfb6-xncff      1/1     Running   1          101m
+
+```
+
+4. Create an IAM user and role with the following permissions. Get an aws-access-key-id and aws-secret-access-key for the user.
 
 ```
 {
@@ -158,29 +147,29 @@ jetstack/cert-manager
     ]
 }
 ```
-6. Create a kubernetes secret for the credentials.
+5. Create a kubernetes secret for the credentials.
 
 ```
 kubectl create secret generic aws-cloudbees-iam --from-literal=secret-access-key=<aws-secret-access-key> -n istio-system
 ```
 
-7. Updated the letsencrypt-issuer-production.yaml with your email address and AWS access key ID.
+6. Updated the letsencrypt-issuer-production.yaml with your email address and AWS access key ID.
 
-8. Apply letsencrypt-issuer-production.yaml.
+7. Apply letsencrypt-issuer-production.yaml.
 
 ```
 kubectl apply -f manifests/letsencrypt-issuer-production.yaml 
 ```
 
-9. Update cert-production.yaml with the correct host and common name.
+8. Update cert-production.yaml with the correct host and common name.
 
-10. Apply cert-production.yaml.
+9. Apply cert-production.yaml.
 
 ```
 kubectl apply -f manifests/cert-production.yaml 
 ```
 
-11. You can monitor the issuance of the cert with the following command. The cert-manager stackdriver logs also provide detailed logging.
+10. You can monitor the issuance of the cert with the following command. The cert-manager stackdriver logs also provide detailed logging.
 
 ```
 kubectl -n istio-system describe certificate istio-gateway
@@ -203,8 +192,6 @@ kubectl create secret generic frontend-service-config --from-file frontend-servi
 kubectl create secret generic pubsub-service-config --from-file pubsub-service-config.json
 
 kubectl create secret generic subscription-service-config --from-file subscription-service-config.json
-
-
 ```
 
 ##### Apply the Common GCP Service Account
@@ -305,10 +292,12 @@ Four images are used in the application. Images are hosted in GCR and automatica
 * datastore-backup - Daily executing datastore backup.
 
 Development (cloud-bill-dev/cloud-bill-dev): [Dev GCR Repo](https://console.cloud.google.com/gcr/images/cloud-bill-dev?project=cloud-bill-dev)
-Production (gcp-marketplace-solutions/cje-marketplace-dev): [Prod GCR Repo](https://console.cloud.google.com/gcr/images/cloud-bill-dev?project=cje-marketplace-dev)
+
+Production (gcp-marketplace-solutions/cje-marketplace-dev): [Prod GCR Repo](https://console.cloud.google.com/gcr/images/cje-marketplace-dev/GLOBAL/cloud-bill-saas?project=cje-marketplace-dev)
 
 #### Logging and Audits
 Application logging and security audits are provided by Google Stackdriver. 
 
 Development (cloud-bill-dev/cloud-bill-dev): [Dev Stackdriver](https://console.cloud.google.com/logs/viewer?project=cloud-bill-dev&organizationId=41792434410&minLogLevel=0&expandAll=false&timestamp=2019-10-14T20:33:35.889000000Z&customFacets=&limitCustomFacetWidth=true&dateRangeStart=2019-10-14T19:33:36.144Z&dateRangeEnd=2019-10-14T20:33:36.144Z&interval=PT1H&resource=audited_resource&scrollTimestamp=2019-10-14T20:33:18.273999553Z)
+
 Production (gcp-marketplace-solutions/cje-marketplace-dev): [Prod Stackdriver](https://console.cloud.google.com/logs/viewer?organizationId=41792434410&project=cje-marketplace-dev&minLogLevel=0&expandAll=false&timestamp=2019-10-14T20:33:02.130000000Z&customFacets=&limitCustomFacetWidth=true&dateRangeStart=2019-10-14T19:33:02.381Z&dateRangeEnd=2019-10-14T20:33:02.381Z&interval=PT1H&resource=audited_resource&scrollTimestamp=2019-10-14T20:27:52.458843159Z)

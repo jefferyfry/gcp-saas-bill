@@ -1,16 +1,19 @@
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
-  name: istio-gateway
+  name: gcp-marketplace-cloudbees-com
   namespace: istio-system
 spec:
   secretName: istio-ingressgateway-certs
   issuerRef:
     name: letsencrypt-prod
-  commonName: "gcp-marketplace.cloudbees.com"
+    kind: ClusterIssuer
+  commonName: gcp-marketplace.cloudbees.com
+  dnsNames:
+    - gcp-marketplace.cloudbees.com
   acme:
     config:
-    - dns01:
-        provider: route53
-      domains:
-      - "gcp-marketplace.cloudbees.com"
+      - dns01:
+          provider: route53
+        domains:
+          - gcp-marketplace.cloudbees.com

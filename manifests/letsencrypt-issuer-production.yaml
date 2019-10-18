@@ -1,20 +1,23 @@
-apiVersion: certmanager.k8s.io/v1alpha1
-kind: Issuer
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
 metadata:
   name: letsencrypt-prod
-  namespace: istio-system
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: jfry@cloudbees.com
     privateKeySecretRef:
-      name: letsencrypt-prod
-    dns01:
-      providers:
-      - name: route53
-        route53:
-          region: us-east-1
-          accessKeyID: AKIA6F5YXFD46KUTEFGM
-          secretAccessKeySecretRef:
-            name: aws-cloudbees-iam
-            key: secret-access-key
+      name: letsencrypt-issuer-account-key
+    solvers:
+      - selector:
+          dnsZones:
+            - cloudbees.com
+        dns01:
+          route53:
+            region: us-east-1
+            hostedZoneID: <hosted-zone>
+            accessKeyID: <access-key-id>
+            secretAccessKeySecretRef:
+              name: aws-cloudbees-iam
+              key: secret-access-key
+            role: arn:aws:iam::xxxxx:role/infra-cert-manager

@@ -35,8 +35,8 @@ spec:
   gateways:
     - cloud-bill-gateway
   http:
-  - route:
-      - destination:
-          port:
-            number: 8086
-          host: frontend-service
+    - route:
+        - destination:
+            port:
+              number: 8086
+            host: frontend-service
