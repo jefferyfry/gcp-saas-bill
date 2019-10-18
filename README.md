@@ -72,9 +72,8 @@ This application was deployed and tested on GKE clusters version 1.13.7-gke.24 w
 kubectl label namespace NAMESPACE istio-injection=enabled
 ```
 
-The manifest for the Istio ingress gateway is configured for HTTPS and references certificates. Before applying the manifests, create the cert, key and add the secret.
-
-##### Creating the Cert, Key for the Istio Ingress Gateway HTTPS
+##### Istio Ingress Gateway HTTPS for Development and Testing
+The manifest for the Istio ingress gateway is configured for HTTPS and references certificates. Before applying the manifests, create the self-signed cert, key and add the secret.
 
 ```
 1. openssl genrsa -des3 -passout pass:x -out server.pass.key 2048
@@ -92,10 +91,105 @@ The manifest for the Istio ingress gateway is configured for HTTPS and reference
 
 ```
 
-##### Applying the Istio Manifest
+##### Applying the Istio Manifest for Development and Testing
 Before applying the manifest update the hosts value to your domain.
 ```
-kubectl apply -f manifests/istio-gateway.yaml
+kubectl apply -f manifests/istio-gateway-devtest.yaml
+```
+
+##### Istio Ingress Gateway HTTPS for Production
+For production, the Istio Ingress Gateway can use a certification that is automatically provided by Let's Encrypt and using our AWS Route 53 DNS. This is a but more involved to set up. This solution uses a jetstack cert-manager to request Let's Encrypt certificates.
+
+1. Install helm.
+
+```
+kubectl -n kube-system create serviceaccount tiller
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+helm init --service-account=tiller
+```
+2. Install cert-manager CRDs.
+
+```
+CERT_REPO=https://raw.githubusercontent.com/jetstack/cert-manager
+
+kubectl apply -f ${CERT_REPO}/release-0.7/deploy/manifests/00-crds.yaml
+```
+
+3. Create the cert-manager namespace and disable resource validation
+
+```
+kubectl create namespace cert-manager
+
+kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
+```
+
+4. Install the jetstack cert-manager.
+
+```
+helm repo add jetstack https://charts.jetstack.io && \
+helm repo update && \
+helm upgrade -i cert-manager \
+--namespace cert-manager \
+--version v0.7.0 \
+jetstack/cert-manager
+```
+
+5. Create an IAM user and role with the following permissions. Get an aws-access-key-id and aws-secret-access-key for the user.
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "route53:GetChange",
+            "Resource": "arn:aws:route53:::change/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "route53:ChangeResourceRecordSets",
+            "Resource": "arn:aws:route53:::hostedzone/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "route53:ListHostedZonesByName",
+            "Resource": "*"
+        }
+    ]
+}
+```
+6. Create a kubernetes secret for the credentials.
+
+```
+kubectl create secret generic aws-cloudbees-iam --from-literal=secret-access-key=<aws-secret-access-key> -n istio-system
+```
+
+7. Updated the letsencrypt-issuer-production.yaml with your email address and AWS access key ID.
+
+8. Apply letsencrypt-issuer-production.yaml.
+
+```
+kubectl apply -f manifests/letsencrypt-issuer-production.yaml 
+```
+
+9. Update cert-production.yaml with the correct host and common name.
+
+10. Apply cert-production.yaml.
+
+```
+kubectl apply -f manifests/cert.yaml 
+```
+
+11. You can monitor the issuance of the cert with the following command. The cert-manager stackdriver logs also provide detailed logging.
+
+```
+kubectl -n istio-system describe certificate istio-gateway
+```
+
+##### Applying the Istio Manifest for Production
+Before applying the manifest update the hosts value to your domain.
+```
+kubectl apply -f manifests/istio-gateway-production.yaml
 ```
 
 ##### Applying the Application Manfiest
@@ -158,7 +252,7 @@ kubectl rollout status deployments/<deployment-name>
 ### Security
 
 #### External Access
-Access to the application is only allowed to the Frontend-Service and is controlled by Istio. See the [Istio Gateway manifest](/manifests/istio-gateway.yaml) that is applied to configure this. Four pages are hosted by the frontend-service:
+Access to the application is only allowed to the Frontend-Service and is controlled by Istio. See the [Istio Gateway manifest](/manifests/istio-gateway-devtest.yaml) that is applied to configure this. Four pages are hosted by the frontend-service:
 
 * [signup.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/signup.html) - Initial page to direct customer to Auth0/Google sign in. The customer is sent to this page from marketplace.
 * [confirmProd.html](https://github.com/cloudbees/cloud-bill-saas/tree/master/frontend-service/templates/confirmProd.html) - Auth0/Google callback page to confirm account information for VM and K8s products.
