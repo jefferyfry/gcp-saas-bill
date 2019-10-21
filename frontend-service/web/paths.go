@@ -28,5 +28,9 @@ func SetUpService(webServiceEndpoint string,healthCheckEndpoint string,subscript
 
 	webService.Methods(http.MethodGet).Path("/healthz").HandlerFunc(handler.Healthz)
 
+	webService.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://www.cloudbees.com", http.StatusFound)
+	})
+
 	return http.ListenAndServe(":"+webServiceEndpoint, webService)
 }
