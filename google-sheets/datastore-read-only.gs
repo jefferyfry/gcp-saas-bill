@@ -23,7 +23,10 @@ var datastore = {
     },
 
     getConfig: function(filename){
-        var it = DriveApp.getFilesByName(filename);
+        thisFileId = SpreadsheetApp.getActive().getId();
+        var thisFile = DriveApp.getFileById(thisFileId);
+        var parentFolder = thisFile.getParents().next();
+        var it = parentFolder.getFilesByName(filename);
         while (it.hasNext()) {
             var file = it.next();
             var data = JSON.parse(file.getAs("application/json").getDataAsString());
@@ -103,7 +106,7 @@ var datastore = {
 
         /* always log remote errors */
         if(typeof(result.error) !== "undefined") {
-            Logger.log(method + " > ERROR " + result.error.code + ": " + result.error.message);
+            Logger.log(" ERROR " + result.error.code + ": " + result.error.message);
             return false;
         }
 
