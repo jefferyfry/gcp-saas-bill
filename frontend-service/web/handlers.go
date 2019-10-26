@@ -102,7 +102,8 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 
 //gets google jwt token and stores. sends to signup.html
 func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *http.Request) {
-	tknStr := r.Header.Get("x-gcp-marketplace-token")
+	r.ParseForm()
+	tknStr := r.Form.Get("x-gcp-marketplace-token")
 	if tknStr == "" {
 		http.Error(w, "x-gcp-marketplace-token not found.", http.StatusInternalServerError)
 		return
@@ -125,11 +126,18 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *ht
 			return nil, errors.New("Unable to get JWT payload.")
 		}
 
-		keySet, err := jwk.FetchHTTP(iss);
+		issSub := strings.Replace(iss,"x509","jwk",-1)
+
+		LogI.Printf("Getting keys from %s",issSub)
+
+		keySet, err := jwk.FetchHTTP(issSub);
 
 		if err != nil {
+			LogE.Printf("Error fetching keyset from ISS %s: %#v",issSub,err)
 			return nil, err
 		}
+
+		LogI.Printf("KeySet found %#v",keySet)
 
 		if key := keySet.LookupKeyID(keyID); len(key) == 1 {
 			return key[0].Materialize()
@@ -140,6 +148,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *ht
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	if !tkn.Valid {
@@ -166,6 +175,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupSaas(w http.ResponseWriter, r *ht
 	if session, err := Store.Get(r, "auth-session"); err != nil {
 		LogE.Printf("Unable to get session %#v",err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	} else {
 		session.Values["acct"] = sub
 		if err := session.Save(r,w); err != nil {
