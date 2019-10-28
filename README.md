@@ -301,3 +301,18 @@ Application logging and security audits are provided by Google Stackdriver.
 Development (cloud-bill-dev/cloud-bill-dev): [Dev Stackdriver](https://console.cloud.google.com/logs/viewer?project=cloud-bill-dev&organizationId=41792434410&minLogLevel=0&expandAll=false&timestamp=2019-10-14T20:33:35.889000000Z&customFacets=&limitCustomFacetWidth=true&dateRangeStart=2019-10-14T19:33:36.144Z&dateRangeEnd=2019-10-14T20:33:36.144Z&interval=PT1H&resource=audited_resource&scrollTimestamp=2019-10-14T20:33:18.273999553Z)
 
 Production (gcp-marketplace-solutions/cje-marketplace-dev): [Prod Stackdriver](https://console.cloud.google.com/logs/viewer?organizationId=41792434410&project=cje-marketplace-dev&minLogLevel=0&expandAll=false&timestamp=2019-10-14T20:33:02.130000000Z&customFacets=&limitCustomFacetWidth=true&dateRangeStart=2019-10-14T19:33:02.381Z&dateRangeEnd=2019-10-14T20:33:02.381Z&interval=PT1H&resource=audited_resource&scrollTimestamp=2019-10-14T20:27:52.458843159Z)
+
+## Testing in Production
+1. Request that the billing account be reset if needed.
+3. Create a throwaway Google/Gmail account [here](https://accounts.google.com/signup/v2/webcreateaccount?service=accountsettings&continue=https%3A%2F%2Fmyaccount.google.com%2F%3Futm_source%3Dsign_in_no_continue%26nlr%3D1&gmb=exp&biz=false&flowName=GlifWebSignIn&flowEntry=SignUp).
+4. For testing, use a browser that you don't normally use (like Safari).
+5. Launch this browser and CLEAR the cookies.
+6. Go to the marketplace listing [here](https://console.cloud.google.com/marketplace/details/cloudbees/cloudbees-jenkins-support?project=cloud-bill-dev).
+7. You will be asked to sign in. Sign in using your GCP account (not the throwaway account created on #3).
+8. Choose the plan you would like to subscribe to.
+9. Begin marketplace subscription signup steps.
+10. When directed to login/sign up with CloudBees, use the throwaway account created in step #3.
+11. Complete the signup form.
+12. On the last step of the signup flow, click the Login button. This will direct you to Grandcentral login.
+13. Use the Google login and choose the throwaway Google account.
+14. You will then be directed to create your first support ticket.
