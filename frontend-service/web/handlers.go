@@ -83,7 +83,7 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 
 	Store.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   60 * 60,
+		MaxAge:   86400 * 7,
 		HttpOnly: true,
 	}
 	return &SubscriptionFrontendHandler{
