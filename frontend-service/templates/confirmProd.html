@@ -33,12 +33,12 @@
                         <input name="prod" type="hidden" class="form-control" value="{{.prod}}">
                     </div>
                     <div class="form-group">
-                        <label for="firstName">First Name</label>
+                        <label for="firstName">First name</label>
                         <input name="firstName" type="text" required="true" class="form-control"
                                placeholder="First Name" value="{{.given_name}}">
                     </div>
                     <div class="form-group">
-                        <label for="lastName">Last/Family Name</label>
+                        <label for="lastName">Last name</label>
                         <input name="lastName" type="text" required="true" class="form-control"
                                placeholder="Last/Family Name" value="{{.family_name}}">
                     </div>
@@ -48,7 +48,7 @@
                                placeholder="johndoe@company.com" value="{{.email}}">
                     </div>
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
+                        <label for="phone">Company phone number, with country code</label>
                         <input name="phone" type="text" required="true" class="form-control" placeholder="0-000-000-000"
                                value="{{.phone_number}}">
                     </div>
@@ -57,7 +57,7 @@
                         <input name="company" type="text" required="true" class="form-control" placeholder="?">
                     </div>
                     <div class="form-group">
-                        <label for="timezone">Timezone</label>
+                        <label for="timezone">Select Timezone for your primary support location.  Support SLA is measured against this designation.</label>
                         <select name="timezone" class="form-control" required>
                             <option value="">Select a Timezone</option>
                             <option value="GMT-12">(GMT-12:00) International Date Line West</option>

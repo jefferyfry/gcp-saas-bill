@@ -133,7 +133,7 @@ func (lstnr *PubSubListener) Listen() error {
 func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 	switch pubSubMsg.EventType {
 	case "ACCOUNT_ACTIVE":
-		LogI.Printf("Account %s is active. \n", pubSubMsg.Account.Id)
+		LogI.Printf("PubSub event: Account %s ACCOUNT_ACTIVE. \n", pubSubMsg.Account.Id)
 		if _,err := syncAccount(pubSubMsg.Account.Id); err != nil {
 			LogE.Printf("Unable to update account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
@@ -151,7 +151,7 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			}
 		}
 	case "ENTITLEMENT_CREATION_REQUESTED":
-		LogI.Printf("Entitlement %s creation requested. \n", pubSubMsg.Entitlement.Id)
+		LogI.Printf("PubSub event: Entitlement %s ENTITLEMENT_CREATION_REQUESTED. \n", pubSubMsg.Entitlement.Id)
 		if entitlement,err := syncEntitlement(pubSubMsg.Entitlement.Id); err == nil {
 			if accountExists, acctErr := accountExistsInDb(entitlement.Account); acctErr != nil {
 				LogE.Printf("Unable to determine if account %#v exists due to error %#v \n", entitlement.Account, acctErr)
@@ -167,13 +167,13 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			return false
 		}
 	case "ENTITLEMENT_ACTIVE":
-		LogI.Printf("Entitlement %s is active. \n", pubSubMsg.Entitlement.Id)
+		LogI.Printf("PubSub event: Entitlement %s ENTITLEMENT_ACTIVE. \n", pubSubMsg.Entitlement.Id)
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGE_REQUESTED":
-		LogI.Printf("Entitlement %s plan change requested. \n", pubSubMsg.Entitlement.Id)
+		LogI.Printf("PubSub event: Entitlement %s ENTITLEMENT_PLAN_CHANGE_REQUESTED. \n", pubSubMsg.Entitlement.Id)
 		if err := postEntitlementChangeApprovalToCommerceApi(pubSubMsg.Entitlement.Id); err == nil {
 			if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 				LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
@@ -184,26 +184,27 @@ func processPubSubMsg(pubSubMsg PubSubMsg) bool {
 			return false
 		}
 	case "ENTITLEMENT_PLAN_CHANGED":
-		LogI.Printf("Entitlement %s plan changed. \n", pubSubMsg.Entitlement.Id)
+		LogI.Printf("PubSub event: Entitlement %s ENTITLEMENT_PLAN_CHANGED. \n", pubSubMsg.Entitlement.Id)
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_PENDING_CANCELLATION":
-		LogE.Println("ENTITLEMENT_PENDING_CANCELLATION ignored.")
+		LogE.Printf("PubSub event: Entitlement %s ENTITLEMENT_PENDING_CANCELLATION. \n", pubSubMsg.Entitlement.Id)
 	case "ENTITLEMENT_CANCELLED":
-		LogI.Printf("Entitlement %s cancelled. \n", pubSubMsg.Entitlement.Id)
+		LogI.Printf("PubSub event: Entitlement %s ENTITLEMENT_CANCELLED. \n", pubSubMsg.Entitlement.Id)
 		if _,err := syncEntitlement(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to update entitlement plan %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ENTITLEMENT_DELETED":
-		LogI.Printf("Entitlement %s deleted. \n", pubSubMsg.Entitlement.Id)
+		LogI.Printf("PubSub event: Entitlement %s ENTITLEMENT_DELETED. \n", pubSubMsg.Entitlement.Id)
 		if err := deleteEntitlementFromDb(pubSubMsg.Entitlement.Id); err != nil {
 			LogE.Printf("Unable to delete entitlement %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
 		}
 	case "ACCOUNT_DELETED":
+		LogI.Printf("PubSub event: Account %s ACCOUNT_DELETED. \n", pubSubMsg.Account.Id)
 		if err := deleteAccountFromDb(pubSubMsg.Account.Id); err != nil {
 			LogE.Printf("Unable to delete account %#v due to error %#v \n", pubSubMsg.Entitlement, err)
 			return false
@@ -324,6 +325,7 @@ func getEntitlementFromCommerceApi(entitlementId string,entitlement *Entitlement
 		return err
 	}
 	entitlement.Id = entitlementId
+	LogI.Printf("Commerce API: Entitlement %s is status %s.",entitlementId, entitlement.State)
 
 	return nil
 }
@@ -471,7 +473,7 @@ func getAccountFromCommerceApi(accountId string,account *Account) error {
 		return errJson
 	}
 	account.Id = accountId
-
+	LogI.Printf("Commerce API: Account %s is status %s.",accountId, account.State)
 	return nil
 }
 
