@@ -136,8 +136,8 @@ function main(){
     SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A1:A1").setValues(dateTime);
 
     //set header
-    var header = [["Account Id","Account Status","First Name","Last Name","Email","Phone","Timezone","Entitlement ID","Product","Plan","Entitlement Status"]];
-    SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A2:K2").setValues(header);
+    var header = [["Account Id","Account Status","First Name","Last Name","Email","Phone","Timezone","Entitlement ID","Product","Plan","Entitlement Status","Create Time","Update Time"]];
+    SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A2:M2").setValues(header);
 
     //query accounts
     var accounts = datastore.getInstance().runGql("select * from Account");
@@ -172,10 +172,12 @@ function main(){
             var product = entitlement['entity']['properties']['product']['stringValue'];
             var plan = entitlement['entity']['properties']['plan']['stringValue'];
             var state = entitlement['entity']['properties']['state']['stringValue'];
-            var rowValues = [[accountId,accountStatus,firstName,lastName,emailAddress,phone,timezone,entitlementId,product,plan,state]];
-            SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A"+row+":K"+row).setValues(rowValues);
+            var createTime = entitlement['entity']['properties']['createTime']['stringValue'];
+            var updateTime = entitlement['entity']['properties']['updateTime']['stringValue'];
+            var rowValues = [[accountId,accountStatus,firstName,lastName,emailAddress,phone,timezone,entitlementId,product,plan,state,createTime,updateTime]];
+            SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A"+row+":M"+row).setValues(rowValues);
             row++;
         }
-        SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().autoResizeColumns(1, 11);
+        SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().autoResizeColumns(1, 13);
     }
 }
