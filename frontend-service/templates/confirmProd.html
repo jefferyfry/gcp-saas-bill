@@ -35,26 +35,26 @@
                     <div class="form-group">
                         <label for="firstName">First name</label>
                         <input name="firstName" type="text" required="true" class="form-control"
-                               placeholder="First Name" value="{{.given_name}}">
+                               placeholder="First name" value="{{.given_name}}">
                     </div>
                     <div class="form-group">
                         <label for="lastName">Last name</label>
                         <input name="lastName" type="text" required="true" class="form-control"
-                               placeholder="Last/Family Name" value="{{.family_name}}">
+                               placeholder="Last name" value="{{.family_name}}">
                     </div>
                     <div class="form-group">
                         <label for="emailAddress">Email</label>
                         <input name="emailAddress" type="text" required="true" class="form-control"
-                               placeholder="johndoe@company.com" value="{{.email}}">
+                               placeholder="yourname@yourcompany.com" value="{{.email}}" disabled>
                     </div>
                     <div class="form-group">
                         <label for="phone">Company phone number, with country code</label>
-                        <input name="phone" type="text" required="true" class="form-control" placeholder="0-000-000-000"
+                        <input name="phone" type="text" required="true" class="form-control" placeholder="01-000-000-000"
                                value="{{.phone_number}}">
                     </div>
                     <div class="form-group">
                         <label for="company">Company</label>
-                        <input name="company" type="text" required="true" class="form-control" placeholder="?">
+                        <input name="company" type="text" required="true" class="form-control" placeholder="Your company's name">
                     </div>
                     <div class="form-group">
                         <label for="timezone">Select Timezone for your primary support location.  Support SLA is measured against this designation.</label>
