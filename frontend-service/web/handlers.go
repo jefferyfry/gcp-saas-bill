@@ -8,6 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http/httputil"
+	"regexp"
 	"strings"
 	"time"
 
@@ -242,6 +243,13 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 
 	if accountId == "" {
 		http.Error(w,`{"error": "missing account name in path"}`,400)
+		return
+	}
+
+	matched,_ := regexp.MatchString("^[a-zA-Z0-9_-]*$",accountId)
+
+	if !matched {
+		http.Error(w,`{"error": "invalid account ID"}`,400)
 		return
 	}
 
