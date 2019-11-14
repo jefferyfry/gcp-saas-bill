@@ -19,9 +19,9 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
+	"github.com/jefferyfry/funclog"
 	"github.com/lestrrat/go-jwx/jwk"
 	"html/template"
-	"github.com/jefferyfry/funclog"
 
 	"crypto/rand"
 	"net/http"
@@ -257,6 +257,16 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 
 	if !ok || len(prod) < 1 {
 		http.Error(w, "Missing prod parameter.", http.StatusBadRequest)
+		return
+	}
+
+	valid, err := accountValid(accountId,prod[0])
+
+	if !valid && err != nil {
+		http.Error(w,`{"error": "error validating account"}`,500)
+		return
+	} else if !valid {
+		http.Error(w,`{"error": "invalid account"}`,500)
 		return
 	}
 
@@ -518,7 +528,7 @@ func createProduct(prod string, accountId string, subscriptionServiceUrl string,
 		Product: prod,
 		Plan: prod,
 		Account: accountId,
-		State: "ENTITLEMENT_ACTIVE",
+		State: "ENTITLEMENT_PROD_ACTIVE",
 		CreateTime: now,
 		UpdateTime: now,
 	}
@@ -637,6 +647,35 @@ func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accou
 				return errors.New("Account reset received error response: " + procResp.Status)
 			}
 			return nil
+		}
+	}
+}
+
+func accountValid(accountId string, prod string) (bool, error) {
+	subscriptonsUrl := "https://cloudbilling.googleapis.com/v1/partnerSubscriptions?externalAccountId="+accountId
+	if client, clientErr := google.DefaultClient(oauth2.NoContext, "https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
+		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return false, clientErr
+	} else {
+		LogI.Printf("Validating account : %s \n", subscriptonsUrl)
+		if subResp, err := client.Get(subscriptonsUrl); nil != err {
+			LogE.Printf("Failed validating account request %s %#v \n", subscriptonsUrl, err)
+			return false, err
+		} else {
+			defer subResp.Body.Close()
+			if subResp.StatusCode != 200 {
+				LogE.Println("Account check received error response: ", subResp.StatusCode)
+				responseDump, _ := httputil.DumpResponse(subResp, true)
+				LogE.Println(string(responseDump))
+				return false,errors.New("Account check received error response: " + subResp.Status)
+			}
+			responseDump, _ := httputil.DumpResponse(subResp, true)
+			responseString := string(responseDump)
+			if strings.Contains(responseString,prod) {
+				return true, nil
+			} else {
+				return false, nil
+			}
 		}
 	}
 }
