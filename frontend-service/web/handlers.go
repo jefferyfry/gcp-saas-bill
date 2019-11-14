@@ -59,6 +59,7 @@ type Product struct {
 	Account   			string	`json:"account"`
 	Product  			string	`json:"product"`
 	Plan     	  		string	`json:"plan"`
+	Provider			string	`json:"provider"`
 	State    	  		string	`json:"state"`
 	UpdateTime    	  	string	`json:"updateTime"`
 	CreateTime    	  	string	`json:"createTime"`
@@ -72,6 +73,29 @@ type Contact struct {
 	Phone			string     	`json:"phone,omitempty"`
 	Company			string     	`json:"company,omitempty"`
 	Timezone		string     	`json:"timezone,omitempty"`
+}
+
+type PartnerSubscriptions struct {
+	Subscriptions 	[]Subscription   `json:"subscriptions,omitempty"`
+}
+
+type Subscription struct {
+	Name 				string     	`json:"name"`
+	ExternalAccountId 	string     	`json:"externalAccountId"`
+	Version				string     	`json:"version,omitempty"`
+	Status				string     	`json:"status"`
+	SubscribedResources	[]SubscribedResource     	`json:"subscribedResources"`
+	RequiredApprovals	string     	`json:"requiredApprovals,omitempty"`
+	StartDate			json.RawMessage     	`json:"startDate,omitempty"`
+	EndDate				json.RawMessage     	`json:"endDate,omitempty"`
+	CreateTime			string     	`json:"createTime,omitempty"`
+	UpdateTime			string     	`json:"updateTime,omitempty"`
+}
+
+type SubscribedResource struct {
+	SubscriptionProvider 	string     	`json:"subscriptionProvider"`
+	Resource 				string     	`json:"resource"`
+	Labels					json.RawMessage     	`json:"labels,omitempty"`
 }
 
 type Finish struct {
@@ -260,7 +284,7 @@ func (hdlr *SubscriptionFrontendHandler) SignupProd(w http.ResponseWriter, r *ht
 		return
 	}
 
-	valid, err := accountValid(accountId,prod[0])
+	valid, err := isProdAccountValid(accountId,prod[0])
 
 	if !valid && err != nil {
 		http.Error(w,`{"error": "error validating account"}`,500)
@@ -479,18 +503,27 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 		if !createAccount(account, hdlr.SubscriptionServiceUrl, w) {
 			http.Error(w, "Failed to store account info", http.StatusInternalServerError)
 		} else {
-			if !createProduct(prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w){
-				http.Error(w, "Failed to store product info", http.StatusInternalServerError)
+			if entitlementId, err := getProdEntitlementId(contact.AccountId,prod); err == nil {
+				LogI.Printf("Entitlement ID is %s",entitlementId)
+				if entitlementId == "" {
+					http.Error(w, "Failed to get entitlement ID", http.StatusInternalServerError)
+				} else {
+					if !createProduct(entitlementId, prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w) {
+						http.Error(w, "Failed to store product info", http.StatusInternalServerError)
+					} else {
+						if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
+							http.Error(w, err.Error(), http.StatusInternalServerError)
+						} else {
+							finish := Finish{}
+							finish.FinishUrl = hdlr.FinishUrl
+							finish.FinishUrlTitle = hdlr.FinishUrlTitle
+							tmpl.Execute(w, finish)
+						}
+					}
+				}
+			} else {
+				http.Error(w, "Failed to get entitlement ID", http.StatusInternalServerError)
 			}
-		}
-
-		if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else {
-			finish := Finish{}
-			finish.FinishUrl = hdlr.FinishUrl
-			finish.FinishUrlTitle = hdlr.FinishUrlTitle
-			tmpl.Execute(w, finish)
 		}
 	}
 }
@@ -519,16 +552,17 @@ func (hdlr *SubscriptionFrontendHandler) Healthz(w http.ResponseWriter, r *http.
 	}
 }
 
-func createProduct(prod string, accountId string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+func createProduct(entitlementId string,prod string, accountId string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
 	loc, _ := time.LoadLocation("UTC")
-	now := time.Now().In(loc).String()
+	now := time.Now().In(loc).Format(time.RFC3339)
 	product := Product {
-		Id: accountId+"-"+prod,
-		Name: accountId+"-"+prod,
+		Id: entitlementId,
+		Name: "providers/cloudbees/entitlements/"+entitlementId,
 		Product: prod,
 		Plan: prod,
 		Account: accountId,
-		State: "ENTITLEMENT_PROD_ACTIVE",
+		State: "ENTITLEMENT_ACTIVE",
+		Provider: "cloudbees",
 		CreateTime: now,
 		UpdateTime: now,
 	}
@@ -651,15 +685,15 @@ func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accou
 	}
 }
 
-func accountValid(accountId string, prod string) (bool, error) {
-	subscriptonsUrl := "https://cloudbilling.googleapis.com/v1/partnerSubscriptions?externalAccountId="+accountId
+func isProdAccountValid(accountId string, prod string) (bool, error) {
+	subscriptionsUrl := "https://cloudbilling.googleapis.com/v1/partnerSubscriptions?externalAccountId="+accountId
 	if client, clientErr := google.DefaultClient(oauth2.NoContext, "https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
 		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return false, clientErr
 	} else {
-		LogI.Printf("Validating account : %s \n", subscriptonsUrl)
-		if subResp, err := client.Get(subscriptonsUrl); nil != err {
-			LogE.Printf("Failed validating account request %s %#v \n", subscriptonsUrl, err)
+		LogI.Printf("Validating account : %s \n", subscriptionsUrl)
+		if subResp, err := client.Get(subscriptionsUrl); nil != err {
+			LogE.Printf("Failed validating account request %s %#v \n", subscriptionsUrl, err)
 			return false, err
 		} else {
 			defer subResp.Body.Close()
@@ -678,6 +712,48 @@ func accountValid(accountId string, prod string) (bool, error) {
 			}
 		}
 	}
+}
+
+func getProdEntitlementId(accountId string, prod string) (string, error) {
+	subscriptionsUrl := "https://cloudbilling.googleapis.com/v1/partnerSubscriptions?externalAccountId="+accountId
+	if client, clientErr := google.DefaultClient(oauth2.NoContext, "https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
+		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
+		return "", clientErr
+	} else {
+		LogI.Printf("Getting subscription entitlements : %s \n", subscriptionsUrl)
+		if subResp, err := client.Get(subscriptionsUrl); nil != err {
+			LogE.Printf("Failed subscription entitlements request %s %#v \n", subscriptionsUrl, err)
+			return "", err
+		} else {
+			defer subResp.Body.Close()
+			if subResp.StatusCode != 200 {
+				LogE.Println("Getting subscription entitlements received error response: ", subResp.StatusCode)
+				responseDump, _ := httputil.DumpResponse(subResp, true)
+				LogE.Println(string(responseDump))
+				return "",errors.New("Getting subscription entitlements received error response: " + subResp.Status)
+			}
+			partnerSubscriptions := PartnerSubscriptions{}
+			if err = json.NewDecoder(subResp.Body).Decode(&partnerSubscriptions); err != nil {
+				LogE.Printf("Error decoding subscriptions %s %#v %#v \n", subscriptionsUrl, subResp.Body, err)
+				responseDump, _ := httputil.DumpResponse(subResp, true)
+				LogE.Println(string(responseDump))
+				return "",err
+			}
+
+			for _, subscription := range partnerSubscriptions.Subscriptions {
+				if len(subscription.SubscribedResources) > 0 {
+					for _, resource := range subscription.SubscribedResources {
+						if resource.Resource == prod {
+							LogI.Printf("Subscription name is '%s'",subscription.Name)
+							entitlementId := strings.TrimPrefix(subscription.Name,"partnerSubscriptions/")
+							return entitlementId,nil
+						}
+					}
+				}
+			}
+		}
+	}
+	return "", nil
 }
 
 
