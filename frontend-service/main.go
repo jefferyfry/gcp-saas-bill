@@ -37,5 +37,5 @@ func main() {
 	}
 
 	//start web service
-	LogE.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.HealthCheckEndpoint,config.SubscriptionServiceUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer,config.SessionKey,config.CloudCommerceProcurementUrl,config.PartnerId,config.FinishUrl,config.FinishUrlTitle,config.TestMode))
+	LogE.Fatal(web.SetUpService(config.FrontendServiceEndpoint,config.HealthCheckEndpoint,config.SubscriptionServiceUrl,config.GoogleSubscriptionsUrl,config.ClientId,config.ClientSecret,config.CallbackUrl,config.Issuer,config.SessionKey,config.CloudCommerceProcurementUrl,config.PartnerId,config.FinishUrl,config.FinishUrlTitle,config.TestMode))
 }

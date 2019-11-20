@@ -7,8 +7,8 @@ import (
 )
 
 //SetUpService sets up the subscription service.
-func SetUpService(webServiceEndpoint string,healthCheckEndpoint string,subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string, testMode string) error {
-	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId, finishUrl, finishUrlTitle)
+func SetUpService(webServiceEndpoint string,healthCheckEndpoint string,subscriptionServiceUrl string,googleSubscriptionsUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string, testMode string) error {
+	handler := GetSubscriptionFrontendHandler(subscriptionServiceUrl,googleSubscriptionsUrl,clientId, clientSecret, callbackUrl, issuer, sessionKey, cloudCommerceProcurementUrl, partnerId, finishUrl, finishUrlTitle)
 
 	healthCheck := mux.NewRouter()
 	healthCheck.Methods(http.MethodGet).Path("/healthz").HandlerFunc(handler.Healthz)

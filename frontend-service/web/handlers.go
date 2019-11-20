@@ -30,12 +30,17 @@ import (
 var (
 	Store *sessions.CookieStore
 
+	subscriptionServiceBaseUrl string
+	googleSubscriptionsBaseUrl string
+	cloudCommerceProcurementBaseUrl string
+
 	LogI = funclog.NewInfoLogger("INFO: ")
 	LogE = funclog.NewErrorLogger("ERROR: ")
 )
 
 type SubscriptionFrontendHandler struct {
 	SubscriptionServiceUrl string
+	GoogleSubscriptionsUrl string
 	ClientId string
 	ClientSecret string
 	CallbackUrl string
@@ -103,9 +108,11 @@ type Finish struct {
 	FinishUrlTitle 	string `json:"finishUrlTitle"`
 }
 
-func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string) *SubscriptionFrontendHandler {
+func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,googleSubscriptionsUrl string,clientId string, clientSecret string, callbackUrl string, issuer string, sessionKey string, cloudCommerceProcurementUrl string, partnerId string, finishUrl string, finishUrlTitle string) *SubscriptionFrontendHandler {
 	Store = sessions.NewCookieStore([]byte(sessionKey))
-
+	subscriptionServiceBaseUrl = subscriptionServiceUrl
+	googleSubscriptionsBaseUrl = googleSubscriptionsUrl
+	cloudCommerceProcurementBaseUrl = cloudCommerceProcurementUrl
 	Store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7,
@@ -113,6 +120,7 @@ func GetSubscriptionFrontendHandler(subscriptionServiceUrl string,clientId strin
 	}
 	return &SubscriptionFrontendHandler{
 		subscriptionServiceUrl,
+		googleSubscriptionsUrl,
 		clientId,
 		clientSecret,
 		callbackUrl,
@@ -254,7 +262,7 @@ func (hdlr *SubscriptionFrontendHandler) ResetSaas(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if err := postAccountReset(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, acct[0], w); err != nil {
+	if err := postAccountReset(hdlr.PartnerId, acct[0], w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		fmt.Fprintf(w,"Account %s has been reset.",acct[0])
@@ -447,10 +455,10 @@ func (hdlr *SubscriptionFrontendHandler) FinishSaas(w http.ResponseWriter, r *ht
 	contact.Phone = r.PostFormValue("phone")
 	contact.Timezone = r.PostFormValue("timezone")
 
-	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
+	if !createContact(contact, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 	} else {
-		postAccountApproval(hdlr.CloudCommerceProcurementUrl, hdlr.PartnerId, contact.AccountId, w)
+		postAccountApproval(hdlr.PartnerId, contact.AccountId, w)
 
 		if tmpl, err := template.ParseFiles("templates/finish.html"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -488,7 +496,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 
 	prod := r.PostFormValue("prod")
 
-	if !createContact(contact, hdlr.SubscriptionServiceUrl, w) {
+	if !createContact(contact, w) {
 		http.Error(w, "Failed to store contact info", http.StatusInternalServerError)
 	} else {
 		loc, _ := time.LoadLocation("UTC")
@@ -500,7 +508,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 			State : "ACCOUNT_ACTIVE",
 		}
 
-		if !createAccount(account, hdlr.SubscriptionServiceUrl, w) {
+		if !createAccount(account, w) {
 			http.Error(w, "Failed to store account info", http.StatusInternalServerError)
 		} else {
 			if entitlementId, err := getProdEntitlementId(contact.AccountId,prod); err == nil {
@@ -508,7 +516,7 @@ func (hdlr *SubscriptionFrontendHandler) FinishProd(w http.ResponseWriter, r *ht
 				if entitlementId == "" {
 					http.Error(w, "Failed to get entitlement ID", http.StatusInternalServerError)
 				} else {
-					if !createProduct(entitlementId, prod, contact.AccountId, hdlr.SubscriptionServiceUrl, w) {
+					if !createProduct(entitlementId, prod, contact.AccountId, w) {
 						http.Error(w, "Failed to store product info", http.StatusInternalServerError)
 					} else {
 						if tmpl, err := template.ParseFiles("templates/finish.html");err != nil {
@@ -552,7 +560,7 @@ func (hdlr *SubscriptionFrontendHandler) Healthz(w http.ResponseWriter, r *http.
 	}
 }
 
-func createProduct(entitlementId string,prod string, accountId string, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+func createProduct(entitlementId string,prod string, accountId string, w http.ResponseWriter) bool {
 	loc, _ := time.LoadLocation("UTC")
 	now := time.Now().In(loc).Format(time.RFC3339)
 	product := Product {
@@ -570,7 +578,7 @@ func createProduct(entitlementId string,prod string, accountId string, subscript
 		fmt.Fprintf(w, `{"error": "unable to decode product object %s"}`, err)
 		return false
 	} else {
-		if prodReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/entitlements", bytes.NewBuffer(productBytes)); nil != err {
+		if prodReq, err := http.NewRequest(http.MethodPut, subscriptionServiceBaseUrl+"/entitlements", bytes.NewBuffer(productBytes)); nil != err {
 			w.WriteHeader(500)
 			fmt.Fprint(w, `{"error": "error with creating product upsert request %s"}`, err)
 			return false
@@ -587,13 +595,13 @@ func createProduct(entitlementId string,prod string, accountId string, subscript
 	}
 }
 
-func createContact(contact Contact, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+func createContact(contact Contact, w http.ResponseWriter) bool {
 	//submit to subscript service
 	if contactBytes, err := json.Marshal(contact); err != nil {
 		LogE.Println(err)
 		return false
 	} else {
-		if contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/contacts", bytes.NewBuffer(contactBytes)); nil != err {
+		if contactReq, err := http.NewRequest(http.MethodPut, subscriptionServiceBaseUrl+"/contacts", bytes.NewBuffer(contactBytes)); nil != err {
 			w.WriteHeader(500)
 			fmt.Fprint(w, `{"error": "error with creating contact upsert request %s"}`, err)
 			return false
@@ -610,13 +618,13 @@ func createContact(contact Contact, subscriptionServiceUrl string, w http.Respon
 	}
 }
 
-func createAccount(account Account, subscriptionServiceUrl string, w http.ResponseWriter) bool {
+func createAccount(account Account, w http.ResponseWriter) bool {
 	//submit to subscript service
 	if accountBytes, err := json.Marshal(account); err != nil {
 		LogE.Println(err)
 		return false
 	} else {
-		if accountReq, err := http.NewRequest(http.MethodPut, subscriptionServiceUrl+"/accounts", bytes.NewBuffer(accountBytes)); nil != err {
+		if accountReq, err := http.NewRequest(http.MethodPut, subscriptionServiceBaseUrl+"/accounts", bytes.NewBuffer(accountBytes)); nil != err {
 			w.WriteHeader(500)
 			fmt.Fprint(w, `{"error": "error with creating account upsert request %s"}`, err)
 			return false
@@ -633,8 +641,8 @@ func createAccount(account Account, subscriptionServiceUrl string, w http.Respon
 	}
 }
 
-func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,accountName string, w http.ResponseWriter) error {
-	procurementUrl := cloudCommerceProcurementUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":approve"
+func postAccountApproval(partnerId string,accountName string, w http.ResponseWriter) error {
+	procurementUrl := cloudCommerceProcurementBaseUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":approve"
 	jsonApproval := []byte(`
 			{
 				"approvalName": "signup"
@@ -662,8 +670,8 @@ func postAccountApproval(cloudCommerceProcurementUrl string, partnerId string,ac
 	}
 }
 
-func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accountName string,w http.ResponseWriter) error {
-	procurementUrl := cloudCommerceProcurementUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":reset"
+func postAccountReset(partnerId string,accountName string,w http.ResponseWriter) error {
+	procurementUrl := cloudCommerceProcurementBaseUrl +  "/providers/" +  partnerId + "/accounts/" + accountName + ":reset"
 	if client, clientErr := google.DefaultClient(oauth2.NoContext,"https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
 		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return clientErr
@@ -686,7 +694,7 @@ func postAccountReset(cloudCommerceProcurementUrl string, partnerId string,accou
 }
 
 func isProdAccountValid(accountId string, prod string) (bool, error) {
-	subscriptionsUrl := "https://cloudbilling.googleapis.com/v1/partnerSubscriptions?externalAccountId="+accountId
+	subscriptionsUrl := googleSubscriptionsBaseUrl+"/partnerSubscriptions?externalAccountId="+accountId
 	if client, clientErr := google.DefaultClient(oauth2.NoContext, "https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
 		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return false, clientErr
@@ -715,7 +723,7 @@ func isProdAccountValid(accountId string, prod string) (bool, error) {
 }
 
 func getProdEntitlementId(accountId string, prod string) (string, error) {
-	subscriptionsUrl := "https://cloudbilling.googleapis.com/v1/partnerSubscriptions?externalAccountId="+accountId
+	subscriptionsUrl := googleSubscriptionsBaseUrl+"/partnerSubscriptions?externalAccountId="+accountId
 	if client, clientErr := google.DefaultClient(oauth2.NoContext, "https://www.googleapis.com/auth/cloud-platform"); clientErr != nil {
 		LogE.Printf("Failed to create oath2 client for the procurement API %#v \n", clientErr)
 		return "", clientErr

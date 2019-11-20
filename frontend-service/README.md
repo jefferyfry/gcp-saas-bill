@@ -17,6 +17,7 @@ To successfully run the subscription service, configuration must be set through 
 * Frontend Service Endpoint - This is the listening port for the frontend service.
 * Frontend Health Check Endpoint - This is the listening port for the health check service.
 * Subscription Service URL - This is the URL to the subscription service.
+* Google Subscription URL - This is the URL to the Google subscription service for querying VM entitlements.
 * Client ID - This is the Oauth/Auth0 client ID.
 * Client Secret - This is the Oauth/Auth0 client secret.
 * Callback URL - This is the callback URL used by the Oauth/Auth0 service.
@@ -36,7 +37,8 @@ command-line options > environment variables
 * CLOUD_BILL_FRONTEND_CONFIG_FILE - Path to a configuration file (see below).
 * CLOUD_BILL_FRONTEND_SERVICE_ENDPOINT 
 * CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT
-* CLOUD_BILL_SUBSCRIPTION_SERVICE_URL 
+* CLOUD_BILL_FRONTEND_SUBSCRIPTION_SERVICE_URL 
+* CLOUD_BILL_FRONTEND_GOOGLE_SUBSCRIPTIONS_URL
 * CLOUD_BILL_FRONTEND_CLIENT_ID 
 * CLOUD_BILL_FRONTEND_CLIENT_SECRET 
 * CLOUD_BILL_FRONTEND_CALLBACK_URL
@@ -53,6 +55,7 @@ command-line options > environment variables
 * frontendServiceEndpoint 
 * healthCheckEndpoint
 * subscriptionServiceUrl 
+* googleSubscriptionServiceUrl
 * clientId 
 * clientSecret 
 * callbackUrl 
@@ -71,6 +74,7 @@ The configFile command-line option or CLOUD_BILL_FRONTEND_CONFIG_FILE environmen
   "frontendServiceEndpoint": "8086",
   "healthCheckEndpoint": "8096",
   "subscriptionServiceUrl": "http://subscription-service.default.svc.cluster.local:8085/api/v1/",
+  "googleSubscriptionsUrl": "https://cloudbilling.googleapis.com/v1",
   "clientId": "clientId",
   "clientSecret": "clientSecret",
   "callbackUrl": "https://cloud-bill.35.237.116.107.beesdns.com/callback",
@@ -105,8 +109,10 @@ Then mount the file and set it as an environment variable.
     #              value: "8086"
     #            - name: CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT
     #              value: "8096"
-    #            - name: CLOUD_BILL_SUBSCRIPTION_SERVICE_URL
+    #            - name: CLOUD_BILL_FRONTEND_SUBSCRIPTION_SERVICE_URL
     #              value: "http://subscription-service.default.svc.cluster.local:8085/api/v1"
+    #            -CLOUD_BILL_FRONTEND_GOOGLE_SUBSCRIPTIONS_URL
+    #              value: "https://cloudbilling.googleapis.com/v1"
     #            - name: CLOUD_BILL_FRONTEND_CLIENT_ID
     #              value: "<yourauth0clientid>"
     #            - name: CLOUD_BILL_FRONTEND_CLIENT_SECRET

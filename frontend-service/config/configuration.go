@@ -13,6 +13,7 @@ var (
 	FrontendServiceEndpoint = "8086"
 	HealthCheckEndpoint = "8096"
 	SubscriptionServiceUrl = "https://subscription-service.cloudbees-jenkins-support.svc.cluster.local"
+	GoogleSubscriptionsUrl = "https://cloudbilling.googleapis.com/v1"
 	ClientId 		= "123456"
 	ClientSecret    = "abcdef"
 	CallbackUrl		= "http://localhost/callback"
@@ -34,6 +35,7 @@ type ServiceConfig struct {
 	FrontendServiceEndpoint string `json:"frontendServiceEndpoint"`
 	HealthCheckEndpoint string `json:"healthCheckEndpoint"`
 	SubscriptionServiceUrl 	string `json:"subscriptionServiceUrl"`
+	GoogleSubscriptionsUrl 	string `json:"googleSubscriptionsUrl"`
 	ClientId    			string	`json:"clientId"`
 	ClientSecret    		string	`json:"clientSecret"`
 	CallbackUrl    			string	`json:"callbackUrl"`
@@ -53,6 +55,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		FrontendServiceEndpoint,
 		HealthCheckEndpoint,
 		SubscriptionServiceUrl,
+		GoogleSubscriptionsUrl,
 		ClientId,
 		ClientSecret,
 		CallbackUrl,
@@ -79,6 +82,7 @@ func GetConfiguration() (ServiceConfig, error) {
 	frontendServiceEndpoint := flag.String("frontendServiceEndpoint", "", "set the value of the frontend service endpoint port")
 	healthCheckEndpoint := flag.String("healthCheckEndpoint", "", "set the value of the health check endpoint port")
 	subscriptionServiceUrl := flag.String("subscriptionServiceUrl", "", "set the value of subscription service url")
+	googleSubscriptionsUrl := flag.String("googleSubscriptionsUrl", "", "set the Google subscription url")
 	clientId := flag.String("clientId", "", "set the value of the Auth0 client ID")
 	clientSecret := flag.String("clientSecret", "", "set the value of the Auth0 client secret")
 	callbackUrl := flag.String("callbackUrl", "", "set the value for the Auth0 callback URL")
@@ -104,7 +108,10 @@ func GetConfiguration() (ServiceConfig, error) {
 		*healthCheckEndpoint = os.Getenv("CLOUD_BILL_FRONTEND_HEALTH_CHECK_ENDPOINT")
 	}
 	if *subscriptionServiceUrl == "" {
-		*subscriptionServiceUrl = os.Getenv("CLOUD_BILL_SUBSCRIPTION_SERVICE_URL")
+		*subscriptionServiceUrl = os.Getenv("CLOUD_BILL_FRONTEND_SUBSCRIPTION_SERVICE_URL")
+	}
+	if *googleSubscriptionsUrl == "" {
+		*googleSubscriptionsUrl = os.Getenv("CLOUD_BILL_FRONTEND_GOOGLE_SUBSCRIPTIONS_URL")
 	}
 	if *clientId == "" {
 		*clientId = os.Getenv("CLOUD_BILL_FRONTEND_CLIENT_ID")
@@ -148,6 +155,7 @@ func GetConfiguration() (ServiceConfig, error) {
 		conf.FrontendServiceEndpoint = *frontendServiceEndpoint
 		conf.HealthCheckEndpoint = *healthCheckEndpoint
 		conf.SubscriptionServiceUrl = *subscriptionServiceUrl
+		conf.GoogleSubscriptionsUrl = *googleSubscriptionsUrl
 		conf.ClientId = *clientId
 		conf.ClientSecret = *clientSecret
 		conf.CallbackUrl = *callbackUrl
@@ -189,6 +197,13 @@ func GetConfiguration() (ServiceConfig, error) {
 		valid = false
 	} else {
 		conf.SubscriptionServiceUrl = strings.TrimSuffix(conf.SubscriptionServiceUrl,"/")
+	}
+
+	if conf.GoogleSubscriptionsUrl == "" {
+		LogE.Println("GoogleSubscriptionsUrl was not set.")
+		valid = false
+	} else {
+		conf.GoogleSubscriptionsUrl = strings.TrimSuffix(conf.GoogleSubscriptionsUrl,"/")
 	}
 
 	if conf.ClientId == "" {
