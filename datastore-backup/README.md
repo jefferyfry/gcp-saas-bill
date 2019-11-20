@@ -47,39 +47,42 @@ Then mount the file and set it as an environment variable.
 
 ```
         spec:
-          containers:
-            - name: datastore-backup
-              image: gcr.io/cloud-bill-dev/datastore-backup:1.0.0
-              env:
-                #            - name: CLOUD_BILL_DATASTORE_BACKUP_GCS_BUCKET
-                #              value: "gs://bucket"
-                #            - name: CLOUD_BILL_DATASTORE_BACKUP_GCP_PROJECT_ID
-                #              value: "<yourprojectid>"
-                #            - name: CLOUD_BILL_DATASTORE_BACKUP_SENTRY_DSN
-                #              value: "dsn"               
-                - name: GOOGLE_APPLICATION_CREDENTIALS
-                  value: /auth/gcp-service-account/gcp-service-account.json
-                - name: CLOUD_BILL_DATASTORE_BACKUP_CONFIG_FILE
-                  value: /auth/datastore-backup-config/datastore-backup-config.json
-              volumeMounts:
-                - name: gcp-service-account
-                  mountPath: "/auth/gcp-service-account"
-                  readOnly: true
-                - name: datastore-backup-config
-                  mountPath: "/auth/datastore-backup-config"
-                  readOnly: true
-          restartPolicy: Never
-          volumes:
-            - name: gcp-service-account
-              secret:
-                secretName: gcp-service-account
-            - name: datastore-backup-config
-              secret:
-                secretName: datastore-backup-config
+          schedule: "0 1 * * *"
+          jobTemplate:
+            spec:
+              template:
+                spec:
+                  containers:
+                    - name: datastore-backup
+                      image: gcr.io/cloud-bill-dev/datastore-backup:latest
+                      env:
+                        #            - name: CLOUD_BILL_DATASTORE_BACKUP_GCS_BUCKET
+                        #              value: "gs://bucket"
+                        #            - name: CLOUD_BILL_DATASTORE_BACKUP_GCP_PROJECT_ID
+                        #              value: "<yourprojectid>"
+                        - name: GOOGLE_APPLICATION_CREDENTIALS
+                          value: /auth/gcp-service-account/gcp-service-account.json
+                        - name: CLOUD_BILL_DATASTORE_BACKUP_CONFIG_FILE
+                          value: /auth/datastore-backup-config/datastore-backup-config.json
+                      volumeMounts:
+                        - name: gcp-service-account
+                          mountPath: "/auth/gcp-service-account"
+                          readOnly: true
+                        - name: datastore-backup-config
+                          mountPath: "/auth/datastore-backup-config"
+                          readOnly: true
+                  restartPolicy: Never
+                  volumes:
+                    - name: gcp-service-account
+                      secret:
+                        secretName: gcp-service-account
+                    - name: datastore-backup-config
+                      secret:
+                        secretName: datastore-backup-config
 ```
 
 ## GCP Service Accounts
-The pubsub service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials.
+The service requires setting the environment variable **GOOGLE_APPLICATION_CREDENTIALS**. This is the path to your GCP service account credentials.
 
 The following roles are required:
 * Cloud Import Export Admin - Used to export from Cloud Datastore.
