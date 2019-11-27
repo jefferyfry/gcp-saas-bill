@@ -19,9 +19,10 @@ The service will manage the subscriptions through a centrally stored customer su
 * subscription service [README](/subscription-service/README.md)
 * pubsub service [README](/pubsub-service/README.md)
 * datastore backup cron job [README](/datastore-backup/README.md)
+* entitlement check cron job [README](/entitlement-check/README.md)
 
 ## Architecture
-![Architecture](https://user-images.githubusercontent.com/6440106/67062045-090e8880-f117-11e9-921d-f57c8bc1f450.png)
+![Architecture](https://user-images.githubusercontent.com/6440106/69755717-b5c42880-110d-11ea-8d65-8a8549dcd6b8.png)
 
 ### Components
 #### Google/Auth0 Components
@@ -37,7 +38,8 @@ The service will manage the subscriptions through a centrally stored customer su
 * Frontend Service(CloudBees Developed) - Lightweight web interface that provides the signup page.
 * Subscription DB (CloudBees Developed) - This is a backup database that stores the current account and subscription data.
 * Support Systems - Support systems are the current backend systems such as Zendesk and Salesforce that must be provisioned to enable Jenkins Support services for a customer. The provisioning of these systems is TBD.
-* Datastore Backup Cron Job - Daily executing datastore backup.
+* Datastore Backup Cron Job (CloudBees Developed) - Daily executing datastore backup.
+* Entitlement Check Cron Job (CloudBees Developed) - VM offerings are not integrated into the marketplace pubsub for lifecycle events. We are required to query for entitlement status. This cron job executes periodically to get the status of a VM entitlement and updates our database if it has changed (ACTIVE to CANCELLED).
 
 ## Customer Workflow
 ![Customer Workflow](https://user-images.githubusercontent.com/6440106/66532891-e00e4800-eac5-11e9-8db3-4a2656066d51.png)
@@ -290,6 +292,7 @@ Four images are used in the application. Images are hosted in GCR and automatica
 * subscription-service - This web app serves the signup page and then approves new accounts and entitlements after receiving account information.
 * frontend-service - Lightweight web interface that provides the signup page.
 * datastore-backup - Daily executing datastore backup.
+* entitlement-check - Checks the status of entitlements for VM products.
 
 Development (cloud-bill-dev/cloud-bill-dev): [Dev GCR Repo](https://console.cloud.google.com/gcr/images/cloud-bill-dev?project=cloud-bill-dev)
 
