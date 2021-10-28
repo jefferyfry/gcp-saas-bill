@@ -1,4 +1,6 @@
 # GCP SaaS Bill
+
+[![CIS](https://app.soluble.cloud/api/v1/public/badges/1304c259-5ff4-4ded-9547-d0bfdd5646f0.svg)](https://app.soluble.cloud/repos/details/github.com/jefferyfry/gcp-saas-bill)  [![IaC](https://app.soluble.cloud/api/v1/public/badges/5a7c1e9b-138b-4941-b78d-8fbd2ef51610.svg)](https://app.soluble.cloud/repos/details/github.com/jefferyfry/gcp-saas-bill)  
 This document describes the technical architecture and implementation for a prototype SaaS service that enables a marketplace transactions in the Google Cloud Platform (GCP) marketplace. 
 
 The Cloud Bill SaaS service will act as an agent between the GCP marketplace enablement APIs and the CloudBees support systems. The service will be responsible for processing notifications from the GCP marketplace. These notifications include:
